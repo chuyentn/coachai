@@ -1,0 +1,5 @@
+{
+  "name": "CourseMarket VN",
+  "description": "A full-stack online course marketplace with Supabase, VNPAY, MoMo, and PayPal integration.",
+  "requestFramePermissions": []
+}
