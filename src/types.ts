@@ -1,4 +1,4 @@
-export type Role = 'student' | 'instructor' | 'admin';
+export type Role = 'student' | 'teacher' | 'admin' | 'vip';
 
 export interface Profile {
   id: string;
@@ -7,6 +7,8 @@ export interface Profile {
   avatar_url: string | null;
   role: Role;
   provider?: string;
+  affiliate_balance?: number;
+  referred_by?: string | null;
   created_at: string;
 }
 

@@ -12,7 +12,7 @@ export const NotFound: React.FC = () => {
   usePageTitle('404 – Trang không tìm thấy');
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex items-center justify-center px-4 transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -21,20 +21,20 @@ export const NotFound: React.FC = () => {
       >
         {/* Animated 404 */}
         <div className="relative mb-10">
-          <div className="text-[10rem] font-black text-slate-100 leading-none select-none">
+          <div className="text-[10rem] font-black text-slate-100 dark:text-slate-800/50 leading-none select-none">
             404
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-200 animate-bounce">
+            <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-200 dark:shadow-indigo-500/20 animate-bounce">
               <Zap className="text-white w-12 h-12" fill="currentColor" />
             </div>
           </div>
         </div>
 
-        <h1 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
           Trang không tìm thấy
         </h1>
-        <p className="text-slate-500 font-medium mb-10 leading-relaxed">
+        <p className="text-slate-500 dark:text-slate-400 font-medium mb-10 leading-relaxed">
           Trang bạn đang tìm không tồn tại hoặc đã bị di chuyển. 
           Hãy thử tìm kiếm hoặc quay về trang chủ.
         </p>
@@ -42,14 +42,14 @@ export const NotFound: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             to="/"
-            className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"
+            className="flex items-center gap-2 px-8 py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-600 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/20"
           >
             <Home size={18} />
             Về trang chủ
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all"
+            className="flex items-center gap-2 px-8 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
           >
             <ArrowLeft size={18} />
             Quay lại

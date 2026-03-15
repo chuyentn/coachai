@@ -1,27 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: users
-    // Fields: id, email, full_name, avatar_url, role, created_at
-    //
-    // Collection: courses
-    // Fields: id, instructor_id, title, description, price_vnd, price_usd, published, featured, etc.
-    //
-    // Collection: categories
-    // Fields: id, name, slug, icon
-    //
-    // Collection: enrollments
-    // Fields: id, user_id, course_id, status, completion_percentage, progress, created_at
-    //
-    // ===============================================================
 
-    // ===============================================================
+    // ═══════════════════════════════════════════════════════════════════
     // Helper Functions
-    // ===============================================================
+    // ═══════════════════════════════════════════════════════════════════
+
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -30,44 +14,117 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
     function isAdmin() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         (request.auth.token.email == "teambosskingdom2@gmail.com" && request.auth.token.email_verified == true));
+      return isAuthenticated() && (
+        getUserRole() == 'admin' ||
+        request.auth.token.email == 'tranngocchuyen1980@gmail.com' ||
+        request.auth.token.email == 'teambosskingdom2@gmail.com'
+      );
     }
 
-    function isInstructor() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor';
+    function isTeacher() {
+      // App uses role='teacher' (not 'instructor')
+      return isAuthenticated() && getUserRole() == 'teacher';
     }
 
-    // ===============================================================
-    // Collection Rules
-    // ===============================================================
+    function isStudent() {
+      return isAuthenticated() && (getUserRole() == 'student' || getUserRole() == 'vip');
+    }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // users
+    // ═══════════════════════════════════════════════════════════════════
     match /users/{userId} {
+      // Any signed-in user can read profiles (for avatar display, etc.)
       allow read: if isAuthenticated();
+      // Only the owner can create their own doc (role enforced to student on signup)
       allow create: if isOwner(userId) && request.resource.data.role == 'student';
-      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
+      // Owner can update their own profile, but cannot escalate their role
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role
+        || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // courses
+    // ═══════════════════════════════════════════════════════════════════
     match /courses/{courseId} {
-      allow read: if true; // Publicly readable
-      allow create: if isInstructor() || isAdmin();
-      allow update: if isAdmin() || (isInstructor() && resource.data.instructor_id == request.auth.uid);
+      allow read: if true; // Public catalog
+      allow create: if isTeacher() || isAdmin();
+      allow update: if isAdmin()
+        || (isTeacher() && (
+             resource.data.teacherId == request.auth.uid ||
+             resource.data.instructor_id == request.auth.uid
+           ));
       allow delete: if isAdmin();
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // categories
+    // ═══════════════════════════════════════════════════════════════════
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // enrollments
+    // ═══════════════════════════════════════════════════════════════════
     match /enrollments/{enrollmentId} {
-      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      // Student sees own enrollments; Teacher sees their course enrollments; Admin sees all
+      allow read: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        isTeacher() ||
+        isAdmin()
+      );
       allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
-      allow update: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
       allow delete: if isAdmin();
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // leads (WOA newsletter sign-ups)
+    // ═══════════════════════════════════════════════════════════════════
+    match /leads/{leadId} {
+      allow read:   if isAdmin();
+      allow create: if true; // Open sign-up
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // payments
+    // ═══════════════════════════════════════════════════════════════════
+    match /payments/{paymentId} {
+      // Student sees own; Teacher sees payments tied to their teacher_id; Admin sees all
+      allow read: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        resource.data.teacher_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow update: if isAdmin(); // Only Admin can confirm / reject
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // certificates
+    // ═══════════════════════════════════════════════════════════════════
+    match /certificates/{certId} {
+      allow read: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
+      allow create: if isAdmin(); // Only system/admin grants certs
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
   }
 }
+

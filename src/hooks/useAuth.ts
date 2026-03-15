@@ -31,15 +31,16 @@ export function useAuth() {
       if (docSnap.exists()) {
         setProfile(docSnap.data() as Profile);
       } else {
-        // P1.5 Fix: Never hardcode email-based role assignment.
-        // New users always start as 'student'. Instructor role must be
-        // granted explicitly via Firestore (e.g., by admin or manual update).
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+
         const newProfile: Profile = {
           id: userId,
           email: firebaseUser.email || '',
           full_name: firebaseUser.displayName || 'Học viên mới',
           avatar_url: firebaseUser.photoURL || null,
           role: 'student',
+          referred_by: refCode || null,
           created_at: new Date().toISOString(),
         };
         await setDoc(docRef, newProfile);

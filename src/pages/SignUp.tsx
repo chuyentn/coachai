@@ -6,8 +6,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Github, Chrome, ArrowRight, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useTranslation } from 'react-i18next';
 
 export const SignUp: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -27,6 +29,10 @@ export const SignUp: React.FC = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Capture referral code from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+
       // Update Firebase Auth profile
       await updateProfile(user, { displayName: fullName });
 
@@ -37,6 +43,7 @@ export const SignUp: React.FC = () => {
         full_name: fullName,
         avatar_url: null,
         role: 'student',
+        referred_by: refCode || null,
         created_at: new Date().toISOString(),
       });
 
@@ -45,9 +52,9 @@ export const SignUp: React.FC = () => {
     } catch (err: any) {
       console.error('Sign up error:', err);
       if (err.code === 'auth/email-already-in-use') {
-        setError('Email này đã được sử dụng.');
+        setError(t('auth.emailInUse'));
       } else if (err.code === 'auth/weak-password') {
-        setError('Mật khẩu quá yếu.');
+        setError(t('auth.weakPassword'));
       } else {
         setError(err.message);
       }
@@ -60,7 +67,17 @@ export const SignUp: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const user = userCredential.user;
+
+      // Check if profile exists, if not create it with ref code
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+
+      // The profile creation is also handled in useAuth.ts, 
+      // but we ensure it's captured here or let useAuth handle it.
+      // For Google Sign-In, it's safer to check and set here if it's the first time.
+      
       navigate('/dashboard/student');
     } catch (err: any) {
       console.error('Google sign in error:', err);
@@ -72,23 +89,22 @@ export const SignUp: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F9FAFB] p-4">
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F9FAFB] dark:bg-slate-950 p-4 transition-colors duration-300">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-black/5 border border-black/5 p-8 text-center"
+          className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-black/5 dark:shadow-indigo-500/5 border border-black/5 dark:border-slate-800 p-8 text-center"
         >
           <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 size={40} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Đăng ký thành công!</h1>
-          <p className="text-gray-500 mb-8 text-sm leading-relaxed">
-            Chào mừng {fullName}! Tài khoản của bạn đã được khởi tạo thành công. 
-            Bây giờ bạn có thể bắt đầu khám phá các khóa học.
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('auth.signUpSuccess')}</h1>
+          <p className="text-gray-500 dark:text-slate-400 mb-8 text-sm leading-relaxed">
+            {t('auth.signUpSuccessMsg', { name: fullName })}
           </p>
           <div className="flex items-center justify-center gap-2 text-indigo-600 font-medium">
             <Loader2 className="animate-spin" size={18} />
-            <span>Đang chuyển hướng đến trang đăng nhập...</span>
+            <span>{t('auth.redirecting')}</span>
           </div>
         </motion.div>
       </div>
@@ -96,15 +112,15 @@ export const SignUp: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F9FAFB] p-4">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F9FAFB] dark:bg-slate-950 p-4 transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-black/5 border border-black/5 p-8"
+        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-black/5 dark:shadow-indigo-500/5 border border-black/5 dark:border-slate-800 p-8"
       >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Tạo tài khoản mới</h1>
-          <p className="text-gray-500">Bắt đầu hành trình học tập của bạn ngay hôm nay</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.createAccount')}</h1>
+          <p className="text-gray-500 dark:text-slate-400">{t('auth.startJourney')}</p>
         </div>
 
         {error && (
@@ -115,14 +131,14 @@ export const SignUp: React.FC = () => {
 
         <form onSubmit={handleSignUp} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700 ml-1">Họ và tên</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">{t('auth.fullName')}</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <input
                 type="text"
                 required
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                placeholder="Nguyễn Văn A"
+                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                placeholder={t('auth.namePlaceholder')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
@@ -130,14 +146,14 @@ export const SignUp: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700 ml-1">Email</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">{t('auth.email')}</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <input
                 type="email"
                 required
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                placeholder="name@example.com"
+                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                placeholder={t('auth.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -145,22 +161,22 @@ export const SignUp: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700 ml-1">Mật khẩu</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">{t('auth.password')}</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 minLength={6}
-                className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                placeholder="•••••••• (ít nhất 6 ký tự)"
+                className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                placeholder={t('auth.pwdPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -171,33 +187,33 @@ export const SignUp: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition-all disabled:opacity-50"
+            className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-800 dark:hover:bg-slate-100 transition-all disabled:opacity-50"
           >
-            {loading ? <Loader2 className="animate-spin" /> : 'Đăng ký tài khoản'}
+            {loading ? <Loader2 className="animate-spin" /> : t('auth.signUpBtn')}
             {!loading && <ArrowRight size={18} />}
           </button>
         </form>
 
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
+            <div className="w-full border-t border-gray-200 dark:border-slate-800"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">Hoặc đăng ký với</span>
+            <span className="bg-white dark:bg-slate-900 px-2 text-gray-500 dark:text-slate-400">{t('auth.orSignUpWith')}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={handleGoogleSignIn}
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all font-medium text-sm text-slate-700 dark:text-slate-300"
           >
             <Chrome size={18} />
             Google
           </button>
           <button
-            onClick={() => setError('Đăng ký GitHub hiện chưa khả dụng.')}
-            className="flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+            onClick={() => setError(t('auth.githubSignUpError'))}
+            className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all font-medium text-sm text-slate-700 dark:text-slate-300"
           >
             <Github size={18} />
             GitHub
@@ -205,8 +221,8 @@ export const SignUp: React.FC = () => {
         </div>
 
         <p className="mt-8 text-center text-sm text-gray-500">
-          Đã có tài khoản?{' '}
-          <Link to="/auth/signin" className="text-indigo-600 font-semibold hover:underline">Đăng nhập</Link>
+          {t('auth.alreadyHaveAccount')}{' '}
+          <Link to="/auth/signin" className="text-indigo-600 font-semibold hover:underline">{t('auth.signInBtn')}</Link>
         </p>
       </motion.div>
     </div>

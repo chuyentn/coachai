@@ -6,13 +6,15 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Course, Enrollment } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { googleSheetsService } from '../services/googleSheetsService';
-import { CheckCircle2, Lock, PlayCircle, ShieldCheck, Clock, Award, Loader2, MessageSquare, Send, User as UserIcon, List, FileText, CreditCard, Share2, AlertTriangle, X, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, Lock, PlayCircle, ShieldCheck, Clock, Award, Loader2, MessageSquare, Send, User as UserIcon, List, FileText, FileBox, Calendar, CreditCard, Share2, AlertTriangle, X, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useTranslation } from 'react-i18next';
 
 export const CourseDetails: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -103,54 +105,33 @@ export const CourseDetails: React.FC = () => {
     }
   };
 
-  const handleEnroll = async (method: 'vnpay' | 'momo' | 'paypal') => {
+  const handleEnroll = async () => {
     if (!profile) {
       navigate('/auth/signin');
       return;
     }
 
     setPaying(true);
-    setPayError(null); // P4.7: reset inline error
-    try {
-      if (method === 'vnpay') {
-        // P1.2 Fix: Do NOT create enrollment here. Enrollment is created server-side
-        // only after VNPAY callback verifies the payment signature successfully.
-        const res = await axios.post('/api/payments/vnpay/create', {
-          amount: course?.price_vnd,
-          orderId: `ENROLL_${Date.now()}`,
-          orderInfo: `Thanh toan khoa hoc: ${course?.title}`,
-          userId: profile.id,
-          courseId: course?.id,
-        });
-
-        window.location.href = res.data.url;
-      } else {
-        setPayError('Phương thức này đang được bảo trì. Vui lòng chọn VNPAY.'); // P4.7
-      }
-    } catch (err) {
-      console.error(err);
-      setPayError('Đã có lỗi xảy ra khi khởi tạo thanh toán. Vui lòng thử lại.'); // P4.7
-    } finally {
-      setPaying(false);
-    }
+    // Redirect cleanly to the central Payment page
+    navigate(`/payment?plan=course&courseId=${course?.id}&amount=${course?.price_vnd}`);
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-slate-950 transition-colors duration-300">
       <Loader2 className="animate-spin text-indigo-600 w-10 h-10" />
     </div>
   );
 
   if (!course) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-slate-950 px-4 transition-colors duration-300">
       <div className="text-center max-w-sm">
-        <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-slate-300">
+        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-slate-300 dark:text-slate-600">
           <Lock size={40} />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 mb-3">Khóa học không tồn tại</h2>
-        <p className="text-slate-500 mb-8 font-medium">Khóa học này đã bị xóa hoặc đang được cập nhật. Hãy khám phá các khóa học khác!</p>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">{t('courseDetails.notFound')}</h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-8 font-medium">{t('courseDetails.notFoundDesc')}</p>
         <button onClick={() => navigate('/')} className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200">
-          Xem các khóa học khác
+          {t('courseDetails.viewOtherCourses')}
         </button>
       </div>
     </div>
@@ -159,7 +140,7 @@ export const CourseDetails: React.FC = () => {
   const isEnrolled = enrollment?.status === 'completed';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 pb-20 transition-colors duration-300">
       {/* P4.2: Access Denied Banner */}
       {showAccessDenied && (
         <motion.div
@@ -169,7 +150,7 @@ export const CourseDetails: React.FC = () => {
         >
           <div className="flex items-center gap-3 font-bold text-sm">
             <AlertTriangle size={18} />
-            Bạn chưa đăng ký khóa học này. Hãy mua khóa học để bắt đầu học!
+            {t('courseDetails.accessDenied')}
           </div>
           <button onClick={() => setShowAccessDenied(false)} className="p-1 hover:bg-amber-600 rounded-lg transition-colors flex-shrink-0">
             <X size={18} />
@@ -191,7 +172,7 @@ export const CourseDetails: React.FC = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-bold uppercase tracking-widest mb-8">
               <ShieldCheck size={14} />
-              <span>Khóa học Coaching AI Chuyên sâu</span>
+              <span>{t('courseDetails.specialBadge')}</span>
             </div>
             <h1 className="text-5xl md:text-6xl font-black mb-8 leading-[1.1] tracking-tight">
               {course.title}
@@ -204,13 +185,13 @@ export const CourseDetails: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
                   <Clock size={18} className="text-indigo-400" />
                 </div>
-                <span>{lessons.length} bài học chuyên sâu</span>
+                <span>{t('courseDetails.lessonsCount', { count: lessons.length })}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
                   <Award size={18} className="text-indigo-400" />
                 </div>
-                <span>Chứng chỉ quốc tế</span>
+                <span>{t('courseDetails.certBadge')}</span>
               </div>
             </div>
           </motion.div>
@@ -243,20 +224,20 @@ export const CourseDetails: React.FC = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-12">
           {/* Tabs Navigation */}
-          <div className="bg-white p-2 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-wrap gap-2">
+          <div className="inline-flex p-1.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto mb-8">
             {[
-              { id: 'curriculum', label: 'Lộ trình học', icon: List },
-              { id: 'resources', label: 'Tài nguyên', icon: FileText },
-              { id: 'notes', label: 'Ghi chú AI', icon: MessageSquare },
-              { id: 'coaching', label: 'Lịch Coaching', icon: Clock }
+              { id: 'curriculum', label: t('courseDetails.tabCurriculum'), icon: List },
+              { id: 'resources', label: t('courseDetails.tabResources'), icon: FileBox },
+              { id: 'notes', label: t('courseDetails.tabNotes'), icon: FileText },
+              { id: 'coaching', label: t('courseDetails.tabCoaching'), icon: Calendar }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all ${
+                className={`flex-shrink-0 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
                   activeTab === tab.id 
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
                 }`}
               >
                 <tab.icon size={18} />
@@ -265,32 +246,32 @@ export const CourseDetails: React.FC = () => {
             ))}
           </div>
 
-          <section className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-              <h2 className="text-xl font-black text-slate-900">
-                {activeTab === 'curriculum' ? 'Nội dung khóa học' : 
-                 activeTab === 'resources' ? 'Tài liệu đính kèm' :
-                 activeTab === 'notes' ? 'Tóm tắt thông minh từ AI' : 'Lịch Coaching trực tiếp'}
+          <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                {activeTab === 'curriculum' ? t('courseDetails.contentTitle') : 
+                 activeTab === 'resources' ? t('courseDetails.resourcesTitle') :
+                 activeTab === 'notes' ? t('courseDetails.notesTitle') : t('courseDetails.coachingTitle')}
               </h2>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{lessons.length} bài học</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('courseDetails.lessonsSubtitle', { count: lessons.length })}</span>
             </div>
 
             <div className="divide-y divide-slate-50">
               {activeTab === 'curriculum' && lessons.map((lesson, idx) => (
                 <div 
                   key={lesson.id}
-                  className="group flex items-center justify-between p-6 hover:bg-slate-50/80 transition-all cursor-pointer"
+                  className="group flex items-center justify-between p-6 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-6">
-                    <span className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                    <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 font-black text-xs group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {String(idx + 1).padStart(2, '0')}
                     </span>
                     <div>
-                      <span className="font-bold text-slate-700 group-hover:text-slate-900 transition-colors block mb-1">{lesson.title}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors block mb-1">{lesson.title}</span>
                       <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         <span className="flex items-center gap-1"><Clock size={10} /> 15:30</span>
                         <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                        <span>Video bài giảng</span>
+                        <span>{t('courseDetails.videoSubtitle')}</span>
                       </div>
                     </div>
                   </div>
@@ -310,25 +291,25 @@ export const CourseDetails: React.FC = () => {
 
               {activeTab === 'notes' && (
                 <div className="p-8">
-                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-3xl p-8 relative overflow-hidden">
+                  <div className="bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-100 dark:border-indigo-900/50 rounded-3xl p-8 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                       <MessageSquare size={120} />
                     </div>
                     <div className="relative z-10">
                       <div className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest mb-4">
                         <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
-                        AI Summary
+                        {t('courseDetails.aiSummary')}
                       </div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-4">Tóm tắt lộ trình học tập</h3>
-                      <p className="text-slate-600 leading-relaxed mb-6">
-                        Khóa học này tập trung vào việc ứng dụng AI để tự động hóa quy trình kinh doanh. Bạn sẽ bắt đầu từ việc hiểu các mô hình ngôn ngữ lớn (LLM), sau đó tiến tới xây dựng các Agent AI có khả năng tự thực hiện nhiệm vụ phức tạp.
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('courseDetails.aiSummaryTitle')}</h3>
+                      <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                        {t('courseDetails.aiSummaryDesc')}
                       </p>
                       <div className="grid sm:grid-cols-2 gap-4">
                         {[
-                          'Làm thế nào để viết Prompt hiệu quả?',
-                          'Cách kết nối AI với Google Sheets?',
-                          'Xây dựng Chatbot hỗ trợ khách hàng',
-                          'Tối ưu hóa chi phí API'
+                          t('courseDetails.aiQuestions_0'),
+                          t('courseDetails.aiQuestions_1'),
+                          t('courseDetails.aiQuestions_2'),
+                          t('courseDetails.aiQuestions_3')
                         ].map((q, i) => (
                           <button key={i} className="flex items-center gap-3 p-4 bg-white border border-indigo-100 rounded-2xl text-xs font-bold text-slate-700 hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-500/5 transition-all text-left">
                             <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
@@ -348,10 +329,10 @@ export const CourseDetails: React.FC = () => {
           {/* Comments Section */}
           <section className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
             <div className="flex items-center justify-between mb-10">
-              <h2 className="text-2xl font-black text-slate-900">Thảo luận khóa học</h2>
+              <h2 className="text-2xl font-black text-slate-900">{t('courseDetails.discussionsTitle')}</h2>
               <div className="flex items-center gap-2 text-slate-400 text-sm font-bold">
                 <MessageSquare size={18} />
-                <span>{comments.length} bình luận</span>
+                <span>{t('courseDetails.commentsCount', { count: comments.length })}</span>
               </div>
             </div>
 
@@ -361,7 +342,7 @@ export const CourseDetails: React.FC = () => {
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Chia sẻ suy nghĩ hoặc đặt câu hỏi cho giảng viên..."
+                    placeholder={t('courseDetails.commentPlaceholder')}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 text-slate-700 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none min-h-[120px] resize-none"
                   />
                   <div className="absolute bottom-4 right-4">
@@ -371,19 +352,19 @@ export const CourseDetails: React.FC = () => {
                       className="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
                     >
                       {submittingComment ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
-                      Gửi bình luận
+                      {t('courseDetails.submitComment')}
                     </button>
                   </div>
                 </div>
               </form>
             ) : (
               <div className="bg-slate-50 border border-slate-100 rounded-3xl p-8 text-center mb-12">
-                <p className="text-slate-600 font-medium mb-4">Đăng nhập để tham gia thảo luận cùng cộng đồng.</p>
+                <p className="text-slate-600 font-medium mb-4">{t('courseDetails.loginToComment')}</p>
                 <button 
                   onClick={() => navigate('/auth/signin')}
                   className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
                 >
-                  Đăng nhập ngay
+                  {t('courseDetails.loginNow')}
                 </button>
               </div>
             )}
@@ -415,10 +396,10 @@ export const CourseDetails: React.FC = () => {
                     </div>
                     <div className="flex-grow">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-bold text-slate-900">{comment.userName || comment.user_name}</h4>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <h4 className="font-bold text-slate-900 dark:text-white">{comment.userName || comment.user_name}</h4>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           {comment.timestamp ? format(new Date(comment.timestamp), 'dd/MM/yyyy', { locale: vi }) : 
-                           comment.created_at ? new Date(comment.created_at).toLocaleDateString('vi-VN') : 'Vừa xong'}
+                           comment.created_at ? new Date(comment.created_at).toLocaleDateString('vi-VN') : t('courseDetails.justNow')}
                         </span>
                       </div>
                       <div className="bg-slate-50 rounded-2xl p-5 text-slate-600 leading-relaxed border border-slate-100">
@@ -430,7 +411,7 @@ export const CourseDetails: React.FC = () => {
               ) : (
                 <div className="text-center py-12 text-slate-400">
                   <MessageSquare size={48} className="mx-auto mb-4 opacity-10" />
-                  <p className="font-bold uppercase tracking-widest text-xs">Chưa có bình luận nào</p>
+                  <p className="font-bold uppercase tracking-widest text-xs">{t('courseDetails.noComments')}</p>
                 </div>
               )}
             </div>
@@ -443,14 +424,14 @@ export const CourseDetails: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-indigo-500/5 overflow-hidden"
             >
               <div className="p-8">
                 <div className="flex items-end gap-2 mb-8">
-                  <span className="text-4xl font-black text-slate-900">
+                  <span className="text-4xl font-black text-slate-900 dark:text-white">
                     {course.price_vnd?.toLocaleString('vi-VN')}
                   </span>
-                  <span className="text-slate-400 font-bold mb-1">VNĐ</span>
+                  <span className="text-slate-400 font-bold mb-1">{t('courseDetails.currency')}</span>
                 </div>
 
                 {isEnrolled ? (
@@ -459,37 +440,31 @@ export const CourseDetails: React.FC = () => {
                     className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-3 mb-6"
                   >
                     <PlayCircle size={24} />
-                    Tiếp tục học ngay
+                    {t('courseDetails.continueLearning')}
                   </button>
                 ) : (
                   <div className="space-y-4 mb-8">
                     <button
-                      onClick={() => handleEnroll('vnpay')}
+                      onClick={handleEnroll}
                       disabled={paying}
                       className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-50"
                     >
                       {paying ? <Loader2 className="animate-spin" /> : <CreditCard size={24} />}
-                      Đăng ký bằng VNPAY
+                      Đăng ký khóa học
                     </button>
-                    <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest">Hoặc thanh toán qua</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button className="flex items-center justify-center p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-indigo-200 transition-all">
-                        <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" className="h-6 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" alt="MoMo" />
-                      </button>
-                      <button className="flex items-center justify-center p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-indigo-200 transition-all">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" className="h-5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" alt="PayPal" />
-                      </button>
-                    </div>
+                    {payError && (
+                      <p className="text-center text-sm font-bold text-rose-500 bg-rose-50 p-3 rounded-lg border border-rose-100">{payError}</p>
+                    )}
                   </div>
                 )}
 
                 <div className="space-y-5">
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Đặc quyền khóa học</h4>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('courseDetails.coursePerks')}</h4>
                   {[
-                    { icon: ShieldCheck, text: 'Truy cập trọn đời' },
-                    { icon: MessageSquare, text: 'Hỗ trợ 1:1 từ AI Coach' },
-                    { icon: Award, text: 'Chứng chỉ hoàn thành' },
-                    { icon: Clock, text: 'Cập nhật nội dung mới' }
+                    { icon: ShieldCheck, text: t('courseDetails.perkLifetimeAccess') },
+                    { icon: MessageSquare, text: t('courseDetails.perkAiSupport') },
+                    { icon: Award, text: t('courseDetails.perkCertificate') },
+                    { icon: Clock, text: t('courseDetails.perkUpdates') }
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3 text-sm font-bold text-slate-600">
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-indigo-600">
@@ -501,8 +476,8 @@ export const CourseDetails: React.FC = () => {
                 </div>
               </div>
               
-              <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-4">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chia sẻ khóa học</span>
+              <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-4">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('courseDetails.shareCourse')}</span>
                 <div className="flex gap-2">
                   {['fb', 'tw', 'ln'].map(s => (
                     <button key={s} className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all">
@@ -518,12 +493,12 @@ export const CourseDetails: React.FC = () => {
                 <ShieldCheck size={120} />
               </div>
               <div className="relative z-10">
-                <h3 className="text-xl font-black mb-4">Cam kết chất lượng</h3>
+                <h3 className="text-xl font-black mb-4">{t('courseDetails.qualityCommitment')}</h3>
                 <p className="text-indigo-100 text-sm leading-relaxed mb-6">
-                  Hoàn tiền 100% trong vòng 7 ngày nếu bạn không hài lòng với chất lượng nội dung khóa học.
+                  {t('courseDetails.qualityDesc')}
                 </p>
                 <button className="w-full bg-white/10 backdrop-blur-md border border-white/20 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-                  Tìm hiểu thêm
+                  {t('courseDetails.learnMore')}
                 </button>
               </div>
             </div>

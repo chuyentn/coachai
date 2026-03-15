@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Phone, User, Mail, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { X, Send, Phone, User, Mail, MessageSquare, CheckCircle2, Star, ChevronDown } from 'lucide-react';
 import { googleSheetsService } from '../services/googleSheetsService';
+import { useTranslation } from 'react-i18next';
 
 export const LeadPopup: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,13 +17,41 @@ export const LeadPopup: React.FC = () => {
   });
 
   useEffect(() => {
-    // Show popup after 5 seconds if not submitted before
+    // Show popup after 60 seconds or on exit intent, but only if not submitted and not dismissed recently
     const hasSubmitted = localStorage.getItem('lead_submitted');
-    if (!hasSubmitted) {
-      const timer = setTimeout(() => setIsOpen(true), 5000);
-      return () => clearTimeout(timer);
+    const lastDismissed = localStorage.getItem('lead_dismissed_at');
+    
+    // Check if dismissed in the last 7 days
+    if (lastDismissed) {
+      const daysSinceDismissal = (Date.now() - parseInt(lastDismissed)) / (1000 * 60 * 60 * 24);
+      if (daysSinceDismissal < 7) return;
     }
-  }, []);
+
+    if (!hasSubmitted) {
+      const timer = setTimeout(() => setIsOpen(true), 60000); // Increased to 60s
+      
+      const handleMouseLeave = (e: MouseEvent) => {
+        if (e.clientY <= 0) {
+          setIsOpen(true);
+        }
+      };
+      
+      // Only attach leave listener if we haven't shown it yet
+      if (!isOpen) {
+        document.addEventListener('mouseleave', handleMouseLeave);
+      }
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('mouseleave', handleMouseLeave);
+      };
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    localStorage.setItem('lead_dismissed_at', Date.now().toString());
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,111 +80,110 @@ export const LeadPopup: React.FC = () => {
       {isOpen && (
         // P2.4 Fix: The backdrop is now a child inside AnimatePresence-animated element,
         // so it disappears atomically with the modal — no lingering invisible overlay.
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}
-        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm"
+            onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+          >
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-black/5"
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-black/5 dark:border-slate-800"
           >
             {/* Close Button */}
             <button
-              onClick={() => setIsOpen(false)}
-              className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+              onClick={handleClose}
+              className="absolute top-6 right-6 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors z-10"
             >
-              <X size={20} className="text-gray-400" />
+              <X size={20} className="text-slate-400" />
             </button>
-
             {!submitted ? (
               <div className="p-8 md:p-12">
                 <div className="mb-8">
-                  <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Đăng ký tư vấn Coaching</h2>
-                  <p className="text-gray-500 mt-2">Để lại thông tin để nhận lộ trình học tập 1:1 cùng chuyên gia AI.</p>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500 rounded-full text-xs font-bold mb-4 border border-amber-200 dark:border-amber-500/20 shadow-sm">
+                    <Star size={12} fill="currentColor" /> {t('leadPopup.badge')}
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{t('leadPopup.title')}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 mt-3 font-medium text-sm md:text-base">{t('leadPopup.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       required
                       type="text"
-                      placeholder="Họ và tên"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      placeholder={t('leadPopup.name')}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all placeholder:text-slate-400"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
 
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       required
                       type="email"
-                      placeholder="Email liên hệ"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      placeholder={t('leadPopup.email')}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all placeholder:text-slate-400"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
 
                   <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       required
                       type="tel"
-                      placeholder="Số điện thoại"
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      placeholder={t('leadPopup.phone')}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all placeholder:text-slate-400"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
 
                   <div className="relative">
-                    <MessageSquare className="absolute left-4 top-4 text-gray-400" size={18} />
+                    <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <select
                       required
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none"
+                      className="w-full pl-12 pr-10 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all appearance-none font-medium"
                       value={formData.note}
                       onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                     >
-                      <option value="">Chọn nhu cầu học tập</option>
-                      <option value="Coaching 1:1 - Vibe Code AI">Coaching 1:1 - Vibe Code AI</option>
-                      <option value="Coaching 1:1 - AI Automation">Coaching 1:1 - AI Automation</option>
-                      <option value="Coaching 1:1 - AI Master Prompt">Coaching 1:1 - AI Master Prompt</option>
-                      <option value="Coaching 1:1 - Video AI Marketing">Coaching 1:1 - Video AI Marketing</option>
-                      <option value="Video Online - Trọn bộ AI">Video Online - Trọn bộ AI</option>
-                      <option value="Khác">Nhu cầu khác...</option>
+                      <option value="">{t('leadPopup.selectStagePlaceholder')}</option>
+                      <option value="Hoàn toàn mới, chưa biết gì">{t('leadPopup.stageNew')}</option>
+                      <option value="Đã học cơ bản, muốn làm dự án thật">{t('leadPopup.stageBasic')}</option>
+                      <option value="Đã có dự án, cần tối ưu / scale">{t('leadPopup.stageAdvanced')}</option>
                     </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-200 disabled:opacity-50"
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-indigo-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {loading ? 'Đang gửi...' : 'Nhận tư vấn ngay'}
-                    <Send size={18} />
+                    {loading ? t('leadPopup.loading') : `✉️ ${t('leadPopup.btnSubmit')}`}
                   </button>
                 </form>
 
-                <p className="text-center text-xs text-gray-400 mt-6">
-                  Cam kết bảo mật thông tin 100%. Chúng tôi sẽ liên hệ lại trong vòng 24h.
+                <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-6 font-medium">
+                  {t('leadPopup.privacy')}
                 </p>
               </div>
             ) : (
               <div className="p-12 text-center">
-                <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 size={40} />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900">Gửi thành công!</h2>
-                <p className="text-gray-500 mt-4">
-                  Cảm ơn bạn đã quan tâm. Đội ngũ Edu Victor Chuyen sẽ liên hệ với bạn sớm nhất.
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('leadPopup.successTitle')}</h2>
+                <p className="text-slate-500 dark:text-slate-400 mt-4 font-medium">
+                  {t('leadPopup.successDesc')}
                 </p>
               </div>
             )}

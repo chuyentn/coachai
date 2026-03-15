@@ -150,6 +150,89 @@ async function startServer() {
     res.json({ url: "https://test-payment.momo.vn/..." });
   });
 
+  // --- SEPAY Webhook Integration (Free Automated VietQR Variant) ---
+  app.post("/api/webhooks/sepay", async (req, res) => {
+    const { transferAmount, content } = req.body;
+
+    if (!transferAmount || !content) {
+      return res.status(400).json({ error: "Invalid webhook payload" });
+    }
+
+    try {
+      // 1. Extract transaction code using regex (e.g. EVABCD1234)
+      const matches = String(content).toUpperCase().match(/EV[A-Z0-9]{4}\d{4}/);
+      const transactionCode = matches ? matches[0] : null;
+
+      if (!transactionCode) {
+        console.warn(`SePay: No transaction code found in content: ${content}`);
+        return res.json({ success: true, message: "Ignored: No EV code" });
+      }
+
+      const { initializeApp, getApps, getApp } = await import("firebase-admin/app");
+      const { getFirestore } = await import("firebase-admin/firestore");
+
+      if (!getApps().length) {
+        initializeApp();
+      }
+      const adminDb = getFirestore(getApp());
+
+      // 2. Query the pending payment by transaction_code
+      const paymentsRef = adminDb.collection("payments");
+      const snapshot = await paymentsRef
+        .where("transaction_code", "==", transactionCode)
+        .where("status", "==", "pending")
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) {
+        console.warn(`SePay: Pending payment not found for code: ${transactionCode}`);
+        return res.json({ success: true, message: "Ignored: Payment not found or already processed" });
+      }
+
+      const paymentDoc = snapshot.docs[0];
+      const paymentData = paymentDoc.data();
+
+      // 3. Verify amount
+      if (Number(transferAmount) < Number(paymentData.amount)) {
+        console.warn(`SePay: Insufficient amount for ${transactionCode}. Expected ${paymentData.amount}, got ${transferAmount}`);
+        return res.json({ success: true, message: "Ignored: Insufficient amount" });
+      }
+
+      // 4. Fulfillment: Update payment status
+      await paymentDoc.ref.update({ status: 'completed' });
+
+      // 5. Grant access based on plan
+      if (paymentData.plan_type === 'course' && paymentData.course_id) {
+        // Create course enrollment
+        const enrollId = `${paymentData.user_id}_${paymentData.course_id}`;
+        await adminDb.collection("enrollments").doc(enrollId).set({
+          id: enrollId,
+          user_id: paymentData.user_id,
+          course_id: paymentData.course_id,
+          status: "completed",
+          payment_method: "sepay_vietqr",
+          amount_paid: Number(paymentData.amount),
+          currency: "VND",
+          created_at: new Date().toISOString(),
+          completion_percentage: 0,
+          progress: {},
+        });
+        console.log(`[SePay] Auto-enrolled ${paymentData.user_email} to course ${paymentData.course_id}`);
+      } else if (paymentData.plan_type === 'vip') {
+        // Upgrade user role
+        await adminDb.collection("users").doc(paymentData.user_id).update({
+          role: 'vip'
+        });
+        console.log(`[SePay] Upgraded ${paymentData.user_email} to VIP`);
+      }
+
+      return res.json({ success: true, message: "Processed successfully" });
+    } catch (error) {
+      console.error("SePay webhook error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // --- PayPal Integration ---
   app.post("/api/payments/paypal/create", (req, res) => {
     // PayPal usually handled client-side with @paypal/react-paypal-js

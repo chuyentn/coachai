@@ -4,7 +4,7 @@ import { db } from '../lib/firebase';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { googleSheetsService } from '../services/googleSheetsService';
-import { PlayCircle, CheckCircle2, ChevronLeft, Menu, FileText, MessageSquare, Award, Send, Sparkles, BookOpen, Info, Download, Loader2 } from 'lucide-react';
+import { Play, FileText, CheckCircle2, Lock, ChevronLeft, ChevronRight, MessageSquare, Download, PlayCircle, Bot, Sparkles, Send, MoveLeft, Loader2, Zap, X, ArrowRight, BookOpen, Menu, Award, ShoppingCart } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { motion, AnimatePresence } from 'motion/react';
 import { AICoach } from '../components/AICoach';
@@ -19,12 +19,14 @@ export const LearningPlayer: React.FC = () => {
   const [enrollment, setEnrollment] = useState<any>(null);
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'ai-coach' | 'discussion' | 'resources'>('overview');
   
   // Comment state
   const [comment, setComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(false);
 
   useEffect(() => {
     if (id && profile) fetchLearningData();
@@ -48,10 +50,9 @@ export const LearningPlayer: React.FC = () => {
       if (courseData) {
         setCourse(courseData);
 
-        // P2.5 Fix: Guard against unenrolled users accessing the player.
-        // If no enrollment record found, redirect to course details page.
+        // Guard: no enrollment → show PaywallGate in-place instead of redirecting
         if (!enrollData) {
-          navigate(`/courses/${id}?access=denied`, { replace: true });
+          setAccessDenied(true);
           return;
         }
 
@@ -148,15 +149,86 @@ export const LearningPlayer: React.FC = () => {
           progress: newProgress, 
           completion_percentage: newPercentage 
         });
-        alert('Chúc mừng! Bạn đã hoàn thành bài học này.');
+
+        // MVP Phase 1: Show upsell modal if progress hits >= 30% and not VIP
+        const previousPercentage = enrollment?.completion_percentage || 0;
+        if (newPercentage >= 30 && previousPercentage < 30 && profile?.role !== 'vip') {
+          setShowUpsell(true);
+        } else {
+          alert('Chúc mừng! Bạn đã hoàn thành bài học này.');
+        }
       }
     } catch (error) {
       console.error('Error marking lesson as complete:', error);
     }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-black text-white">Đang tải lớp học...</div>;
-  if (!course) return <div>Không tìm thấy khóa học</div>;
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center bg-[#0A0A0B] text-white">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="animate-spin text-indigo-400 w-12 h-12" />
+        <p className="text-slate-400 font-medium animate-pulse">Đang tải lớp học...</p>
+      </div>
+    </div>
+  );
+
+  // PaywallGate: user is not enrolled
+  if (accessDenied) return (
+    <div className="h-screen flex items-center justify-center bg-[#0A0A0B] text-white p-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-md w-full text-center"
+      >
+        {/* Icon */}
+        <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+          <Lock size={36} className="text-indigo-400" />
+        </div>
+
+        {/* Course title if available */}
+        {course?.title && (
+          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+            <BookOpen size={10} /> {course.title}
+          </p>
+        )}
+
+        <h1 className="text-2xl font-bold text-white mb-3">Bạn chưa sở hữu khóa học này</h1>
+        <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+          Để truy cập nội dung, bạn cần mua khóa học này trước. Nhấn "Mua ngay" để xem các gói học phù hợp.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex-1 py-3.5 px-6 rounded-2xl border border-white/10 text-slate-300 font-bold hover:bg-white/5 transition-all"
+          >
+            ← Quay lại
+          </button>
+          <a
+            href="/pricing"
+            className="flex-1 py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
+          >
+            <ShoppingCart size={18} /> Mua ngay
+          </a>
+        </div>
+
+        {/* Optional: social proof */}
+        <p className="text-xs text-slate-600 mt-6">🔒 Thanh toán an toàn · Hỗ trợ 24/7 · Hoàn tiền 7 ngày</p>
+      </motion.div>
+    </div>
+  );
+
+  if (!course) return (
+    <div className="h-screen flex items-center justify-center bg-[#0A0A0B] text-white">
+      <div className="text-center">
+        <BookOpen size={48} className="mx-auto mb-4 text-slate-600" />
+        <p className="text-lg font-bold text-slate-400">Không tìm thấy khóa học</p>
+        <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm font-bold hover:bg-white/10 transition-all">
+          ← Quay lại
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-screen flex flex-col bg-[#0A0A0B] text-white overflow-hidden font-sans">
@@ -267,26 +339,28 @@ export const LearningPlayer: React.FC = () => {
             </div>
             
             {/* Tabs Navigation */}
-            <div className="flex gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/10 mb-10 w-fit">
-              {[
-                { id: 'overview', label: 'Tổng quan', icon: Info },
-                { id: 'ai-coach', label: 'AI Coach', icon: Sparkles },
-                { id: 'resources', label: 'Tài liệu', icon: Download },
-                { id: 'discussion', label: 'Thảo luận', icon: MessageSquare },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    activeTab === tab.id 
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-                      : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                  }`}
-                >
-                  <tab.icon size={14} />
-                  {tab.label}
-                </button>
-              ))}
+            <div className="flex px-6 pb-0 overflow-x-auto hide-scrollbar mb-6">
+              <div className="inline-flex p-1.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl gap-1">
+                {[
+                  { id: 'overview', label: 'Tổng quan', icon: FileText },
+                  { id: 'ai-coach', label: 'Hỏi AI Coach', icon: Bot },
+                  { id: 'resources', label: 'Tài liệu', icon: Download },
+                  { id: 'discussion', label: 'Thảo luận', icon: MessageSquare }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex-shrink-0 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
+                      activeTab === tab.id 
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100' 
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
+                    }`}
+                  >
+                    <tab.icon size={16} />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Tab Content */}
@@ -488,6 +562,61 @@ export const LearningPlayer: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* 30% Upsell Modal */}
+      <AnimatePresence>
+        {showUpsell && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#111113] border border-white/10 p-8 md:p-10 rounded-[2.5rem] max-w-md w-full text-center relative shadow-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-indigo-500/20 to-transparent blur-2xl pointer-events-none" />
+              
+              <button 
+                onClick={() => setShowUpsell(false)}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-all z-10"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 bg-indigo-500/10 text-indigo-400 rounded-full flex items-center justify-center mb-6 shadow-inner shadow-indigo-500/20 border border-indigo-500/20">
+                  <Award size={40} className="drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+                </div>
+                
+                <h3 className="text-2xl font-black text-white mb-3">Bạn Học Rất Tuyệt Vời!</h3>
+                <p className="text-slate-400 leading-relaxed mb-6">Bạn đã hoàn thành 30% khóa học. Đã đến lúc tăng tốc dự án bằng cách sử dụng Source Code đầy đủ và Nhận Coaching 1:1.</p>
+                
+                <div className="w-full space-y-3">
+                  <button 
+                    onClick={() => {
+                      setShowUpsell(false);
+                      navigate('/auth/signup?plan=vip');
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl font-black text-sm hover:scale-[1.02] flex items-center justify-center gap-2 transition-transform shadow-xl shadow-rose-500/20"
+                  >
+                    Nâng Cấp VIP Ngay <ArrowRight size={18} />
+                  </button>
+                  <button 
+                    onClick={() => setShowUpsell(false)}
+                    className="w-full py-4 bg-white/5 text-slate-300 rounded-2xl font-bold text-sm hover:bg-white/10 transition-colors"
+                  >
+                    Tiếp tục học miễn phí
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
