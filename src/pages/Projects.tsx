@@ -97,8 +97,19 @@ export const Projects = () => {
         body: JSON.stringify(payload),
         mode: 'no-cors' // Use no-cors since Apps Script often has strict CORS defaults for POST
       });
+      // Trigger the backend Cloudflare function to send a welcome email via Resend
+      try {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name, project: selectedProject })
+        });
+      } catch (emailErr) {
+        console.error('Lỗi khi gửi email chào mừng (Resend API):', emailErr);
+        // We don't block the UI success state if only the email fails
+      }
 
-      // Because of no-cors, we can't reliably check res.ok, but we assume success if no catch
+      // Because of no-cors for Google Sheets, we assume success if no catch on the first fetch
       setIsSuccess(true);
 
     } catch (error) {
