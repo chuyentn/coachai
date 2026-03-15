@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "full_name": { "type": "string" },
+        "avatar_url": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "instructor", "admin"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Course information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "instructor_id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "short_description": { "type": "string" },
+        "price_vnd": { "type": "integer" },
+        "price_usd": { "type": "number" },
+        "thumbnail_url": { "type": "string" },
+        "modules": { "type": "array", "items": { "type": "object" } },
+        "published": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "total_students": { "type": "integer" },
+        "total_reviews": { "type": "integer" },
+        "avg_rating": { "type": "number" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["instructor_id", "title", "price_vnd", "published"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Course category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["name", "slug"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "User enrollment in a course",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "course_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] },
+        "completion_percentage": { "type": "integer" },
+        "progress": { "type": "object" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user_id", "course_id", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "courses/{courseId}": {
+      "schema": "Course",
+      "description": "Available courses"
+    },
+    "categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Course categories"
+    },
+    "enrollments/{enrollmentId}": {
+      "schema": "Enrollment",
+      "description": "User course enrollments"
+    }
+  }
+}
