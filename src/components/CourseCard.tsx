@@ -65,10 +65,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </div>
 
         <h3 className="font-black text-xl text-slate-900 dark:text-white line-clamp-2 mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
-          {course.title.includes('JavaScript') ? 'Xây Chatbot AI cho Website trong 1 ngày' :
-           course.title.includes('React') ? 'App AI Sinh Ảnh (SaaS) với React' :
-           course.title.includes('Python') ? 'Tự Động Hóa Affiliate với AI Agent & Python' :
-           course.title}
+          {course.title}
         </h3>
         
         <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 font-medium leading-relaxed">
