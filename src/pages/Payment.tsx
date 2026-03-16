@@ -17,6 +17,11 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+// Import SePay QR Codes
+import sepayFlexible from '../assets/qrcodes/sepay_flexible.png';
+import sepay100k from '../assets/qrcodes/sepay_100k.png';
+import sepay1m from '../assets/qrcodes/sepay_1m.png';
+
 export const Payment: React.FC = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
@@ -132,18 +137,30 @@ export const Payment: React.FC = () => {
             </div>
             <div className="p-8 space-y-6">
               <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 relative group">
-                {/* Mock QR image */}
+                {/* SePay QR images */}
                 <div className="absolute inset-0 flex items-center justify-center p-2">
                   <img 
-                    src={`https://img.vietqr.io/image/techcombank-19035434261013-compact2.jpg?amount=${amountNum}&addInfo=${transactionCode}&accountName=TRAN NGOC CHUYEN`}
-                    alt="VietQR" 
+                    src={
+                      amountNum === 100000 ? sepay100k :
+                      amountNum === 1000000 ? sepay1m :
+                      sepayFlexible
+                    }
+                    alt="SePay QR" 
                     className="w-full h-full object-contain rounded-xl"
                   />
                 </div>
                 <div className="absolute inset-0 bg-white/10 dark:bg-black/10 backdrop-blur-[2px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                   <button className="bg-white dark:bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold shadow-lg flex items-center gap-2 pointer-events-auto hover:bg-slate-50">
+                   <a 
+                     href={
+                       amountNum === 100000 ? sepay100k :
+                       amountNum === 1000000 ? sepay1m :
+                       sepayFlexible
+                     }
+                     download={`SePay_QR_${amountNum}.png`}
+                     className="bg-white dark:bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold shadow-lg flex items-center gap-2 pointer-events-auto hover:bg-slate-50"
+                   >
                      <Download size={14} /> Lưu mã QR
-                   </button>
+                   </a>
                 </div>
               </div>
 
@@ -159,10 +176,10 @@ export const Payment: React.FC = () => {
                 </div>
 
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Số tài khoản</p>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Số tài khoản (BIDV)</p>
                    <div className="flex items-center justify-between">
-                     <span className="font-bold text-slate-900 dark:text-white uppercase tracking-tight tabular-nums">1903 5434 261 013</span>
-                     <button onClick={() => copyToClipboard('19035434261013')} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                     <span className="font-bold text-slate-900 dark:text-white uppercase tracking-tight tabular-nums">6700 067 179</span>
+                     <button onClick={() => copyToClipboard('6700067179')} className="text-slate-400 hover:text-indigo-600 transition-colors">
                        <Copy size={16} />
                      </button>
                    </div>
