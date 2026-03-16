@@ -39,7 +39,7 @@ const Payment = () => {
   React.useEffect(() => {
     if (paymentMethod === 'paypal' && !paypalLoaded) {
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=sb&currency=USD`; // 'sb' for sandbox
+      script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID || 'sb'}&currency=USD`; // Use VITE_PAYPAL_CLIENT_ID for Live mode
       script.async = true;
       script.onload = () => setPaypalLoaded(true);
       document.body.appendChild(script);
