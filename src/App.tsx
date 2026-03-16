@@ -17,6 +17,7 @@ const SignUp = lazy(() => import('./pages/SignUp').then(m => ({ default: m.SignU
 const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword').then(m => ({ default: m.UpdatePassword })));
 const CourseDetails = lazy(() => import('./pages/CourseDetails').then(m => ({ default: m.CourseDetails })));
+const Courses = lazy(() => import('./pages/Courses').then(m => ({ default: m.Courses })));
 const StudentDashboard = lazy(() => import('./pages/dashboard/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
 const TeacherDashboard = lazy(() => import('./pages/dashboard/TeacherDashboard').then(m => ({ default: m.TeacherDashboard })));
 const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -111,7 +112,7 @@ export default function App() {
             <Route path="/auth/reset" element={<ResetPassword />} />
             <Route path="/auth/update-password" element={<UpdatePassword />} />
             <Route path="/courses/:id" element={<CourseDetails />} />
-            <Route path="/courses" element={<Navigate to="/#courses" replace />} />
+            <Route path="/courses" element={<Courses />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/affiliate" element={<Affiliate />} />
             <Route path="/contact" element={<Contact />} />

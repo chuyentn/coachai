@@ -17,10 +17,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const displayDescription = isEn && course.short_description_en ? course.short_description_en : (course.short_description || course.description);
 
   return (
-    <motion.div 
-      whileHover={{ y: -8 }}
-      className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 transition-all group flex flex-col h-full"
-    >
+    <Link to={`/courses/${course.id}`} className="block h-full group outline-none">
+      <motion.div 
+        whileHover={{ y: -8 }}
+        className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 transition-all flex flex-col h-full"
+      >
       <div className="aspect-[16/10] relative overflow-hidden">
         <img
           src={course.thumbnail_url || `https://picsum.photos/seed/${course.id}/600/400`}
@@ -94,14 +95,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
               {t('courseCard.lifetimeAccess')}
             </span>
           </div>
-          <Link
-            to={`/courses/${course.id}`}
-            className="px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-100 dark:shadow-none hover:shadow-indigo-100 flex items-center gap-1 whitespace-nowrap"
-          >
+          <div className="px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-100 dark:shadow-none hover:shadow-indigo-100 flex items-center gap-1 whitespace-nowrap">
             {t('courseCard.viewDetails')}
-          </Link>
+          </div>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 };
