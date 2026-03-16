@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * P3.6: Per-page document title hook.
@@ -9,16 +10,19 @@ import { useEffect } from 'react';
  *
  * Appends the brand suffix automatically unless the title already includes it.
  */
-const BRAND = 'Edu Victor Chuyen';
+const BRAND = 'CoachAI';
 
 export const usePageTitle = (title: string) => {
+  const { t, i18n } = useTranslation();
+  
   useEffect(() => {
-    const fullTitle = title.includes(BRAND) ? title : `${title} | ${BRAND}`;
+    const suffix = t('common.pageTitleSuffix');
+    const fullTitle = title.includes(BRAND) ? title : `${title} | ${BRAND} - ${suffix}`;
     document.title = fullTitle;
 
     // Restore to default on unmount
     return () => {
-      document.title = `${BRAND} | Nền tảng học AI & Coaching hàng đầu Việt Nam`;
+      document.title = `${BRAND} | ${t('home.pageTitle')}`;
     };
-  }, [title]);
+  }, [title, i18n.language, t]);
 };

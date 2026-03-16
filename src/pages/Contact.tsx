@@ -159,7 +159,7 @@ export const Contact = () => {
       <footer className="py-20 bg-white dark:bg-[#0B0E17] border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4">
           <div className="pt-8 flex justify-between items-center gap-4 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-slate-400 text-sm font-medium">{t('affiliate.footerCopyright')}</p>
+            <p className="text-slate-400 text-sm font-medium">{t('common.footerCopyright')}</p>
             <div className="flex items-center gap-6 text-slate-400 text-sm font-medium">
               <Link to="/"><Zap className="text-indigo-600 inline" size={18} /> {t('contact.backHome')}</Link>
             </div>

@@ -15,7 +15,7 @@ import { useAuth } from '../hooks/useAuth';
 
 export const Pricing = () => {
   const { t } = useTranslation();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [isYearly, setIsYearly] = useState(true);
 
   return (
@@ -67,8 +67,11 @@ export const Pricing = () => {
               <div className="text-[2.5rem] leading-none font-bold text-slate-900 dark:text-white tracking-tight">{t('pricing.freePrice')}</div>
             </div>
             
-            <Link to="/auth/signup" className="w-full py-4 px-4 rounded-xl border-2 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white transition-all mb-10 text-sm bg-transparent">
-              {t('pricing.btnLearnMore')}
+            <Link 
+              to={profile ? "/dashboard" : "/auth/signup"} 
+              className="w-full py-4 px-4 rounded-xl border-2 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white transition-all mb-10 text-sm bg-transparent"
+            >
+              {profile ? t('common.dashboard') : t('pricing.btnLearnMore')}
             </Link>
             
             <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-400 flex-1">
@@ -91,7 +94,7 @@ export const Pricing = () => {
           <div className="p-1 rounded-[2.2rem] bg-gradient-to-b from-indigo-500 via-purple-500 to-indigo-600 w-full transform md:-translate-y-4 shadow-2xl shadow-indigo-500/20 relative group">
             <div className="absolute -top-4 inset-x-0 flex justify-center z-20">
               <div className="bg-indigo-600 text-white px-4 py-1 rounded-full text-xs font-black tracking-widest uppercase shadow-lg shadow-indigo-500/30 flex items-center gap-1">
-                <Zap size={14} className="fill-white" /> PHỔ BIẾN NHẤT
+                <Zap size={14} className="fill-white" /> {t('home.pricingVipBadge')}
               </div>
             </div>
             <div className="bg-white dark:bg-[#111623] rounded-[2rem] p-8 h-full flex flex-col relative overflow-hidden">
@@ -121,10 +124,10 @@ export const Pricing = () => {
               </div>
               
               <Link 
-                to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} 
+                to={authLoading ? "#" : (profile ? "/payment?plan=vip" : "/auth/signup?plan=vip")} 
                 className="w-full py-4 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all mb-10 text-sm shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 relative z-10 transform hover:-translate-y-0.5"
               >
-                {t('pricing.btnBuyNow') || 'Mua ngay'}
+                {t('pricing.btnBuyNow')}
               </Link>
               
               <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-300 flex-1 relative z-10">
@@ -160,10 +163,10 @@ export const Pricing = () => {
             </div>
             
             <Link 
-              to={profile ? "/payment?plan=coaching" : "/auth/signup?plan=coaching"} 
+              to={authLoading ? "#" : (profile ? "/contact" : "/auth/signup?plan=coaching")} 
               className="w-full py-4 px-4 rounded-xl border-2 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white transition-all mb-10 text-sm bg-transparent"
             >
-              {t('pricing.btnContact') || 'Liên hệ ngay'}
+              {t('pricing.btnContact')}
             </Link>
             
             <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-300 flex-1">
@@ -186,7 +189,7 @@ export const Pricing = () => {
         </div>
       </section>
 
-      {/* Footer - Dark Mode Variant for Pricing Page */}
+      {/* Footer - Standardized with common.footer keys */}
       <footer className="py-20 border-t border-slate-200 dark:border-slate-800/60 bg-white dark:bg-[#0B0E17] relative z-20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-20 text-left">
@@ -198,29 +201,29 @@ export const Pricing = () => {
                 <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">CoachAI</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6">
-                Hệ sinh thái Tự học AI No-Code hàng đầu của Victor Chuyen. Giúp bạn chinh phục công nghệ mới không cần code.
+                {t('common.footerDesc')}
               </p>
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">CHƯƠNG TRÌNH</h4>
+              <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerProgram')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium text-sm">
-                <li><Link to="/affiliate" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Affiliate</Link></li>
-                <li><Link to="/auth/signup?plan=vip" className="hover:text-indigo-400 transition-colors">VIP Member</Link></li>
-                <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">Coaching 1:1</Link></li>
-                <li><Link to="/referral" className="hover:text-indigo-400 transition-colors">Giới thiệu bạn bè</Link></li>
+                <li><Link to="/affiliate" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.affiliate')}</Link></li>
+                <li><Link to="/auth/signup?plan=vip" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('home.affiliateVip')}</Link></li>
+                <li><Link to="/contact" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.coaching')}</Link></li>
+                <li><Link to="/referral" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.referFriend')}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Hỗ trợ</h4>
+              <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerSupport')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium text-sm">
-                <li><Link to="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Trung tâm trợ giúp</Link></li>
-                <li><Link to="/" className="hover:text-indigo-400 transition-colors">Điều khoản dịch vụ</Link></li>
-                <li><Link to="/" className="hover:text-indigo-400 transition-colors">Chính sách bảo mật</Link></li>
-                <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">Liên hệ</Link></li>
+                <li><Link to="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('common.footerHelp')}</Link></li>
+                <li><Link to="/" className="hover:text-indigo-400 transition-colors">{t('common.footerTerms')}</Link></li>
+                <li><Link to="/" className="hover:text-indigo-400 transition-colors">{t('common.footerPrivacy')}</Link></li>
+                <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">{t('common.footerContact')}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Kết nối</h4>
+              <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerConnect')}</h4>
               <div className="flex gap-4">
                 <a href="https://facebook.com" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
                   <Facebook size={18} />
@@ -238,10 +241,10 @@ export const Pricing = () => {
             </div>
           </div>
           <div className="pt-8 border-t border-slate-200 dark:border-slate-800/60 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm font-medium">© 2026 CoachAI. All rights reserved.</p>
+            <p className="text-slate-500 text-sm font-medium">{t('common.footerCopyright')}</p>
             <div className="flex items-center gap-6 text-slate-500 text-sm font-medium">
-              <span className="flex items-center gap-1.5"><ShieldCheck size={16} /> Bảo mật SSL</span>
-              <span className="flex items-center gap-1.5"><Globe size={16} /> Tiếng Việt</span>
+              <span className="flex items-center gap-1.5"><ShieldCheck size={16} /> {t('common.footerSSL')}</span>
+              <span className="flex items-center gap-1.5"><Globe size={16} /> {t('common.footerLang')}</span>
             </div>
           </div>
         </div>

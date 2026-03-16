@@ -14,7 +14,8 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useTranslation } from 'react-i18next';
 
 export const CourseDetails: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === 'en';
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export const CourseDetails: React.FC = () => {
   const [showAccessDenied, setShowAccessDenied] = useState(searchParams.get('access') === 'denied'); // P4.2
 
   // P3.6 + P4.1: Dynamic page title
-  usePageTitle(course ? course.title : 'Chi tiết khóa học');
+  usePageTitle(course ? course.title : t('courseDetails.pageTitle'));
 
   useEffect(() => {
     if (id) {
@@ -52,7 +53,7 @@ export const CourseDetails: React.FC = () => {
         if (courseData.modules && Array.isArray(courseData.modules)) {
           setLessons(courseData.modules.map((m: any) => ({
             id: m.id,
-            title: m.title,
+            title: isEn && m.title_en ? m.title_en : m.title,
             video_url: m.video_url,
             order_index: m.order
           })));
@@ -174,11 +175,11 @@ export const CourseDetails: React.FC = () => {
               <ShieldCheck size={14} />
               <span>{t('courseDetails.specialBadge')}</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black mb-8 leading-[1.1] tracking-tight">
-              {course.title}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-8 leading-[1.1] tracking-tight break-words">
+              {isEn && course.title_en ? course.title_en : course.title}
             </h1>
-            <p className="text-slate-400 text-xl mb-10 leading-relaxed max-w-xl">
-              {course.description}
+            <p className="text-slate-400 text-lg md:text-xl mb-10 leading-relaxed max-w-xl break-words">
+              {isEn && course.description_en ? course.description_en : course.description}
             </p>
             <div className="flex flex-wrap items-center gap-8 text-sm text-slate-300 font-medium">
               <div className="flex items-center gap-2.5">
@@ -450,7 +451,7 @@ export const CourseDetails: React.FC = () => {
                       className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-3 disabled:opacity-50"
                     >
                       {paying ? <Loader2 className="animate-spin" /> : <CreditCard size={24} />}
-                      Đăng ký khóa học
+                      {t('courseDetails.enrollBtn')}
                     </button>
                     {payError && (
                       <p className="text-center text-sm font-bold text-rose-500 bg-rose-50 p-3 rounded-lg border border-rose-100">{payError}</p>

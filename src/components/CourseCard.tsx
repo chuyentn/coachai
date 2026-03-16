@@ -3,12 +3,19 @@ import { Link } from 'react-router-dom';
 import { Course } from '../types';
 import { PlayCircle, Users, Star, Clock, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 interface CourseCardProps {
   course: Course;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === 'en';
+  
+  const displayTitle = isEn && course.title_en ? course.title_en : course.title;
+  const displayDescription = isEn && course.short_description_en ? course.short_description_en : (course.short_description || course.description);
+
   return (
     <motion.div 
       whileHover={{ y: -8 }}
@@ -37,15 +44,15 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           </span>
           {course.total_students > 50 && (
             <span className="px-3 py-1 bg-rose-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-rose-200 flex items-center gap-1 border border-rose-400">
-              Bán chạy
+              {t('courseCard.bestseller')}
             </span>
           )}
           <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-emerald-200 flex items-center gap-1 border border-emerald-400">
-            📦 Có mã nguồn
+            {t('courseCard.hasSourceCode')}
           </span>
           {(!course.price_vnd || course.price_vnd === 0) && (
             <span className="px-3 py-1 bg-slate-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-slate-300 flex items-center gap-1 border border-slate-500">
-              🆓 Xem miễn phí
+              {t('courseCard.freeAccess')}
             </span>
           )}
         </div>
@@ -60,21 +67,21 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           <span className="text-slate-300 dark:text-slate-600 text-xs">•</span>
           <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
             <Users size={14} />
-            <span className="text-xs font-medium">{course.total_students || 0} học viên</span>
+            <span className="text-xs font-medium">{course.total_students || 0} {t('courseCard.studentsCount')}</span>
           </div>
         </div>
 
         <h3 className="font-black text-xl text-slate-900 dark:text-white line-clamp-2 mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
-          {course.title}
+          {displayTitle}
         </h3>
         
         <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 font-medium leading-relaxed">
-          {course.description}
+          {displayDescription}
         </p>
 
         <div className="flex items-center gap-2 mb-6">
           <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-900/50">
-            <Zap size={14} className="text-indigo-500" /> Phù hợp: Người mới / Không cần code
+            <Zap size={14} className="text-indigo-500" /> {t('courseCard.suitability')}
           </span>
         </div>
 
@@ -84,14 +91,14 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
               {(course.price_vnd || 0).toLocaleString('vi-VN')} ₫
             </span>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
-              Truy cập trọn đời
+              {t('courseCard.lifetimeAccess')}
             </span>
           </div>
           <Link
             to={`/courses/${course.id}`}
             className="px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-100 dark:shadow-none hover:shadow-indigo-100 flex items-center gap-1 whitespace-nowrap"
           >
-            Xem & Tải mã nguồn →
+            {t('courseCard.viewDetails')}
           </Link>
         </div>
       </div>

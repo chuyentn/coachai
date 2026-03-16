@@ -121,14 +121,14 @@ export const Affiliate = () => {
                 <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">CoachAI</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6">
-                {t('affiliate.footerDesc')}
+                {t('common.footerDesc')}
               </p>
             </div>
             <div>
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('affiliate.footerCol1')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium">
                 <li><Link to="/affiliate" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-indigo-600 dark:text-indigo-400 font-bold">{t('common.affiliate')}</Link></li>
-                <li><Link to="/auth/signup?plan=vip" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">VIP Member</Link></li>
+                <li><Link to="/auth/signup?plan=vip" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('home.affiliateVip')}</Link></li>
                 <li><Link to="/contact" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('common.coaching')}</Link></li>
               </ul>
             </div>
@@ -145,10 +145,10 @@ export const Affiliate = () => {
             </div>
           </div>
           <div className="pt-8 border-t border-slate-100 flex justify-between items-center gap-4">
-            <p className="text-slate-400 text-sm font-medium">{t('affiliate.footerCopyright')}</p>
+            <p className="text-slate-400 text-sm font-medium">{t('common.footerCopyright')}</p>
             <div className="flex items-center gap-6 text-slate-400 text-sm font-medium">
-              <span className="flex items-center gap-1"><ShieldCheck size={14} /> {t('affiliate.footerSSL')}</span>
-              <span className="flex items-center gap-1"><Globe size={14} /> {t('affiliate.footerLang')}</span>
+              <span className="flex items-center gap-1"><ShieldCheck size={14} /> {t('common.footerSSL')}</span>
+              <span className="flex items-center gap-1"><Globe size={14} /> {t('common.footerLang')}</span>
             </div>
           </div>
         </div>

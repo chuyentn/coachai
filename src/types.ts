@@ -15,6 +15,7 @@ export interface Profile {
 export interface CourseModule {
   id: string;
   title: string;
+  title_en?: string;
   video_url: string;
   duration: number;
   order: number;
@@ -24,8 +25,11 @@ export interface Course {
   id: string;
   instructor_id: string;
   title: string;
+  title_en?: string;
   description: string;
+  description_en?: string;
   short_description?: string;
+  short_description_en?: string;
   price_vnd: number;
   price_usd: number;
   thumbnail_url: string;

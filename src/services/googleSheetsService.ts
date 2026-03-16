@@ -19,7 +19,11 @@ export const googleSheetsService = {
       return data.map((row: any) => ({
         id: String(row.id || row.ID),
         title: String(row.title || row.Title),
+        title_en: String(row.title_en || row.TitleEN || ''),
         description: String(row.description || row.Description),
+        description_en: String(row.description_en || row.DescriptionEN || ''),
+        short_description: String(row.short_description || row.ShortDescription || ''),
+        short_description_en: String(row.short_description_en || row.ShortDescriptionEN || ''),
         price_vnd: Number(row.price_vnd || row.PriceVND || 0),
         price_usd: Number(row.price_usd || row.PriceUSD || 0),
         thumbnail_url: String(row.thumbnail_url || row.Thumbnail || ''),
@@ -38,9 +42,11 @@ export const googleSheetsService = {
           // Try JSON first (preferred format)
           try { return JSON.parse(m); } catch {}
           // Fallback: semicolon-separated plain text → convert to module objects
-          return m.split(';').map((t: string, i: number) => ({
+          // Fallback: semicolon-separated plain text → convert to module objects
+          return m.split(';').map((ts: string, i: number) => ({
             id: `m${i + 1}`,
-            title: t.trim(),
+            title: ts.trim(),
+            title_en: '',
             video_url: '',
             order: i + 1
           }));
