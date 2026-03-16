@@ -7,9 +7,9 @@ const db = admin.firestore();
 
 /**
  * SePay Webhook (Automated VietQR)
- * URL will be: https://<region>-<projectId>.cloudfunctions.net/sepayWebhook
+ * URL will be: https://asia-southeast1-edu-victorchuyen.cloudfunctions.net/sepayWebhook
  */
-export const sepayWebhook = functions.https.onRequest(async (req, res) => {
+export const sepayWebhook = functions.region("asia-southeast1").https.onRequest(async (req, res) => {
   // CORS (Optional, SePay calls server-to-server)
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
@@ -94,9 +94,9 @@ export const sepayWebhook = functions.https.onRequest(async (req, res) => {
 
 /**
  * VNPAY Callback (GET Request)
- * URL will be: https://<region>-<projectId>.cloudfunctions.net/vnpayCallback
+ * URL will be: https://asia-southeast1-edu-victorchuyen.cloudfunctions.net/vnpayCallback
  */
-export const vnpayCallback = functions.https.onRequest(async (req, res) => {
+export const vnpayCallback = functions.region("asia-southeast1").https.onRequest(async (req, res) => {
   const secretKey = process.env.VNPAY_SECURE_SECRET || functions.config().vnpay.secret;
   const appUrl = process.env.APP_URL || functions.config().app.url;
 

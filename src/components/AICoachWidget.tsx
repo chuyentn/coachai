@@ -125,7 +125,7 @@ export const AICoachWidget: React.FC = () => {
                   <Bot size={22} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">AI Coach Demo</h3>
+                  <h3 className="font-bold text-sm">AI Coach Trợ Lý</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                     <span className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider">Online • {questionsLeft} câu còn lại</span>

@@ -452,5 +452,33 @@
     "suitability": "Suitable for: Beginners / No-code",
     "lifetimeAccess": "Lifetime access",
     "viewDetails": "View & Get Source →"
+  },
+  "payment": {
+    "title": "Payment",
+    "methodVietQR": "VietQR Transfer",
+    "methodMoMo": "MoMo Wallet",
+    "methodPayPal": "PayPal / Global Cards",
+    "vietqrTitle": "VietQR Transfer",
+    "momoTitle": "Pay with MoMo",
+    "paypalTitle": "International Payment",
+    "momoBtn": "OPEN MOMO APP TO PAY",
+    "paypalAlt": "Supports PayPal, Visa, Mastercard. Amount will be converted to USD.",
+    "loadingPayPal": "Loading PayPal SDK...",
+    "orderSummary": "Order Summary",
+    "orderPlan": "Plan",
+    "orderTotal": "Total",
+    "waitingPayment": "Waiting for payment...",
+    "supportTitle": "Need Quick Help?",
+    "supportDesc": "If you have trouble with payment, message Admin Victor Chuyen via Zalo.",
+    "supportBtn": "Chat Zalo Admin",
+    "bankAccount": "Account Number",
+    "bankContent": "Transfer Content (Required)",
+    "bankNoticeVietQR": "Please transfer the exact amount and content shown on the left for fastest automatic confirmation.",
+    "bankNoticeMoMo": "Please complete the payment in the MoMo app to activate your account.",
+    "bankNoticePayPal": "The system will convert to USD at the bank exchange rate when paying via PayPal.",
+    "backToPricing": "Back to Pricing",
+    "successTitle": "Payment Completed!",
+    "successDesc": "System has received your payment. Your {{plan}} plan is now active!",
+    "successBtn": "Go to Dashboard"
   }
 }

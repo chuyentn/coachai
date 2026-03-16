@@ -41,9 +41,9 @@ export const Affiliate = () => {
               <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('affiliate.stat1Label')}</div>
             </div>
             <div className="bg-white dark:bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none text-center transform hover:-translate-y-1 transition-all duration-300">
-               <div className="w-16 h-16 mx-auto bg-indigo-50 dark:bg-indigo-900/50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600 dark:text-indigo-400">
-                <Users size={32} />
-              </div>
+               <Link to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} className="relative z-10 shrink-0 px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 rounded-2xl font-black text-sm hover:scale-105 transition-transform shadow-xl shadow-rose-500/20 flex items-center gap-2">
+                 Nâng Cấp VIP <ChevronRight size={18} />
+               </Link>
               <div className="text-2xl font-black mb-1 text-slate-900 dark:text-white">{t('affiliate.stat2Value')}</div>
               <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('affiliate.stat2Label')}</div>
             </div>
@@ -102,9 +102,11 @@ export const Affiliate = () => {
                   <input type="text" className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all" placeholder={t('affiliate.formSocialPlaceholder')} />
                 </div>
               </div>
-              <button type="submit" className="w-full mt-8 py-4 bg-indigo-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 hover:-translate-y-1">
-                {t('affiliate.btnSubmit')} <ArrowRight size={20} />
-              </button>
+              <Link 
+                  to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} 
+                  className="flex items-center justify-center gap-2 w-full mt-8 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 hover:-translate-y-1"
+                >{t('affiliate.btnSubmit')} <ArrowRight size={20} />
+              </Link>
             </form>
           )}
         </div>
@@ -128,7 +130,7 @@ export const Affiliate = () => {
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('affiliate.footerCol1')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium">
                 <li><Link to="/affiliate" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-indigo-600 dark:text-indigo-400 font-bold">{t('common.affiliate')}</Link></li>
-                <li><Link to="/auth/signup?plan=vip" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('home.affiliateVip')}</Link></li>
+                <li><Link to="/pricing" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('home.affiliateVip')}</Link></li>
                 <li><Link to="/contact" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('common.coaching')}</Link></li>
               </ul>
             </div>

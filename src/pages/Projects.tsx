@@ -220,7 +220,7 @@ export const Projects = () => {
                     <p className="text-slate-600 dark:text-slate-300 text-sm font-medium mb-4 leading-relaxed">
                       Nhận ngay <strong className="text-indigo-600 dark:text-indigo-400">toàn bộ mã nguồn thực tế đang chạy</strong>, kèm tài liệu hướng dẫn setup chi tiết A-Z và quyền lợi hỏi đáp trực tiếp cùng Coach. Xây app AI chưa bao giờ dễ đến thế.
                     </p>
-                    <Link to="/auth/signup?plan=vip" className="flex items-center justify-center w-full py-3.5 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:opacity-90 transition-opacity">
+                    <Link to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} className="flex items-center justify-center w-full py-3.5 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:opacity-90 transition-opacity">
                       Đăng ký VIP Member ngay
                     </Link>
                   </div>

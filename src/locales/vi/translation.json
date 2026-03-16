@@ -453,5 +453,33 @@
     "suitability": "Phù hợp: Người mới / Không cần code",
     "lifetimeAccess": "Truy cập trọn đời",
     "viewDetails": "Xem & Tải mã nguồn →"
+  },
+  "payment": {
+    "title": "Thanh toán",
+    "methodVietQR": "Chuyển khoản VietQR",
+    "methodMoMo": "Ví MoMo",
+    "methodPayPal": "PayPal / Thẻ quốc tế",
+    "vietqrTitle": "Chuyển khoản VietQR",
+    "momoTitle": "Thanh toán qua ví MoMo",
+    "paypalTitle": "Thanh toán Quốc tế",
+    "momoBtn": "MỞ VÍ MOMO THANH TOÁN",
+    "paypalAlt": "Hỗ trợ PayPal, Visa, Mastercard. Số tiền sẽ được quy đổi sang USD tương ứng.",
+    "loadingPayPal": "Đang tải PayPal SDK...",
+    "orderSummary": "Chi tiết đơn hàng",
+    "orderPlan": "Gói đăng ký",
+    "orderTotal": "Tổng cộng",
+    "waitingPayment": "Đang chờ thanh toán...",
+    "supportTitle": "Bạn cần hỗ trợ nhanh?",
+    "supportDesc": "Nếu gặp khó khăn khi thanh toán, hãy nhắn tin trực tiếp cho Admin Victor Chuyen qua Zalo.",
+    "supportBtn": "Chat Zalo Admin",
+    "bankAccount": "Số tài khoản",
+    "bankContent": "Nội dung chuyển khoản (Bắt buộc)",
+    "bankNoticeVietQR": "Vui lòng chuyển đúng số tiền và nội dung ghi bên trái để hệ thống tự động xác nhận nhanh nhất.",
+    "bankNoticeMoMo": "Vui lòng hoàn tất thanh toán trên ứng dụng MoMo để kích hoạt tài khoản.",
+    "bankNoticePayPal": "Hệ thống sẽ quy đổi sang USD theo tỷ giá ngân hàng khi thanh toán qua PayPal.",
+    "backToPricing": "Quay lại bảng giá",
+    "successTitle": "Thanh toán hoàn tất!",
+    "successDesc": "Hệ thống đã nhận được thanh toán. Gói {{plan}} của bạn đã được kích hoạt thành công!",
+    "successBtn": "Về Dashboard"
   }
 }

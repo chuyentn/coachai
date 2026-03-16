@@ -454,7 +454,7 @@ export const Home: React.FC = () => {
                 </li>
               </ul>
               <Link 
-                to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} 
+                to={profile ? "/payment?plan=vip&amount=1500000" : "/auth/signup?plan=vip"} 
                 className="block w-full text-center py-4 rounded-2xl bg-indigo-600 text-white font-black hover:bg-indigo-500 shadow-xl shadow-indigo-900/20 transition-all"
               >
                 {t('home.pricingVipBtn')}
@@ -663,16 +663,16 @@ export const Home: React.FC = () => {
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerProgram')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium text-sm">
                 <li><Link to="/affiliate" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.affiliate')}</Link></li>
-                <li><Link to="/auth/signup?plan=vip" className="hover:text-emerald-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('home.affiliateVip')}</Link></li>
+                <li><Link to="/pricing" className="hover:text-emerald-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('home.affiliateVip')}</Link></li>
                 <li><Link to="/contact" className="hover:text-emerald-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.coaching')}</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerSupport')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium text-sm">
-                <li><Link to="/" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">{t('common.footerHelp')}</Link></li>
-                <li><Link to="/" className="hover:text-emerald-400 transition-colors">{t('common.footerTerms')}</Link></li>
-                <li><Link to="/" className="hover:text-emerald-400 transition-colors">{t('common.footerPrivacy')}</Link></li>
+                <li><Link to="/contact" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">{t('common.footerHelp')}</Link></li>
+                <li><Link to="/contact" className="hover:text-emerald-400 transition-colors">{t('common.footerTerms')}</Link></li>
+                <li><Link to="/contact" className="hover:text-emerald-400 transition-colors">{t('common.footerPrivacy')}</Link></li>
                 <li><Link to="/contact" className="hover:text-emerald-400 transition-colors">{t('common.footerContact')}</Link></li>
               </ul>
             </div>

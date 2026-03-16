@@ -599,7 +599,7 @@ export const LearningPlayer: React.FC = () => {
                   <button 
                     onClick={() => {
                       setShowUpsell(false);
-                      navigate('/auth/signup?plan=vip');
+                      navigate(profile ? '/payment?plan=vip' : '/auth/signup?plan=vip');
                     }}
                     className="w-full py-4 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl font-black text-sm hover:scale-[1.02] flex items-center justify-center gap-2 transition-transform shadow-xl shadow-rose-500/20"
                   >

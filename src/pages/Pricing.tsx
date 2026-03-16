@@ -124,7 +124,7 @@ export const Pricing = () => {
               </div>
               
               <Link 
-                to={authLoading ? "#" : (profile ? "/payment?plan=vip" : "/auth/signup?plan=vip")} 
+                to={authLoading ? "#" : (profile ? `/payment?plan=vip&amount=${isYearly ? 1500000 : 199000}` : "/auth/signup?plan=vip")} 
                 className="w-full py-4 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all mb-10 text-sm shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 relative z-10 transform hover:-translate-y-0.5"
               >
                 {t('pricing.btnBuyNow')}
@@ -208,7 +208,7 @@ export const Pricing = () => {
               <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerProgram')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium text-sm">
                 <li><Link to="/affiliate" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.affiliate')}</Link></li>
-                <li><Link to="/auth/signup?plan=vip" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('home.affiliateVip')}</Link></li>
+                <li><Link to="/pricing" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('home.affiliateVip')}</Link></li>
                 <li><Link to="/contact" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.coaching')}</Link></li>
                 <li><Link to="/referral" className="hover:text-indigo-400 transition-colors uppercase tracking-widest text-[10px] font-black">{t('common.referFriend')}</Link></li>
               </ul>
@@ -216,9 +216,9 @@ export const Pricing = () => {
             <div>
               <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerSupport')}</h4>
               <ul className="space-y-4 text-slate-500 dark:text-slate-400 font-medium text-sm">
-                <li><Link to="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('common.footerHelp')}</Link></li>
-                <li><Link to="/" className="hover:text-indigo-400 transition-colors">{t('common.footerTerms')}</Link></li>
-                <li><Link to="/" className="hover:text-indigo-400 transition-colors">{t('common.footerPrivacy')}</Link></li>
+                <li><Link to="/contact" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('common.footerHelp')}</Link></li>
+                <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">{t('common.footerTerms')}</Link></li>
+                <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">{t('common.footerPrivacy')}</Link></li>
                 <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">{t('common.footerContact')}</Link></li>
               </ul>
             </div>
