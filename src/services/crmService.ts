@@ -8,7 +8,7 @@ export const crmService = {
 
   async sendTransactionalEmail(toEmail: string, subject: string, htmlContent: string): Promise<boolean> {
     try {
-      const response = await fetch('/api/email/send', {
+      const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'content-type': 'application/json'
