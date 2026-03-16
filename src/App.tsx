@@ -172,6 +172,32 @@ export default function App() {
                 </ProtectedRoute>
               } 
             />
+
+            {/* Role Shortcut Routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/teacher" 
+              element={
+                <ProtectedRoute role="teacher">
+                  <TeacherDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              } 
+            />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
