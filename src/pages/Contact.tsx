@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MessageSquare, Calendar, Phone, Mail, CheckCircle2, User, Send, ArrowRight, Zap, Globe, ShieldCheck, Facebook, Youtube } from 'lucide-react';
+import { MessageSquare, Calendar, Phone, Mail, CheckCircle2, User, Send, ArrowRight, Zap, Globe, ShieldCheck, Facebook, Youtube, Users, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -57,7 +57,22 @@ export const Contact = () => {
                 </div>
                 <div>
                   <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-1">{t('contact.hotline')}</div>
-                  <div className="text-xl font-medium">0987.654.321 (Zalo)</div>
+                  <div className="text-xl font-medium hover:text-indigo-200 transition-colors"><a href="https://zalo.me/0989890022" target="_blank" rel="noreferrer">0989.890.022 (Zalo Admin)</a></div>
+                  <div className="text-xl font-medium mt-1 hover:text-indigo-200 transition-colors"><a href="https://t.me/victorchuyen" target="_blank" rel="noreferrer">@victorchuyen (Telegram Admin)</a></div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                  <Users size={24} />
+                </div>
+                <div>
+                  <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Cộng Đồng & Support</div>
+                  <div className="flex gap-4">
+                    <a href="https://www.facebook.com/groups/vibecodecoaching" target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Facebook size={20} /></a>
+                    <a href="https://zalo.me/g/tdhmtu261" target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><MessageCircle size={20} /></a>
+                    <a href="https://t.me/vibecodocoaching" target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Send size={20} /></a>
+                  </div>
                 </div>
               </div>
 

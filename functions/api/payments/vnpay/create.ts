@@ -28,7 +28,7 @@ export const onRequestPost = async (context: any) => {
       });
     }
 
-    const vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    const vnpUrl = env.VNPAY_ENDPOINT || "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     const returnUrl = `${appUrl}/api/payments/vnpay/callback`;
 
     const date = new Date();

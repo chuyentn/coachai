@@ -96,7 +96,11 @@ export function useTeacherStats(teacherId: string | undefined): TeacherStats {
       } catch (err: any) {
         if (!cancelled) {
           console.warn('[useTeacherStats] Firestore error:', err?.message);
-          setState(s => ({ ...s, loading: false, error: err?.message || 'Lỗi tải dữ liệu' }));
+          let userMessage = 'Lỗi tải dữ liệu. ';
+          if (err?.message?.includes('requires an index')) {
+            userMessage += 'Hệ thống đang yêu cầu khởi tạo Index trong Firebase Console.';
+          }
+          setState(s => ({ ...s, loading: false, error: userMessage }));
         }
       }
     };

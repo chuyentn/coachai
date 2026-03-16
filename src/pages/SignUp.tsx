@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { auth, db, googleProvider } from '../lib/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { crmService } from '../services/crmService';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Github, Chrome, ArrowRight, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -46,6 +47,37 @@ export const SignUp: React.FC = () => {
         referred_by: refCode || null,
         created_at: new Date().toISOString(),
       });
+      
+      // Gửi email chào mừng thành viên mới
+      try {
+        await crmService.sendTransactionalEmail(
+          email,
+          `🏮 Chào mừng ${fullName} đến với CoachAI!`,
+          `
+            <div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #4f46e5;">Chúc mừng bạn đã gia nhập CoachAI!</h2>
+              <p>Chào <strong>${fullName}</strong>,</p>
+              <p>Tài khoản học tập của bạn đã được khởi tạo thành công. Từ nay, bạn có thể truy cập vào kho tàng kiến thức về AI & Code thực chiến bất cứ lúc nào.</p>
+              <div style="background: #eef2ff; padding: 20px; border-radius: 12px; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #4338ca;">🚀 Bắt đầu ngay:</h3>
+                <ol>
+                  <li>Hoàn thiện hồ sơ cá nhân.</li>
+                  <li>Lựa chọn khóa học phù hợp với mục tiêu.</li>
+                  <li>Sử dụng <strong>AI Coach Trợ Lý</strong> để giải đáp thắc mắc 24/7.</li>
+                </ol>
+              </div>
+              <p>Nếu cần hỗ trợ, đừng ngần ngại reply email này hoặc liên hệ Mentor qua Zalo.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://edu.victorchuyen.net/dashboard/student" style="background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Vào Dashboard Học Viên</a>
+              </div>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;" />
+              <p style="font-size: 12px; color: #94a3b8;">© 2026 CoachAI - Nền tảng học AI & Coaching hàng đầu Việt Nam.</p>
+            </div>
+          `
+        );
+      } catch (emailErr) {
+        console.error('Lỗi khi gửi email chào mừng (SignUp):', emailErr);
+      }
 
       setSuccess(true);
       setTimeout(() => navigate('/auth/signin'), 3000);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, Phone, User, Mail, MessageSquare, CheckCircle2, Star, ChevronDown } from 'lucide-react';
 import { googleSheetsService } from '../services/googleSheetsService';
+import { crmService } from '../services/crmService';
 import { useTranslation } from 'react-i18next';
 
 export const LeadPopup: React.FC = () => {
@@ -66,6 +67,31 @@ export const LeadPopup: React.FC = () => {
       if (success) {
         setSubmitted(true);
         localStorage.setItem('lead_submitted', 'true');
+        
+        // Gửi email chào mừng ngay khi khách để lại thông tin
+        try {
+          await crmService.sendTransactionalEmail(
+            formData.email,
+            `🎁 Quà tặng từ CoachAI: Hệ sinh thái AI & Coaching`,
+            `
+              <div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #4f46e5;">Chào ${formData.name}!</h2>
+                <p>Cảm ơn bạn đã quan tâm đến <strong>CoachAI</strong>. Chúng tôi đã nhận được thông tin đăng ký nhận quà của bạn.</p>
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                  <p style="margin: 0;"><strong>Trạng thái:</strong> Đang xử lý</p>
+                  <p style="margin: 5px 0 0 0;"><strong>Gói quà:</strong> Bộ tài liệu hướng dẫn AI & Coaching thực chiến</p>
+                </div>
+                <p>Mentor sẽ sớm liên hệ với bạn qua SĐT <strong>${formData.phone}</strong> để gửi quà và hỗ trợ bạn tốt nhất.</p>
+                <p>Đừng quên khám phá các khóa học hấp dẫn của chúng tôi tại <a href="https://edu.victorchuyen.net">edu.victorchuyen.net</a>.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 12px; color: #999;">© 2026 CoachAI. Mọi quyền được bảo lưu.</p>
+              </div>
+            `
+          );
+        } catch (emailErr) {
+          console.error('Lỗi khi gửi email chào mừng từ Popup:', emailErr);
+        }
+
         setTimeout(() => setIsOpen(false), 3000);
       }
     } catch (error) {

@@ -27,7 +27,7 @@ const Pricing = lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pri
 const Affiliate = lazy(() => import('./pages/Affiliate').then(m => ({ default: m.Affiliate })));
 const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
-const Payment = lazy(() => import('./pages/Payment').then(m => ({ default: m.Payment })));
+const Payment = lazy(() => import('./pages/Payment').then(m => ({ default: m.default })));
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
 // Page loading fallback

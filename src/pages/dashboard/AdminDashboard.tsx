@@ -25,7 +25,10 @@ import {
   Phone,
   Save,
   Lock,
-  RefreshCw
+  RefreshCw,
+  Unlock,
+  ShieldAlert,
+  Edit
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -47,7 +50,7 @@ import {
 export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'approvals' | 'payments' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'courses' | 'approvals' | 'finance' | 'settings'>('overview');
   
   // Settings form state
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -69,11 +72,22 @@ export const AdminDashboard: React.FC = () => {
   const [vipUsers, setVipUsers] = useState<any[]>([]);
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const [pendingTeachers, setPendingTeachers] = useState<any[]>([]);
+  
+  // Finance & Payouts State
+  const [payouts, setPayouts] = useState<any[]>([]);
+  
+  // Course Management State
+  const [allCourses, setAllCourses] = useState<any[]>([]);
+  
+  // User Management State
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   React.useEffect(() => {
     // 1. Fetch Stats & Users
     const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
       const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAllUsers(users); // Store all users for the Users tab
       const students = users.filter((u: any) => u.role === 'student');
       const vips = users.filter((u: any) => u.role === 'vip');
       
@@ -99,6 +113,34 @@ export const AdminDashboard: React.FC = () => {
       query(collection(db, 'payments'), where('status', '==', 'pending'), orderBy('created_at', 'desc')),
       (snapshot) => {
         setPendingPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      },
+      (error) => {
+        console.error('Error fetching pending payments:', error);
+        if (error.message.includes('requires an index')) {
+          console.warn('⚠️ Admin: Missing Firestore Index for payments. Click the link in console to create it.');
+        }
+      }
+    );
+
+    // 4. Fetch All Courses
+    const unsubCourses = onSnapshot(
+      query(collection(db, 'courses'), orderBy('created_at', 'desc')),
+      (snapshot) => {
+        setAllCourses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      },
+      (error) => {
+        console.error('Error fetching courses:', error);
+      }
+    );
+
+    // 5. Fetch Payout Requests
+    const unsubPayouts = onSnapshot(
+      query(collection(db, 'payouts'), orderBy('created_at', 'desc')),
+      (snapshot) => {
+        setPayouts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      },
+      (error) => {
+        console.error('Error fetching payouts:', error);
       }
     );
 
@@ -107,12 +149,16 @@ export const AdminDashboard: React.FC = () => {
       unsubUsers();
       unsubLeads();
       unsubPayments();
+      unsubCourses();
+      unsubPayouts();
     };
   }, []);
 
   const sidebarItems = [
     { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
-    { id: 'payments', label: 'Duyệt Thanh toán', icon: CreditCard },
+    { id: 'users', label: 'Quản lý Người dùng', icon: Users },
+    { id: 'courses', label: 'Quản lý Khóa học', icon: BookOpen },
+    { id: 'finance', label: 'Tài chính & Giao dịch', icon: CreditCard },
     { id: 'approvals', label: 'Duyệt Giảng viên', icon: UserCheck },
     { id: 'settings', label: 'Cài đặt hệ thống', icon: Settings },
   ] as const;
@@ -135,6 +181,20 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleApprovePayout = async (payoutId: string) => {
+    if (!window.confirm('Xác nhận đã chuyển khoản số tiền này cho Giảng viên?')) return;
+    try {
+      await updateDoc(doc(db, 'payouts', payoutId), {
+        status: 'paid',
+        paid_at: serverTimestamp()
+      });
+      alert('Đã cập nhật trạng thái đã thanh toán.');
+    } catch (error) {
+      console.error('Error updating payout:', error);
+      alert('Lỗi cập nhật payout.');
+    }
+  };
+
   const handleSaveSettings = () => {
     setSettingsSaved(true);
     setTimeout(() => setSettingsSaved(false), 3000);
@@ -142,6 +202,55 @@ export const AdminDashboard: React.FC = () => {
 
   const handleApproveTeacher = (id: string) => {
     alert(`Đã phê duyệt giảng viên ID: ${id}`);
+  };
+
+  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    if (!window.confirm(`Xác nhận đổi role user thành ${newRole.toUpperCase()}?`)) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      alert(`Đã cập nhật role thành ${newRole.toUpperCase()}`);
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      alert('Lỗi khi cập nhật role.');
+    }
+  };
+
+  const handleToggleUserLock = async (userId: string, currentStatus: boolean) => {
+    const action = currentStatus ? 'mở khóa' : 'khóa';
+    if (!window.confirm(`Bạn có chắc muốn ${action} tài khoản này?`)) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), { disabled: !currentStatus });
+    } catch (error) {
+      console.error('Error toggling user lock:', error);
+      alert('Lỗi cập nhật trạng thái.');
+    }
+  };
+
+  const filteredUsers = allUsers.filter(u => 
+    (u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleApproveCourse = async (courseId: string) => {
+    if (!window.confirm('Xác nhận duyệt khóa học này? Khóa học sẽ được hiển thị công khai.')) return;
+    try {
+      await updateDoc(doc(db, 'courses', courseId), { status: 'published', updated_at: serverTimestamp() });
+      // Notify implementation placeholder
+    } catch (error) {
+      console.error('Error approving course:', error);
+      alert('Lỗi duyệt khóa học.');
+    }
+  };
+
+  const handleRejectCourse = async (courseId: string) => {
+    const reason = window.prompt('Nhập lý do từ chối (bắt buộc):');
+    if (!reason) return;
+    try {
+      await updateDoc(doc(db, 'courses', courseId), { status: 'rejected', reject_reason: reason, updated_at: serverTimestamp() });
+    } catch (error) {
+       console.error('Error rejecting course:', error);
+       alert('Lỗi từ chối khóa học.');
+    }
   };
 
   const formatPrice = (p: string | number) => {
@@ -333,6 +442,177 @@ export const AdminDashboard: React.FC = () => {
               </motion.div>
             )}
 
+            {activeTab === 'users' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-white dark:bg-[#111623] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
+              >
+                <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                       Quản Lý Người Dùng
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">Tra cứu, thay đổi quyền hạn và trạng thái tài khoản.</p>
+                  </div>
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Tìm theo email hoặc tên..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                    />
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                      <tr>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Người dùng</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Quyền (Role)</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Trạng thái</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 text-right">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {filteredUsers.map((u) => (
+                        <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-6 py-4 flex items-center gap-3">
+                             <img src={u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`} alt="" className="w-10 h-10 rounded-xl bg-slate-100" />
+                             <div>
+                               <p className="font-bold text-sm text-slate-900 dark:text-white max-w-[200px] truncate">{u.full_name || 'Chưa cập nhật'}</p>
+                               <p className="text-xs text-slate-500 max-w-[200px] truncate">{u.email}</p>
+                             </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <select 
+                              value={u.role || 'student'}
+                              onChange={(e) => handleUpdateUserRole(u.id, e.target.value)}
+                              className="text-xs font-bold uppercase px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                              <option value="student">Student</option>
+                              <option value="vip">VIP</option>
+                              <option value="teacher">Teacher</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-4">
+                            {u.disabled ? (
+                              <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-2.5 py-1 rounded-full w-fit">
+                                <Lock size={12} /> Bị khóa
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full w-fit">
+                                <ShieldCheck size={12} /> Hoạt động
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <button 
+                               onClick={() => handleToggleUserLock(u.id, u.disabled)}
+                               title={u.disabled ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                               className={`p-2 rounded-lg transition-colors ${u.disabled ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
+                             >
+                               {u.disabled ? <Unlock size={16} /> : <Lock size={16} />}
+                             </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                             <div className="flex flex-col items-center justify-center">
+                               <Search size={32} className="text-slate-300 mb-3" />
+                               <p>Không tìm thấy người dùng nào phù hợp.</p>
+                             </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'courses' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-white dark:bg-[#111623] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
+              >
+                <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                     <BookOpen className="text-indigo-600" size={24} /> Quản Lý Khóa Học
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">Phê duyệt hoặc từ chối các khóa học do giảng viên tải lên.</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                      <tr>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Khóa học</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Giảng viên</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Trạng thái</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 text-right">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {allCourses.map((c) => (
+                        <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-6 py-4 flex items-center gap-4">
+                            <div className="w-16 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
+                               {c.thumbnail ? <img src={c.thumbnail} alt="" className="w-full h-full object-cover" /> : <BookOpen className="w-full h-full p-3 text-slate-300" />}
+                            </div>
+                            <div>
+                               <p className="font-bold text-sm text-slate-900 dark:text-white max-w-[250px] truncate">{c.title || 'Chưa cập nhật tên'}</p>
+                               <p className="text-xs text-slate-500 font-bold text-amber-500">{formatPrice(c.price || 0)}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                             <p className="text-sm text-slate-900 dark:text-white">{c.instructor_name || 'Không rõ'}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            {c.status === 'published' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 uppercase">Published</span>}
+                            {c.status === 'pending' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-amber-50 text-amber-600 dark:bg-amber-900/30 uppercase">Chờ duyệt</span>}
+                            {c.status === 'rejected' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-600 dark:bg-rose-900/30 uppercase">Đã từ chối</span>}
+                            {c.status === 'draft' && <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 uppercase">Nháp</span>}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <div className="flex items-center justify-end gap-2">
+                                {c.status === 'pending' && (
+                                  <>
+                                    <button onClick={() => handleApproveCourse(c.id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Duyệt khóa">
+                                      <CheckCircle2 size={18} />
+                                    </button>
+                                    <button onClick={() => handleRejectCourse(c.id)} className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition-colors" title="Từ chối">
+                                      <XCircle size={18} />
+                                    </button>
+                                  </>
+                                )}
+                                {c.status !== 'pending' && (
+                                   <Link to={`/course/${c.id}`} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 rounded-lg transition-colors" title="Xem trước">
+                                     <ChevronRight size={18} />
+                                   </Link>
+                                )}
+                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {allCourses.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-12 text-center text-slate-500">Chưa có khóa học nào trên hệ thống.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+
             {activeTab === 'approvals' && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -388,60 +668,133 @@ export const AdminDashboard: React.FC = () => {
               </motion.div>
             )}
 
-            {activeTab === 'payments' && (
+            {activeTab === 'finance' && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-white dark:bg-[#111623] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
+                className="space-y-8"
               >
-                <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Duyệt Thanh Toán (Payments)</h2>
-                  <p className="text-sm text-slate-500 mt-1">Xác nhận chuyển khoản ngân hàng từ học viên để kích hoạt VIP.</p>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
-                      <tr>
-                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Học viên</th>
-                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Gói</th>
-                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Số tiền</th>
-                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Ngày yêu cầu</th>
-                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 text-right">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {pendingPayments.map((p) => (
-                        <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-slate-900 dark:text-white">{p.user_email}</p>
-                            <p className="text-[10px] text-slate-400 select-all">{p.user_id?.substring(0, 8).toUpperCase()} CV</p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">{p.plan_type}</span>
-                          </td>
-                          <td className="px-6 py-4 font-bold text-amber-500">{p.amount}</td>
-                          <td className="px-6 py-4 text-sm text-slate-500">{p.created_at?.toDate().toLocaleString()}</td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button 
-                                onClick={() => handleApprovePayment(p)} 
-                                className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
-                                title="Xác nhận đã nhận tiền"
-                              >
-                                <CheckCircle2 size={18} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {pendingPayments.length === 0 && (
+                {/* 1. Duyệt Thanh Toán Học Viên */}
+                <div className="bg-white dark:bg-[#111623] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                  <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                      <CreditCard size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Duyệt Thanh Toán (Học Viên)</h2>
+                      <p className="text-sm text-slate-500 mt-1">Xác nhận chuyển khoản ngân hàng từ học viên để kích hoạt VP/Khóa học.</p>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-slate-500">Không có thanh toán nào đang chờ.</td>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Học viên</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Gói</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Số tiền</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Ngày yêu cầu</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 text-right">Thao tác</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {pendingPayments.map((p) => (
+                          <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td className="px-6 py-4">
+                              <p className="font-bold text-slate-900 dark:text-white">{p.user_email}</p>
+                              <p className="text-[10px] text-slate-400 select-all">{p.user_id?.substring(0, 8).toUpperCase()} CV</p>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">{p.plan_type}</span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-amber-500">{formatPrice(p.amount)}</td>
+                            <td className="px-6 py-4 text-sm text-slate-500">{p.created_at?.toDate().toLocaleString()}</td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button 
+                                  onClick={() => handleApprovePayment(p)} 
+                                  className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
+                                  title="Xác nhận đã nhận tiền"
+                                >
+                                  <CheckCircle2 size={18} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {pendingPayments.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-6 py-12 text-center text-slate-500">Không có thanh toán nào đang chờ.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 2. Rút tiền của Giảng Viên */}
+                <div className="bg-white dark:bg-[#111623] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mt-8">
+                  <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400">
+                      <DollarSign size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Lệnh Rút Tiền (Payouts)</h2>
+                      <p className="text-sm text-slate-500 mt-1">Quản lý và cập nhật trạng thái thanh toán doanh thu cho Giảng viên.</p>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                        <tr>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Giảng viên</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Số tiền rút</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Bank / STK</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Trạng thái</th>
+                          <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 text-right">Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {payouts.map((p) => (
+                          <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td className="px-6 py-4">
+                              <p className="font-bold text-slate-900 dark:text-white">{p.teacher_name || 'Teacher'}</p>
+                              <p className="text-xs text-slate-500">{p.teacher_email}</p>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(p.amount)}</td>
+                            <td className="px-6 py-4">
+                              <p className="text-sm text-slate-900 dark:text-white font-medium">{p.bank_name}</p>
+                              <p className="text-xs text-slate-500">{p.bank_account}</p>
+                            </td>
+                            <td className="px-6 py-4">
+                              {p.status === 'paid' ? (
+                                <span className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 uppercase">Đã thanh toán</span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-1 rounded bg-amber-50 text-amber-600 dark:bg-amber-900/30 uppercase">Chờ xử lý</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {p.status === 'pending' && (
+                                  <button 
+                                    onClick={() => handleApprovePayout(p.id)} 
+                                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors"
+                                  >
+                                    Mark as Paid
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {payouts.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-6 py-12 text-center text-slate-500">Không có lệnh rút tiền nào.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </motion.div>
             )}

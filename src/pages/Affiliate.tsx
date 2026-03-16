@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { TrendingUp, Users, DollarSign, ArrowRight, CheckCircle2, ShieldCheck, Globe, Zap, Facebook, Youtube, Video, MessageCircle } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, ArrowRight, CheckCircle2, ShieldCheck, Globe, Zap, Facebook, Youtube, Video, MessageCircle, ChevronRight, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../hooks/useAuth';
 
 export const Affiliate = () => {
   const { t } = useTranslation();
+  const { profile } = useAuth();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -137,11 +139,14 @@ export const Affiliate = () => {
             <div>
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('affiliate.footerCol2')}</h4>
               <div className="flex gap-4">
-                <a href="https://facebook.com" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                <a href="https://www.facebook.com/groups/vibecodecoaching" target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
                   <Facebook size={20} />
                 </a>
-                <a href="https://youtube.com" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                  <Youtube size={20} />
+                <a href="https://zalo.me/g/tdhmtu261" target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                  <MessageCircle size={20} />
+                </a>
+                <a href="https://t.me/vibecodocoaching" target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                  <Send size={20} />
                 </a>
               </div>
             </div>
