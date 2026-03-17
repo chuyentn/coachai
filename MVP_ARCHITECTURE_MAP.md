@@ -54,6 +54,33 @@ Dự án được triển khai theo kiến trúc Serverless (Không máy chủ t
 
 ---
 
+## 📚 Kiến Trúc Lưu Trữ Khóa Học & Tài Liệu (Course Storage Blueprint)
+
+**Tình trạng hiện tại (Legacy):** Trang chủ và trang `/courses/mock-1` đang chạy bằng JSON tĩnh (Mock Data) đóng ghim sẵn trong code. Điều này gây khó trong scale nội dung lớn và không tự động hóa được.
+**Định hướng V2 (Real-time Database + CRM):**
+
+### 1. Nguồn Dữ Liệu Khóa Học (Course Content)
+Toàn bộ Cấu trúc (Tên Khóa, Giá Bán, Mô Tả) phải được migrate thành Documents trong Firebase Firestore collection mang tên `courses`.
+- **Media (Videos & Images):** 
+  - Ảnh Thumbnail tải lên thông qua Firebase Storage lấy URl Public gán vào Firestore.
+  - Video khóa học được khuyên nghị Host trên Server chuyên biệt như **Vimeo**, **YouTube Unlisted** hoặc CDN để tối ưu băng thông (tránh quá tải Firestore/Cloudflare).
+- **Tài liệu đính kèm (PDF/Zip):** Upload qua Firebase Storage dưới quyền `auth.uid` xác thực, đảm bảo chỉ có User trả tiền (VIP) mới có quyền đọc và download bảo vệ bản quyền.
+
+### 2. Mô Hình Nâng Cao: Đồng bộ Data Firebase & Google Sheets (GAS CRM)
+Để đội ngũ Leader, Marketing không cần biết Code vẫn quản lý được leads và dữ liệu, ta dùng giải pháp kết hợp **Google Apps Script (GAS)** và Firebase Automations:
+
+*   **Firebase Cloud Functions Trigger:** Mỗi khi có 1 Lead vào (`onDocumentCreated` trong bảng "users") hoặc 1 User Nhập Feedback ("comments"/"reviews"), Firebase sẽ tự động bắn POST Request (Fetch API).
+*   **Google Apps Script (Webhook Receiver):** 
+    - Phía Google Sheets, vào `Extensions -> Apps Script`.
+    - Viết hàm `doPost(e)` để nhận gói tin HTTP POST Payload (JSON chứa tên, SĐT, comment từ Firebase).
+    - Code GAS nâng cao sẽ tự động phân loại: Nếu là Lead đỗ vào Sheet `[Leads Mới]`, Nếu là Comment đổ vào `[Feedback Sinh Viên]`. Định dạng Timestamp chuẩn.
+    - Cuối cùng GAS trả lại HTTP 200 OK cho dòng Code bên Web an tâm.
+
+> **💡 Tại sao làm thế này?** 
+> Dữ liệu được đảm bảo Dual-bound. Web chạy siêu tốc vì kéo từ Firebase. Nhưng Marketing và Sales Team vẫn có một bản Google Sheet Realtime để gọi điện chốt khách, lọc báo cáo doanh thu tài chính mà không sợ vô tình xóa Data Core của Server.
+
+---
+
 ## 🔌 Sơ Đồ Kết Nối (Connection Map)
 
 ```mermaid
