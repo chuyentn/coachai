@@ -31,8 +31,7 @@ export function useAuth() {
       if (docSnap.exists()) {
         setProfile(docSnap.data() as Profile);
       } else {
-        const urlParams = new URLSearchParams(window.location.search);
-        const refCode = urlParams.get('ref');
+        const refCode = localStorage.getItem('aff_ref');
 
         const newProfile: Profile = {
           id: userId,
@@ -45,6 +44,7 @@ export function useAuth() {
         };
         await setDoc(docRef, newProfile);
         setProfile(newProfile);
+        if (refCode) localStorage.removeItem('aff_ref');
       }
     } catch (error) {
       console.error('Error fetching/creating profile:', error);

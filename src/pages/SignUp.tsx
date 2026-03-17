@@ -30,9 +30,8 @@ export const SignUp: React.FC = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Capture referral code from URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
+      // Capture referral code from LocalStorage (set by App.tsx)
+      const refCode = localStorage.getItem('aff_ref');
 
       // Update Firebase Auth profile
       await updateProfile(user, { displayName: fullName });
@@ -47,6 +46,8 @@ export const SignUp: React.FC = () => {
         referred_by: refCode || null,
         created_at: new Date().toISOString(),
       });
+      // Clear ref code after successful signup
+      if (refCode) localStorage.removeItem('aff_ref');
       
       // Gửi email chào mừng thành viên mới
       try {
@@ -101,14 +102,9 @@ export const SignUp: React.FC = () => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const user = userCredential.user;
-
       // Check if profile exists, if not create it with ref code
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
-
-      // The profile creation is also handled in useAuth.ts, 
-      // but we ensure it's captured here or let useAuth handle it.
-      // For Google Sign-In, it's safer to check and set here if it's the first time.
+      // The profile creation logic is handled in useAuth.ts
+      // where we will also read from localStorage.
       
       navigate('/dashboard/student');
     } catch (err: any) {

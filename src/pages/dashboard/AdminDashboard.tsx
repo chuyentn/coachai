@@ -82,6 +82,7 @@ export const AdminDashboard: React.FC = () => {
   // User Management State
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   React.useEffect(() => {
     // 1. Fetch Stats & Users
@@ -227,6 +228,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const filteredUsers = allUsers.filter(u => 
+    (roleFilter === 'all' || u.role === roleFilter) &&
     (u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
      u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -344,7 +346,10 @@ export const AdminDashboard: React.FC = () => {
                   </motion.div>
 
                   {/* Students – Violet */}
-                  <motion.div className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                  <motion.div 
+                    onClick={() => { setActiveTab('users'); setRoleFilter('student'); }}
+                    className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
                         <Users size={24} />
@@ -456,15 +461,28 @@ export const AdminDashboard: React.FC = () => {
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">Tra cứu, thay đổi quyền hạn và trạng thái tài khoản.</p>
                   </div>
-                  <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Tìm theo email hoặc tên..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                    />
+                  <div className="flex w-full md:w-auto gap-3">
+                    <select
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value)}
+                      className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-700 dark:text-slate-300"
+                    >
+                      <option value="all">Tất cả role</option>
+                      <option value="student">Student</option>
+                      <option value="vip">VIP</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <div className="relative w-full md:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Tìm theo email hoặc tên..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-900 dark:text-white"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="overflow-x-auto">

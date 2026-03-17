@@ -93,6 +93,13 @@ export default function App() {
       }
     }
     testConnection();
+
+    // Auto-capture Affiliate Reference Code from URL globally
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      localStorage.setItem('aff_ref', refCode);
+    }
   }, []);
 
   return (
