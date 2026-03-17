@@ -170,8 +170,8 @@ export const Navbar: React.FC = () => {
                           <LayoutDashboard size={18} />
                           {t('common.dashboard')}
                         </Link>
-                        {/* P4.5: /profile and /settings don't exist — redirect to dashboard instead */}
-                        <Link to={getDashboardLink()} className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                        
+                        <Link to="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
                           <User size={18} />
                           {t('common.profile')}
                         </Link>

@@ -28,6 +28,7 @@ const Pricing = lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pri
 const Affiliate = lazy(() => import('./pages/Affiliate').then(m => ({ default: m.Affiliate })));
 const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
+const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Payment = lazy(() => import('./pages/Payment').then(m => ({ default: m.default })));
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
@@ -130,6 +131,11 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
             <Route 
               path="/learn/:id" 
               element={
