@@ -80,7 +80,7 @@ export const SignUp: React.FC = () => {
       }
 
       setSuccess(true);
-      setTimeout(() => navigate('/auth/signin'), 3000);
+      setTimeout(() => navigate('/dashboard/student'), 3000);
     } catch (err: any) {
       console.error('Sign up error:', err);
       if (err.code === 'auth/email-already-in-use') {
