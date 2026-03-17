@@ -82,7 +82,10 @@ export const AdminDashboard: React.FC = () => {
   // User Management State
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [vipFilter, setVipFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  
   React.useEffect(() => {
     // 1. Fetch Stats & Users
     const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
@@ -159,8 +162,8 @@ export const AdminDashboard: React.FC = () => {
     { id: 'users', label: 'Quản lý Người dùng', icon: Users },
     { id: 'courses', label: 'Quản lý Khóa học', icon: BookOpen },
     { id: 'finance', label: 'Tài chính & Giao dịch', icon: CreditCard },
-    { id: 'approvals', label: 'Duyệt Giảng viên', icon: UserCheck },
-    { id: 'settings', label: 'Cài đặt hệ thống', icon: Settings },
+    { id: 'approvals', label: 'Duyệt Giảng viên', icon: UserCheck, comingSoon: true },
+    { id: 'settings', label: 'Cài đặt hệ thống', icon: Settings, comingSoon: true },
   ] as const;
 
   const handleApprovePayment = async (payment: any) => {
@@ -226,10 +229,24 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const filteredUsers = allUsers.filter(u => 
-    (u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredUsers = allUsers
+    .filter(u => {
+      const matchesSearch = (
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        u.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+      const matchesVip = vipFilter === 'all' || 
+                        (vipFilter === 'vip' && u.role === 'vip') || 
+                        (vipFilter === 'regular' && u.role !== 'vip');
+      
+      return matchesSearch && matchesRole && matchesVip;
+    })
+    .sort((a, b) => {
+      const dateA = a.created_at?.toDate?.() || new Date(a.created_at || 0);
+      const dateB = b.created_at?.toDate?.() || new Date(b.created_at || 0);
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
 
   const handleApproveCourse = async (courseId: string) => {
     if (!window.confirm('Xác nhận duyệt khóa học này? Khóa học sẽ được hiển thị công khai.')) return;
@@ -332,7 +349,16 @@ export const AdminDashboard: React.FC = () => {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Leads – Indigo */}
-                  <motion.div className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                  <motion.div 
+                    onClick={() => {
+                      // Lead management coming soon, for now just show all users
+                      setActiveTab('users');
+                      setSearchTerm('');
+                      setRoleFilter('all');
+                      setVipFilter('all');
+                    }}
+                    className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                         <UserPlus size={24} />
@@ -343,8 +369,16 @@ export const AdminDashboard: React.FC = () => {
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mt-1">Tổng Lead (WOA)</p>
                   </motion.div>
 
-                  {/* Students – Violet */}
-                  <motion.div className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                  {/* Students – Violet */}                  {/* Students – Violet */}
+                  <motion.div 
+                    onClick={() => { 
+                      setActiveTab('users'); 
+                      setRoleFilter('student'); 
+                      setVipFilter('all');
+                      setSearchTerm('');
+                    }}
+                    className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
                         <Users size={24} />
@@ -354,10 +388,16 @@ export const AdminDashboard: React.FC = () => {
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{stats.totalStudents}</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mt-1">Tổng Học Viên</p>
                   </motion.div>
-
                   {/* VIP – Amber */}
-                  {/* VIP – Amber */}
-                  <motion.div className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                  <motion.div 
+                    onClick={() => { 
+                      setActiveTab('users'); 
+                      setVipFilter('vip');
+                      setRoleFilter('all');
+                      setSearchTerm('');
+                    }}
+                    className="bg-white dark:bg-[#111623] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
                         <ShieldCheck size={24} />
@@ -456,15 +496,53 @@ export const AdminDashboard: React.FC = () => {
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">Tra cứu, thay đổi quyền hạn và trạng thái tài khoản.</p>
                   </div>
-                  <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Tìm theo email hoặc tên..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                    />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-700 dark:text-slate-300 font-medium"
+                      >
+                        <option value="all">Tất cả Role</option>
+                        <option value="student">Học viên</option>
+                        <option value="teacher">Giảng viên</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={vipFilter}
+                        onChange={(e) => setVipFilter(e.target.value)}
+                        className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-700 dark:text-slate-300 font-medium"
+                      >
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="vip">Chỉ VIP</option>
+                        <option value="regular">Thường (Non-VIP)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={sortOrder}
+                        onChange={(e) => setSortOrder(e.target.value as any)}
+                        className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-700 dark:text-slate-300 font-medium"
+                      >
+                        <option value="newest">Mới nhất trước</option>
+                        <option value="oldest">Cũ nhất trước</option>
+                      </select>
+                    </div>
+
+                    <div className="relative w-full md:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Tìm email hoặc tên..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-900 dark:text-white"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -473,6 +551,9 @@ export const AdminDashboard: React.FC = () => {
                       <tr>
                         <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Người dùng</th>
                         <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Quyền (Role)</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">VIP</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Ngày tham gia</th>
+                        <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Người giới thiệu</th>
                         <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">Trạng thái</th>
                         <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 text-right">Thao tác</th>
                       </tr>
@@ -500,6 +581,37 @@ export const AdminDashboard: React.FC = () => {
                             </select>
                           </td>
                           <td className="px-6 py-4">
+                            {u.role === 'vip' ? (
+                              <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1 rounded-full border border-amber-200/50">
+                                VIP
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-2.5 py-1 rounded-full">
+                                Thường
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-xs text-slate-500 font-medium">
+                              {u.created_at?.toDate?.() ? u.created_at.toDate().toLocaleDateString('vi-VN') : 
+                               (u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : 'Unknown')}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              {u.referred_by ? (
+                                <>
+                                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full w-fit">
+                                    REF: {u.referred_by.substring(0, 8)}
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 mt-0.5">Mã giới thiệu</span>
+                                </>
+                              ) : (
+                                <span className="text-[10px] text-slate-300 italic">Trực tiếp</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
                             {u.disabled ? (
                               <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-2.5 py-1 rounded-full w-fit">
                                 <Lock size={12} /> Bị khóa
@@ -511,22 +623,42 @@ export const AdminDashboard: React.FC = () => {
                             )}
                           </td>
                           <td className="px-6 py-4 text-right">
-                             <button 
-                               onClick={() => handleToggleUserLock(u.id, u.disabled)}
-                               title={u.disabled ? "Mở khóa tài khoản" : "Khóa tài khoản"}
-                               className={`p-2 rounded-lg transition-colors ${u.disabled ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
-                             >
-                               {u.disabled ? <Unlock size={16} /> : <Lock size={16} />}
-                             </button>
+                             <div className="flex items-center justify-end gap-2">
+                               <button 
+                                 onClick={() => alert(`View Profile for ${u.full_name || u.email}\nID: ${u.id}\n(Feature Coming Soon)`)}
+                                 title="Xem hồ sơ chi tiết"
+                                 className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                               >
+                                 <Edit size={16} />
+                               </button>
+                               <button 
+                                 onClick={() => handleToggleUserLock(u.id, u.disabled)}
+                                 title={u.disabled ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                                 className={`p-2 rounded-lg transition-colors ${u.disabled ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
+                               >
+                                 {u.disabled ? <Unlock size={16} /> : <Lock size={16} />}
+                               </button>
+                             </div>
                           </td>
                         </tr>
                       ))}
                       {filteredUsers.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                          <td colSpan={6} className="px-6 py-20 text-center text-slate-500">
                              <div className="flex flex-col items-center justify-center">
-                               <Search size={32} className="text-slate-300 mb-3" />
-                               <p>Không tìm thấy người dùng nào phù hợp.</p>
+                               <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
+                                 <Search size={32} className="text-slate-300" />
+                               </div>
+                               <p className="font-bold text-slate-900 dark:text-white">Không tìm thấy kết quả</p>
+                               <p className="text-sm text-slate-500 mt-1">Vui lòng điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.</p>
+                               {(searchTerm || roleFilter !== 'all' || vipFilter !== 'all') && (
+                                 <button 
+                                   onClick={() => { setSearchTerm(''); setRoleFilter('all'); setVipFilter('all'); }}
+                                   className="mt-4 text-xs font-bold text-indigo-600 hover:text-indigo-700 underline"
+                                 >
+                                   Xóa tất cả bộ lọc
+                                 </button>
+                               )}
                              </div>
                           </td>
                         </tr>
