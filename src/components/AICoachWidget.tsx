@@ -11,20 +11,6 @@ interface Message {
 
 const MAX_FREE_QUESTIONS = 3;
 
-const DEMO_RESPONSES: Record<string, string> = {
-  default: "Câu hỏi hay đấy! 🎯 Để tối ưu dự án AI của bạn, tôi khuyên bạn nên bắt đầu với Make.com hoặc n8n để tự động hóa workflow, sau đó kết nối với ChatGPT API. Tất cả đều có sẵn mã nguồn trong kho Projects của chúng tôi!",
-  ai: "AI No-Code là xu hướng 2026! 🚀 Bạn có thể xây chatbot, auto-post, voice AI mà không cần viết 1 dòng code nào. Trên nền tảng CoachAI, mỗi dự án đều có source code đầy đủ để bạn clone về và chạy ngay.",
-  code: "Bạn hoàn toàn không cần biết code! 💡 Các công cụ No-Code như Typebot, Make.com, Vapi cho phép bạn kéo thả tạo app AI. Chúng tôi có hơn 120+ dự án mẫu kèm hướng dẫn step-by-step.",
-  money: "Kiếm tiền với AI rất thực tế! 💰 Bạn có thể xây chatbot bán cho doanh nghiệp, tạo hệ thống auto marketing, hoặc tham gia chương trình Affiliate của chúng tôi với hoa hồng lên đến 50%.",
-};
-
-function getSmartResponse(userMsg: string): string {
-  const msg = userMsg.toLowerCase();
-  if (msg.includes('ai') || msg.includes('trí tuệ') || msg.includes('chatbot') || msg.includes('tự động')) return DEMO_RESPONSES.ai;
-  if (msg.includes('code') || msg.includes('lập trình') || msg.includes('viết code') || msg.includes('không biết code')) return DEMO_RESPONSES.code;
-  if (msg.includes('tiền') || msg.includes('kiếm') || msg.includes('thu nhập') || msg.includes('affiliate')) return DEMO_RESPONSES.money;
-  return DEMO_RESPONSES.default;
-}
 
 export const AICoachWidget: React.FC = () => {
   const { profile } = useAuth();
@@ -64,21 +50,52 @@ export const AICoachWidget: React.FC = () => {
     const newCount = questionsUsed + 1;
     setQuestionsUsed(newCount);
 
-    // Simulate AI thinking delay
-    await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
+    try {
+      const isDemoMode = import.meta.env.VITE_AI_DEMO_MODE === 'true';
+      let aiText = '';
 
-    const aiText = getSmartResponse(userMessage);
-    setMessages(prev => [...prev, { role: 'model', text: aiText }]);
-    setLoading(false);
+      if (isDemoMode) {
+        // Fallback for demo mode
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        aiText = "Đây là kết quả từ Demo Mode. Tính năng thật sẽ gọi Google API qua Cloudflare server.";
+      } else {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: userMessage, 
+            courseTitle: "Home", 
+            lessonTitle: "Trợ Lý Khách Truy Cập" 
+          }),
+        });
 
-    // If they've used all questions, show upgrade message after a short delay
-    if (!profile && newCount >= MAX_FREE_QUESTIONS) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          role: 'model',
-          text: '🔒 Bạn đã dùng hết 3 câu hỏi miễn phí! Đăng ký tài khoản FREE để tiếp tục chat với AI Coach không giới hạn, hoặc nâng cấp VIP để được Coach 1:1 cá nhân hóa.'
-        }]);
-      }, 1500);
+        if (!res.ok) {
+           const errData = await res.json().catch(() => ({}));
+           throw new Error(errData.error || `Lỗi máy chủ (${res.status})`);
+        }
+        const data = await res.json();
+        aiText = data.text || "Xin lỗi, tôi gặp chút trục trặc. Bạn có thể thử lại không?";
+      }
+
+      setMessages(prev => [...prev, { role: 'model', text: aiText }]);
+    } catch (error: any) {
+      console.error('AI Coach Widget Error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'model', 
+        text: `⚠️ Hệ thống AI hiện đang bận hoặc gián đoạn kết nối. Vui lòng kiểm tra lại thiết lập API Key. (Chi tiết: ${error.message})` 
+      }]);
+    } finally {
+      setLoading(false);
+
+      // If they've used all questions, show upgrade message after a short delay
+      if (!profile && newCount >= MAX_FREE_QUESTIONS) {
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            role: 'model',
+            text: '🔒 Bạn đã dùng hết 3 câu hỏi miễn phí! Đăng ký tài khoản FREE để tiếp tục chat trực tiếp với AI Coach, hoặc nâng cấp VIP để Coach 1:1 cá nhân hóa.'
+          }]);
+        }, 1500);
+      }
     }
   };
 
