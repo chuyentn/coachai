@@ -124,12 +124,21 @@ export const Pricing = () => {
                 )}
               </div>
               
-              <Link 
-                to={authLoading ? "#" : (profile ? `/payment?plan=vip&amount=${isYearly ? 1500000 : 199000}` : "/auth/signup?plan=vip")} 
-                className="w-full py-4 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all mb-10 text-sm shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 relative z-10 transform hover:-translate-y-0.5"
-              >
-                {t('pricing.btnBuyNow')}
-              </Link>
+              {(!profile || profile?.role === 'student' || profile?.role === 'vip') ? (
+                <Link 
+                  to={authLoading ? "#" : (profile ? `/payment?plan=vip&amount=${isYearly ? 1500000 : 199000}` : "/auth/signup?plan=vip")} 
+                  className="w-full py-4 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all mb-10 text-sm shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 relative z-10 transform hover:-translate-y-0.5"
+                >
+                  {t('pricing.btnBuyNow')}
+                </Link>
+              ) : (
+                <Link 
+                  to={profile.role === 'admin' ? "/admin" : "/teacher"}
+                  className="w-full py-4 px-4 rounded-xl bg-slate-800 text-white font-bold text-center transition-all mb-10 text-sm relative z-10"
+                >
+                  {t('common.dashboard')}
+                </Link>
+              )}
               
               <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-300 flex-1 relative z-10">
                 <li className="flex items-center gap-3 text-slate-900 dark:text-white">
@@ -162,13 +171,21 @@ export const Pricing = () => {
               <div className="text-indigo-600 dark:text-indigo-400 font-bold text-xs mb-1 uppercase tracking-widest hidden md:block opacity-0">{t('pricing.coachLabel')}</div>
               <div className="text-[2.5rem] leading-none font-bold text-slate-900 dark:text-white tracking-tight mt-6">{t('pricing.coachPrice')}</div>
             </div>
-            
-            <Link 
-              to={authLoading ? "#" : (profile ? "/contact" : "/auth/signup?plan=coaching")} 
-              className="w-full py-4 px-4 rounded-xl border-2 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white transition-all mb-10 text-sm bg-transparent"
-            >
-              {t('pricing.btnContact')}
-            </Link>
+                        {(!profile || profile?.role === 'student' || profile?.role === 'vip') ? (
+                <Link 
+                  to={authLoading ? "#" : (profile ? "/contact" : "/auth/signup?plan=coaching")} 
+                  className="w-full py-4 px-4 rounded-xl border-2 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white transition-all mb-10 text-sm bg-transparent"
+                >
+                  {t('pricing.btnContact')}
+                </Link>
+              ) : (
+                <Link 
+                  to="/contact"
+                  className="w-full py-4 px-4 rounded-xl border-2 border-slate-100 text-slate-500 font-bold text-center transition-all mb-10 text-sm"
+                >
+                  Hỗ trợ chuyên gia
+                </Link>
+              )}
             
             <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-300 flex-1">
               <li className="flex items-center gap-3">

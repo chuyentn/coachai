@@ -156,9 +156,15 @@ export const Home: React.FC = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-                <Link to="/auth/signup" className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center whitespace-nowrap">
-                  {t('home.heroBtnStart')}
-                </Link>
+                {(!profile || profile?.role === 'student' || profile?.role === 'vip') ? (
+                  <Link to={profile ? "/dashboard" : "/auth/signup"} className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center whitespace-nowrap">
+                    {profile ? t('common.dashboard') : t('home.heroBtnStart')}
+                  </Link>
+                ) : (
+                  <Link to={profile?.role === 'admin' ? "/admin" : "/teacher"} className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center whitespace-nowrap">
+                    {t('common.dashboard')}
+                  </Link>
+                )}
                 <Link to="/projects" className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-black text-lg hover:border-indigo-100 dark:hover:border-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
                    {t('home.heroBtnDemo')}
                 </Link>
@@ -453,12 +459,22 @@ export const Home: React.FC = () => {
                   <CheckCircle2 size={18} className="text-indigo-400 flex-shrink-0" /> {t('home.pricingVipFeature5')}
                 </li>
               </ul>
-              <Link 
-                to={profile ? "/payment?plan=vip&amount=1500000" : "/auth/signup?plan=vip"} 
-                className="block w-full text-center py-4 rounded-2xl bg-indigo-600 text-white font-black hover:bg-indigo-500 shadow-xl shadow-indigo-900/20 transition-all"
-              >
-                {t('home.pricingVipBtn')}
-              </Link>
+              {(!profile || profile?.role === 'student' || profile?.role === 'vip') && (
+                <Link 
+                  to={profile ? "/payment?plan=vip&amount=1500000" : "/auth/signup?plan=vip"} 
+                  className="block w-full text-center py-4 rounded-2xl bg-indigo-600 text-white font-black hover:bg-indigo-500 shadow-xl shadow-indigo-900/20 transition-all"
+                >
+                  {t('home.pricingVipBtn')}
+                </Link>
+              )}
+              {(profile?.role === 'admin' || profile?.role === 'teacher') && (
+                <Link 
+                  to={profile?.role === 'admin' ? "/admin" : "/teacher"} 
+                  className="block w-full text-center py-4 rounded-2xl bg-slate-700 text-white font-black hover:bg-slate-600 transition-all"
+                >
+                  Vào Dashboard
+                </Link>
+              )}
             </div>
 
             {/* Coaching Plan */}

@@ -233,7 +233,7 @@ export const StudentDashboard: React.FC = () => {
             ))}
           </div>
           {/* VIP Upgrade Banner */}
-          {profile?.role !== 'vip' && (
+          {profile?.role === 'student' && (
             <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-[2.5rem] p-8 md:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-indigo-500/30 shadow-2xl relative overflow-hidden">
                <div className="absolute inset-0 bg-transparent opacity-5" style={{backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')"}} />
                <div className="relative z-10 max-w-xl">
