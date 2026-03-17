@@ -24,12 +24,13 @@ import {
   Zap,
   UserPlus
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const StudentDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<(Enrollment & { course?: Course })[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'in_progress' | 'completed'>('all');

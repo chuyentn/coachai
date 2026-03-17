@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -15,7 +16,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CourseBuilder } from '../../components/dashboard/CourseBuilder';
 import { db } from '../../lib/firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -23,6 +24,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 export const TeacherDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'payouts' | 'settings'>('overview');
   const [isCreatingCourse, setIsCreatingCourse] = useState(false);
 
@@ -132,14 +134,17 @@ export const TeacherDashboard: React.FC = () => {
               { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
               { id: 'courses', label: 'Khóa học của tôi', icon: BookOpen },
               { id: 'payouts', label: 'Rút tiền (Payout)', icon: DollarSign, comingSoon: true },
-              { id: 'settings', label: 'Cài đặt', icon: Settings, comingSoon: true }
+              { id: 'settings', label: 'Hồ sơ cá nhân', icon: Settings }
             ].map((item: any) => (
               <button
                 key={item.id}
                 onClick={() => {
                   if (item.comingSoon) return;
-                  setActiveTab(item.id as any);
-                  setIsCreatingCourse(false);
+                  if (item.id === 'settings') {
+                    navigate('/profile');
+                    return;
+                  }
+                  setActiveTab(item.id);
                 }}
                 className={`w-full flex items-center justify-between px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === item.id && !isCreatingCourse
