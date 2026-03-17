@@ -97,8 +97,8 @@ export const StudentDashboard: React.FC = () => {
     { id: 'overview', label: t('studentDashboard.overview'), icon: LayoutDashboard },
     { id: 'my-courses', label: t('studentDashboard.myCourses'), icon: BookOpen },
     { id: 'certificates', label: t('studentDashboard.certificates'), icon: Award },
-    { id: 'ai-coach', label: t('studentDashboard.aiCoach'), icon: Zap },
-    { id: 'messages', label: t('studentDashboard.discussions'), icon: MessageSquare },
+    { id: 'ai-coach', label: t('studentDashboard.aiCoach'), icon: Zap, comingSoon: true },
+    { id: 'messages', label: t('studentDashboard.discussions'), icon: MessageSquare, comingSoon: true },
     { id: 'settings', label: t('studentDashboard.settings'), icon: Settings },
   ];
 
@@ -118,15 +118,24 @@ export const StudentDashboard: React.FC = () => {
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                onClick={() => !item.comingSoon && setActiveTab(item.id)}
+                className={`w-full flex items-center justify-between px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === item.id 
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
+                    : item.comingSoon
+                      ? 'text-slate-400 cursor-not-allowed'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
                 }`}
               >
-                <item.icon size={20} />
-                {item.label}
+                <div className="flex items-center gap-3">
+                  <item.icon size={20} />
+                  {item.label}
+                </div>
+                {item.comingSoon && (
+                  <span className="text-[8px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full border border-slate-200 dark:border-slate-700">
+                    Sắp có
+                  </span>
+                )}
               </button>
             ))}
           </nav>

@@ -131,23 +131,33 @@ export const TeacherDashboard: React.FC = () => {
             {[
               { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
               { id: 'courses', label: 'Khóa học của tôi', icon: BookOpen },
-              { id: 'payouts', label: 'Rút tiền (Payout)', icon: DollarSign },
-              { id: 'settings', label: 'Cài đặt', icon: Settings }
-            ].map((item) => (
+              { id: 'payouts', label: 'Rút tiền (Payout)', icon: DollarSign, comingSoon: true },
+              { id: 'settings', label: 'Cài đặt', icon: Settings, comingSoon: true }
+            ].map((item: any) => (
               <button
                 key={item.id}
                 onClick={() => {
+                  if (item.comingSoon) return;
                   setActiveTab(item.id as any);
                   setIsCreatingCourse(false);
                 }}
-                className={`w-full flex items-center gap-3 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                className={`w-full flex items-center justify-between px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === item.id && !isCreatingCourse
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
+                    : item.comingSoon
+                      ? 'text-slate-400 cursor-not-allowed'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
                 }`}
               >
-                <item.icon size={20} />
-                {item.label}
+                <div className="flex items-center gap-3">
+                  <item.icon size={20} />
+                  {item.label}
+                </div>
+                {item.comingSoon && (
+                  <span className="text-[8px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full border border-slate-200 dark:border-slate-700">
+                    Sắp có
+                  </span>
+                )}
               </button>
             ))}
           </nav>

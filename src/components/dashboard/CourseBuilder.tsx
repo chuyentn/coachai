@@ -8,7 +8,8 @@ import {
   GripVertical, 
   HelpCircle,
   Clock,
-  Settings
+  Settings,
+  Zap
 } from 'lucide-react';
 import { motion, Reorder } from 'motion/react';
 
@@ -51,7 +52,12 @@ export const CourseBuilder: React.FC = () => {
   return (
     <div className="bg-white dark:bg-[#111623] rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
+        <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-[2px] z-50 flex items-center justify-center rounded-t-[2rem]">
+          <div className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-indigo-600/20 flex items-center gap-2 transform -rotate-1">
+            <Zap size={18} fill="currentColor" /> TÍNH NĂNG ĐANG HOÀN THIỆN - SẮP RA MẮT
+          </div>
+        </div>
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Video className="text-indigo-600" /> Course Builder
@@ -60,7 +66,8 @@ export const CourseBuilder: React.FC = () => {
         </div>
         <button 
           onClick={handleSave}
-          className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+          disabled
+          className="px-6 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-400 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed"
         >
           <Save size={18} /> Lưu Bản Nháp
         </button>
