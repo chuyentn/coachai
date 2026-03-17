@@ -28,7 +28,8 @@ import {
   RefreshCw,
   Unlock,
   ShieldAlert,
-  Edit
+  Edit,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -40,7 +41,8 @@ import {
   limit, 
   onSnapshot, 
   doc, 
-  updateDoc, 
+  updateDoc,
+  setDoc,
   where,
   getDocs,
   serverTimestamp,
@@ -53,6 +55,7 @@ export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'courses' | 'approvals' | 'finance' | 'settings'>('overview');
   
   // Settings form state
+  const [saveLoading, setSaveLoading] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [appName, setAppName] = useState('CoachAI – Vibe Code');
   const [supportEmail, setSupportEmail] = useState('support@coachai.vn');
@@ -154,6 +157,21 @@ export const AdminDashboard: React.FC = () => {
     };
   }, []);
 
+  // 6. Fetch System Settings (Realtime)
+  React.useEffect(() => {
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'system'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setAppName(data.appName || 'CoachAI');
+        setSupportEmail(data.supportEmail || '');
+        setSupportPhone(data.supportPhone || '');
+        setAffiliateRate(String(data.affiliateRate || '30'));
+        setFreeTrialDays(String(data.freeTrialDays || '7'));
+      }
+    });
+    return () => unsubSettings();
+  }, []);
+
   const sidebarItems = [
     { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
     { id: 'users', label: 'Quản lý Người dùng', icon: Users },
@@ -195,9 +213,37 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleSaveSettings = () => {
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 3000);
+  const handleSaveSettings = async () => {
+    // Validation
+    if (!appName.trim()) return alert('Tên ứng dụng không được để trống');
+    if (!supportEmail.includes('@')) return alert('Email hỗ trợ không hợp lệ');
+    
+    const rate = parseInt(affiliateRate);
+    if (isNaN(rate) || rate < 0 || rate > 100) return alert('Tỷ lệ hoa hồng phải từ 0-100%');
+    
+    const days = parseInt(freeTrialDays);
+    if (isNaN(days) || days < 0) return alert('Số ngày dùng thử không hợp lệ');
+
+    setSaveLoading(true);
+    try {
+      await setDoc(doc(db, 'settings', 'system'), {
+        appName,
+        supportEmail,
+        supportPhone,
+        affiliateRate: rate,
+        freeTrialDays: days,
+        updatedAt: serverTimestamp(),
+        updatedBy: profile?.uid || 'admin'
+      }, { merge: true });
+
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 3000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Lỗi khi lưu cài đặt hệ thống.');
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const handleApproveTeacher = (id: string) => {
@@ -945,17 +991,31 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Save Button */}
-                <div className="flex justify-end">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 p-6 bg-slate-50 dark:bg-slate-800/30 rounded-3xl border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+                    <Activity size={18} />
+                    <span className="text-xs font-medium">
+                      {loading ? 'Đang tải cấu hình...' : 'Dữ liệu được bảo mật & đồng bộ realtime'}
+                    </span>
+                  </div>
                   <button
                     onClick={handleSaveSettings}
+                    disabled={saveLoading}
                     className={`flex items-center gap-2.5 px-8 py-3.5 rounded-2xl font-bold text-sm transition-all duration-300 ${
+                      saveLoading ? 'opacity-70 cursor-wait' : 
                       settingsSaved
                         ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
                         : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 hover:-translate-y-0.5'
                     }`}
                   >
-                    {settingsSaved ? <CheckCircle2 size={18} /> : <Save size={18} />}
-                    {settingsSaved ? 'Đã lưu!' : 'Lưu cài đặt'}
+                    {saveLoading ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : settingsSaved ? (
+                      <CheckCircle2 size={18} />
+                    ) : (
+                      <Save size={18} />
+                    )}
+                    {saveLoading ? 'Đang lưu...' : settingsSaved ? 'Đã lưu!' : 'Lưu cài đặt'}
                   </button>
                 </div>
               </motion.div>
