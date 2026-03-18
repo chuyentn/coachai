@@ -363,8 +363,8 @@ function seedDataForSheet(sheet, name) {
  * Đọc dữ liệu từ Sheet và chuyển sang định dạng JSON
  */
 function getSheetDataAsJson(ss, sheetName) {
-  var sheet = ss.getSheetByName(sheetName);
-  if (!sheet) return createJsonResponse({ error: "Sheet not found: " + sheetName });
+  var sheet = getOrCreateSheet(ss, sheetName);
+  if (!sheet) return createJsonResponse({ error: "Sheet not found even after creation logic: " + sheetName });
   
   var data = sheet.getDataRange().getValues();
   if (data.length < 2) return createJsonResponse([]); // Chỉ có tiêu đề hoặc trống
@@ -408,4 +408,15 @@ function setupSheets(ss) {
 function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * HÀM TEST SETUP (CHẠY TRỰC TIẾP TRONG EDITOR)
+ * Nếu bạn muốn tạo lại toàn bộ sheet, hãy chọn hàm 'runSetup' ở trên đầu và nhấn 'Chạy'.
+ */
+function runSetup() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log("Bắt đầu setup toàn bộ sheets...");
+  setupSheets(ss);
+  Logger.log("Hoàn tất setup!");
 }
