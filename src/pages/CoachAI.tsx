@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CoachAICard } from '../components/CoachAI/CoachAICard';
-import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { Sparkles, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { crmService } from '../services/crmService';
 import type { CoachAIConfig, RoleTarget, BotCategory } from '../components/CoachAI/types';
 import { googleSheetsService } from '../services/googleSheetsService';
 import { useTranslation } from 'react-i18next';
@@ -101,13 +102,16 @@ const FALLBACK_DATA: CoachAIConfig = {
 };
 
 export const CoachAI: React.FC = () => {
+  const { i18n, t } = useTranslation();
   const [data, setData] = useState<CoachAIConfig | null>(null);
   const [loading, setLoading] = useState(true);
-  
   const [activeRole, setActiveRole] = useState<RoleTarget | 'all'>('student');
   const [activeCategory, setActiveCategory] = useState<BotCategory | 'all'>('all');
-
-  const { i18n } = useTranslation();
+  
+  // Newsletter state
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const lang = i18n.language === 'en' ? 'en' : 'vi';
 
   useEffect(() => {
@@ -300,19 +304,62 @@ export const CoachAI: React.FC = () => {
           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-8 rounded-3xl h-fit border border-indigo-100 dark:border-indigo-800/30">
             <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-100 mb-2">Tham gia cộng đồng AI</h3>
             <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-6">Nhận lộ trình cập nhật mới nhất về các công cụ AI, MMO và Xây khóa học mỗi tuần.</p>
-            <form className="flex flex-col sm:flex-row gap-3">
-              <input 
-                type="email" 
-                placeholder="Nhập email của bạn..." 
-                className="flex-1 px-4 py-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800/80 dark:text-white placeholder:text-slate-400"
-              />
-              <button 
-                type="button"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all active:scale-95"
+            
+            {isSuccess ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold"
               >
-                Nhận Roadmap <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
+                <CheckCircle2 className="w-5 h-5" /> Đã đăng ký thành công!
+              </motion.div>
+            ) : (
+              <form 
+                className="flex flex-col sm:flex-row gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!email || isSubmitting) return;
+                  setIsSubmitting(true);
+                  try {
+                    await googleSheetsService.submitLead(email, '', '', '[CoachAI Newsletter] Nhận Roadmap AI mỗi tuần');
+                    await crmService.sendTransactionalEmail(
+                      email,
+                      '🎁 [CoachAI] Roadmap AI & Roadmap MMO dành cho bạn',
+                      `
+                        <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với CoachAI Roadmap!</h2>
+                        <p style="font-size: 16px;">Cảm ơn bạn đã đăng ký nhận lộ trình phát triển AI & MMO. Bạn đã thực hiện bước đi đúng đắn để làm chủ công nghệ và tạo ra thu nhập thụ động.</p>
+                        <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #4f46e5; margin: 20px 0;">
+                          <p style="margin: 0;"><strong>🎁 Quà tặng kèm theo:</strong> Danh sách 50+ công cụ AI giúp X3 tốc độ làm việc (vừa cập nhật).</p>
+                        </div>
+                        <p style="font-size: 16px;">Hãy thường xuyên kiểm tra hòm thư để không bỏ lỡ các dự án thực chiến mới nhất từ CoachAI.</p>
+                      `
+                    );
+                    setIsSuccess(true);
+                    setEmail('');
+                  } catch (err) {
+                    console.error('Lỗi đăng ký Newsletter CoachAI:', err);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+              >
+                <input 
+                  type="email" 
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Nhập email của bạn..." 
+                  className="flex-1 px-4 py-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800/80 dark:text-white placeholder:text-slate-400"
+                />
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <>Nhận Roadmap <ArrowRight className="w-4 h-4" /></>}
+                </button>
+              </form>
+            )}
           </div>
         </section>
       </div>

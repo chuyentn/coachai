@@ -415,6 +415,7 @@
     "formTitle": "Send us a",
     "formTitleHighlight": "message",
     "formName": "Full Name",
+    "formEmail": "Email",
     "formPhone": "Phone Number",
     "formTopic": "Consultation Topic",
     "topicPlaceholder": "-- Select Topic --",

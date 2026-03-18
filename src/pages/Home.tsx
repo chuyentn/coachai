@@ -111,8 +111,28 @@ export const Home: React.FC = () => {
 
     setLeadLoading(true);
     try {
-      await googleSheetsService.submitLead(leadEmail);
+      await googleSheetsService.submitLead(
+        leadEmail,
+        '',
+        '',
+        '[Newsletter] Đăng ký nhận tài nguyên Free'
+      );
       await crmService.addContact(leadEmail);
+      
+      // Gửi Email tự động tặng quà từ Hệ sinh thái
+      await crmService.sendTransactionalEmail(
+        leadEmail,
+        '🎁 [CoachAI] Xác nhận Đăng ký Newsletter & Nhận Quà',
+        `
+          <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với Cộng đồng CoachAI!</h2>
+          <p style="font-size: 16px;">Cảm ơn bạn đã đăng ký theo dõi Newsletter. Tại đây, chúng tôi chia sẻ đều đặn các Kiến thức Lập trình thực chiến, xu hướng AI và tư duy vận hành sản phẩm công nghệ.</p>
+          <div style="background-color: #f0fdf4; padding: 15px; border-left: 4px solid #22c55e; margin: 20px 0; border-radius: 4px;">
+            <strong style="color: #166534; display: block; margin-bottom: 5px;">Món quà đầu tiên dành cho bạn:</strong>
+            <p style="margin: 0; color: #15803d;">Sách điện tử: "Hành Trang Trở Thành Lập Trình Viên Độc Lập" - Đính kèm bên dưới bài viết VIP của CoachAI.</p>
+          </div>
+          <p style="font-size: 16px;">Hãy kiểm tra Hộp thư Thường xuyên nhé. Nếu bạn muốn bứt tốc sớm hơn, đừng ngần ngại truy cập trực tiếp các lộ trình tại Coaching Hub.</p>
+        `
+      );
       
       setLeadSuccess(true);
       setLeadEmail('');

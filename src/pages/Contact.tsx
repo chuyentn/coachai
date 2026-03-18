@@ -3,15 +3,8 @@ import { motion } from 'motion/react';
 import { MessageSquare, Calendar, Phone, Mail, CheckCircle2, User, Send, ArrowRight, Zap, Globe, ShieldCheck, Facebook, Youtube, Users, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
 export const Contact = () => {
   const { t } = useTranslation();
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-  };
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans relative overflow-hidden transition-colors duration-300">
@@ -95,78 +88,21 @@ export const Contact = () => {
             </div>
           </div>
 
-          {/* Form */}
-          <div className="bg-white dark:bg-[#111623] rounded-[2.5rem] p-10 md:p-12 shadow-xl border border-slate-100 dark:border-slate-800">
-            {submitted ? (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="h-full flex flex-col items-center justify-center py-10"
-              >
-                <div className="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6">
-                  <CheckCircle2 size={48} />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-4 text-center">{t('contact.successTitle')}</h2>
-                <p className="text-slate-500 text-center font-medium max-w-sm">
-                  {t('contact.successDesc')}
-                </p>
-                <button 
-                  onClick={() => setSubmitted(false)}
-                  className="mt-8 px-6 py-3 border-2 border-slate-200 rounded-full text-slate-600 font-bold hover:bg-slate-50 transition-colors"
-                >
-                  {t('contact.btnSendMore')}
-                </button>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-8">{t('contact.formTitle')} <span className="text-indigo-600">{t('contact.formTitleHighlight')}</span></h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('contact.formName')}</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                      <input required type="text" className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white" placeholder="" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('contact.formPhone')}</label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                      <input required type="tel" className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white" placeholder="" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('contact.formTopic')}</label>
-                  <div className="relative">
-                    <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <select required className="w-full appearance-none pl-12 pr-4 py-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-slate-700 dark:text-slate-300">
-                      <option value="">{t('contact.topicPlaceholder')}</option>
-                      <option value="coaching">{t('contact.topicCoaching')}</option>
-                      <option value="course">{t('contact.topicCourse')}</option>
-                      <option value="affiliate">{t('contact.topicAffiliate')}</option>
-                      <option value="other">{t('contact.topicOther')}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('contact.formContent')}</label>
-                  <textarea 
-                    required 
-                    rows={4} 
-                    className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 resize-none font-medium text-slate-900 dark:text-white" 
-                    placeholder={t('contact.contentPlaceholder')}
-                  ></textarea>
-                </div>
-
-                <button type="submit" className="w-full py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl font-black flex items-center justify-center gap-2 hover:bg-indigo-600 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-none">
-                  {t('contact.btnSubmit')} <Send size={20} />
-                </button>
-              </form>
-            )}
+          {/* Form / Booking Lịch */}
+          <div className="bg-white dark:bg-[#111623] rounded-[2.5rem] p-4 md:p-8 shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col h-[700px]">
+            <div className="text-center mb-6 px-4">
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-2">Đặt lịch <span className="text-indigo-600">Coaching 1:1</span></h2>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Chọn khung giờ phù hợp bên dưới. Hệ thống sẽ tự động duyệt và gửi link Google Meet qua Email của bạn.</p>
+            </div>
+            
+            <div className="flex-1 w-full relative rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+              <iframe 
+                src="https://cal.com/victorchuyen/coaching?embed=true&theme=light" 
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title="Đặt lịch Coaching CoachAI"
+                className="absolute inset-0"
+              />
+            </div>
           </div>
         </div>
       </div>

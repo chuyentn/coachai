@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../hooks/useAuth';
 import { googleSheetsService } from '../services/googleSheetsService';
+import { crmService } from '../services/crmService';
 
 export const Projects = () => {
   const { t } = useTranslation();
@@ -73,40 +74,29 @@ export const Projects = () => {
     setIsSubmitting(true);
     
     try {
-      const webhookUrl = import.meta.env.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL;
-      
-      if (!webhookUrl) {
-        console.warn('Webhook URL not configured, skipping actual submission for testing phase.');
-        // Fallback for local testing without env var
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsSuccess(true);
-        return;
-      }
-
-      const payload = {
-        type: 'lead_magnet_project',
-        project: selectedProject,
-        name,
+      await googleSheetsService.submitLead(
         email,
+        name,
         phone,
-        timestamp: new Date().toISOString()
-      };
-
-      const res = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload),
-        mode: 'no-cors' // Use no-cors since Apps Script often has strict CORS defaults for POST
-      });
+        `[Nhận Code Dự Án] ${selectedProject}`
+      );
       // Trigger the backend Cloudflare function to send a welcome email via Resend
       try {
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name, project: selectedProject })
-        });
+        await crmService.sendTransactionalEmail(
+          email,
+          `🎉 [CoachAI] Yêu cầu Mã Nguồn: ${selectedProject}`,
+          `
+            <h2 style="color: #4f46e5; margin-top: 0;">Yêu cầu mã nguồn thành công!</h2>
+            <p>Chào <strong>${name || 'bạn'}</strong>,</p>
+            <p>Cảm ơn bạn đã quan tâm và đăng ký nhận bản quyền mã nguồn cho dự án: <br/>
+              <strong style="color: #e11d48; font-size: 18px; display: inline-block; margin-top: 5px;">🏆 ${selectedProject}</strong>
+            </p>
+            <div style="background-color: #f8fafc; padding: 20px; border-left: 5px solid #4f46e5; margin: 25px 0; border-radius: 0 8px 8px 0;">
+               <h3 style="margin-top: 0; color: #0f172a;">🔥 Trạng Thái: Đã Tiếp Nhận</h3>
+               <p style="margin-bottom: 0;">Yêu cầu của bạn đã được ghi nhận vào hệ thống CRM. Mentor sẽ liên hệ nhanh với bạn qua Zalo/SĐT để gửi bộ File Source Code và Hướng dẫn Deploy an toàn trong vòng 24h tới.</p>
+            </div>
+          `
+        );
       } catch (emailErr) {
         console.error('Lỗi khi gửi email chào mừng (Resend API):', emailErr);
         // We don't block the UI success state if only the email fails

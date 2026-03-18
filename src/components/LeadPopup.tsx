@@ -62,7 +62,7 @@ export const LeadPopup: React.FC = () => {
         formData.email,
         formData.name,
         formData.phone,
-        formData.note
+        `[Trang chủ Popup] Giai đoạn: ${formData.note || 'Chưa chọn'}`
       );
       if (success) {
         setSubmitted(true);
@@ -74,18 +74,14 @@ export const LeadPopup: React.FC = () => {
             formData.email,
             `🎁 Quà tặng từ CoachAI: Hệ sinh thái AI & Coaching`,
             `
-              <div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #4f46e5;">Chào ${formData.name}!</h2>
-                <p>Cảm ơn bạn đã quan tâm đến <strong>CoachAI</strong>. Chúng tôi đã nhận được thông tin đăng ký nhận quà của bạn.</p>
-                <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; margin: 20px 0;">
-                  <p style="margin: 0;"><strong>Trạng thái:</strong> Đang xử lý</p>
-                  <p style="margin: 5px 0 0 0;"><strong>Gói quà:</strong> Bộ tài liệu hướng dẫn AI & Coaching thực chiến</p>
-                </div>
-                <p>Mentor sẽ sớm liên hệ với bạn qua SĐT <strong>${formData.phone}</strong> để gửi quà và hỗ trợ bạn tốt nhất.</p>
-                <p>Đừng quên khám phá các khóa học hấp dẫn của chúng tôi tại <a href="https://edu.victorchuyen.net">edu.victorchuyen.net</a>.</p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-                <p style="font-size: 12px; color: #999;">© 2026 CoachAI. Mọi quyền được bảo lưu.</p>
+              <h2 style="color: #4f46e5; margin-top: 0;">Chào ${formData.name}!</h2>
+              <p>Cảm ơn bạn đã quan tâm đến <strong>CoachAI</strong>. Chúng tôi đã nhận được thông tin đăng ký nhận quà của bạn.</p>
+              <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Trạng thái:</strong> Đã tiếp nhận & Đang xử lý</p>
+                <p style="margin: 5px 0 0 0;"><strong>Gói quà:</strong> Bộ tài liệu hướng dẫn AI & Coaching thực chiến</p>
               </div>
+              <p>Mentor sẽ sớm liên hệ với bạn qua SĐT <strong>${formData.phone}</strong> để gửi quà và hỗ trợ bạn lộ trình phát triển tốt nhất.</p>
+              <p>Trong lúc đó, hãy khám phá các khóa học hấp dẫn khác của chúng tôi tại Dashboard nhé.</p>
             `
           );
         } catch (emailErr) {

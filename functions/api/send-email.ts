@@ -26,48 +26,67 @@ export const onRequestPost = async (context: any) => {
     }
 
     const resend = new Resend(env.RESEND_API_KEY);
+    const senderEmail = "onboarding@resend.dev"; // Thay đổi khi chạy thật
 
-    // KHI TEST: Resend bắt buộc dùng email 'onboarding@resend.dev' nếu bạn chưa verify Domain.
-    // KHI LIVE THẬT: Bạn phải vào trang Resend -> Domains -> Thêm edu.victorchuyen.net rồi đổi email gửi thành hello@edu.victorchuyen.net
-    const senderEmail = "onboarding@resend.dev"; 
+    // -- 1. CHUẨN HOÁ DỮ LIỆU ĐẦU VÀO --
+    // Hỗ trợ cả chuẩn mới (body.to, body.subject, body.html) do crmService gọi
+    // Lẫn chuẩn cũ (body.email, body.name, body.project) do Projects.tsx gọi cũ
+    const targetEmail = body.to || body.email;
+    const emailSubject = body.subject || `🎉 [CoachAI] Yêu cầu Mã Nguồn: ${body.project || 'Thành công'}`;
+    
+    if (!targetEmail) {
+      return new Response(JSON.stringify({ error: 'Missing destination email (body.to or body.email)' }), { status: 400 });
+    }
 
-    // Bắn Email HTML xịn xò
-    const { data, error } = await resend.emails.send({
-      from: `CoachAI Support <${senderEmail}>`,
-      to: [body.email], // Gửi vào email khách hàng nhập
-      subject: `🎉 [CoachAI] Yêu cầu Mã Nguồn: ${body.project}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #4f46e5; margin: 0; font-size: 28px;">CoachAI System</h1>
-            <p style="color: #64748b; margin-top: 5px;">Hệ sinh thái Học lập trình & Triển khai thực chiến</p>
-          </div>
-          
-          <p style="font-size: 16px;">Xin chào <strong style="color: #4f46e5;">${body.name || 'bạn'}</strong>,</p>
-          
-          <p style="font-size: 16px;">Cảm ơn bạn đã quan tâm và đăng ký nhận bản quyền mã nguồn cho dự án: <br/>
-            <strong style="color: #e11d48; font-size: 18px; display: inline-block; margin-top: 5px;">🏆 ${body.project}</strong>
-          </p>
-          
-          <div style="background-color: #f8fafc; padding: 20px; border-left: 5px solid #4f46e5; margin: 25px 0; border-radius: 0 8px 8px 0;">
-             <h3 style="margin-top: 0; color: #0f172a;">🔥 Trạng Thái: Đã Tiếp Nhận</h3>
-             <p style="margin-bottom: 0;">Yêu cầu của bạn đã được ghi nhận vào hệ thống CRM. Đoạn mã nguồn này bao gồm lõi Core Architecture và kết nối Database trực tiếp, do đó Đội ngũ Mentor sẽ trao đổi nhanh với qua qua Zalo/SĐT để gửi bộ File Source Code và Hướng dẫn Deploy an toàn trong vòng 24h tới.</p>
-          </div>
+    // Nội dung động (Dynamic Content): Nếu Không có body.html (chuẩn mới), dùng chuẩn cũ của Form Nhận Code
+    const dynamicContent = body.html || `
+      <p style="font-size: 16px;">Xin chào <strong style="color: #4f46e5;">${body.name || 'bạn'}</strong>,</p>
+      <p style="font-size: 16px;">Cảm ơn bạn đã quan tâm và đăng ký nhận bản quyền mã nguồn cho dự án:<br/>
+        <strong style="color: #e11d48; font-size: 18px; display: inline-block; margin-top: 5px;">🏆 ${body.project || 'Template'}</strong>
+      </p>
+      <div style="background-color: #f8fafc; padding: 20px; border-left: 5px solid #4f46e5; margin: 25px 0; border-radius: 0 8px 8px 0;">
+         <h3 style="margin-top: 0; color: #0f172a;">🔥 Trạng Thái: Đã Tiếp Nhận</h3>
+         <p style="margin-bottom: 0;">Yêu cầu của bạn đã được ghi nhận vào hệ thống CRM. Mentor sẽ liên hệ nhanh với bạn qua Zalo/SĐT để gửi bộ Source Code và Hướng dẫn Deploy trong vòng 24h tới.</p>
+      </div>
+    `;
 
-          <p style="font-size: 16px;">Trong lúc chờ đợi, hãy khám phá thêm các lộ trình Coaching tự động hóa trên trang web của chúng tôi.</p>
-          
-          <div style="text-align: center; margin: 35px 0;">
-            <a href="https://coachai.pages.dev" style="background-color: #4f46e5; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Truy cập CoachAI ngay</a>
-          </div>
-          
-          <hr style="border: none; border-top: 1px dashed #cbd5e1; margin: 30px 0;" />
-          
-          <div style="text-align: center; margin-top: 20px;">
-            <p style="font-size: 12px; color: #94a3b8; margin: 0;">Cần hỗ trợ gấp? Reply trực tiếp email này hoặc liên hệ Zalo Support.</p>
-            <p style="font-size: 12px; color: #94a3b8; margin: 5px 0 0 0;">© 2026 CoachAI. All rights reserved.</p>
-          </div>
+    // -- 2. MASTER EMAIL TEMPLATE GÓC NHÌN WEB OWNER --
+    const masterTemplate = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%); padding: 30px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">CoachAI System</h1>
+          <p style="color: #e0e7ff; margin: 8px 0 0 0; font-size: 14px;">Hệ sinh thái Học Lập Trình & Triển Khai Thực Chiến</p>
         </div>
-      `,
+        
+        <!-- Main Content (Dynamic) -->
+        <div style="padding: 30px 20px; background-color: #ffffff;">
+          ${dynamicContent}
+        </div>
+        
+        <!-- UP-SELL Footer Box -->
+        <div style="background-color: #f8fafc; padding: 25px 20px; text-align: center; border-top: 2px dashed #e2e8f0;">
+          <h3 style="color: #0f172a; margin-top: 0; font-size: 18px;">Tiến Xa Hơn Cùng CoachAI</h3>
+          <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Bạn muốn truy cập thẳng vào kho mã nguồn khổng lồ hoặc cần người kèm cặp 1:1?</p>
+          <a href="https://edu.victorchuyen.net/pricing" style="background-color: #f43f5e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(244,63,94,0.4);">
+            Nâng cấp VIP Member
+          </a>
+        </div>
+        
+        <!-- Bottom Info -->
+        <div style="background-color: #0f172a; padding: 20px; text-align: center;">
+          <p style="font-size: 12px; color: #94a3b8; margin: 0;">Cần hỗ trợ? Hãy Reply trực tiếp email này hoặc nhắn Zalo hỗ trợ.</p>
+          <p style="font-size: 11px; color: #64748b; margin: 8px 0 0 0;">© 2026 CoachAI. Mọi quyền được bảo lưu.</p>
+        </div>
+      </div>
+    `;
+
+    // Gửi Email
+    const { data, error } = await resend.emails.send({
+      from: \`CoachAI Support <\${senderEmail}>\`,
+      to: [targetEmail],
+      subject: emailSubject,
+      html: masterTemplate,
     });
 
     if (error) {
