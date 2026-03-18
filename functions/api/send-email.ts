@@ -74,9 +74,23 @@ export const onRequestPost = async (context: any) => {
         </div>
         
         <!-- Bottom Info -->
-        <div style="background-color: #0f172a; padding: 20px; text-align: center;">
-          <p style="font-size: 12px; color: #94a3b8; margin: 0;">Cần hỗ trợ? Hãy Reply trực tiếp email này hoặc nhắn Zalo hỗ trợ.</p>
-          <p style="font-size: 11px; color: #64748b; margin: 8px 0 0 0;">© 2026 CoachAI. Mọi quyền được bảo lưu.</p>
+        <div style="background-color: #0f172a; padding: 25px 20px; text-align: left; border-top: 4px solid #3b82f6;">
+          <h4 style="color: #ffffff; margin-top: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;">☎️ Trung tâm Hỗ trợ CoachAI</h4>
+          <p style="font-size: 13px; color: #94a3b8; margin-top: 5px; margin-bottom: 20px; line-height: 1.5;">Lưu ý: Đây là email tự động, vui lòng không phản hồi trực tiếp. Hãy liên hệ qua các kênh Support chính thức sau nếu bạn cần giúp đỡ:</p>
+          
+          <div style="background-color: #1e293b; padding: 15px; border-radius: 8px;">
+            <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 13px; color: #cbd5e1; line-height: 2;">
+              <li>🌐 <strong>Group Facebook:</strong> <a href="https://www.facebook.com/groups/vibecodecoaching" style="color: #38bdf8; text-decoration: none;">Cộng đồng Vibe Code</a></li>
+              <li>💬 <strong>Support Zalo:</strong> <a href="https://zalo.me/g/tdhmtu261" style="color: #38bdf8; text-decoration: none;">Nhóm Hỗ trợ Zalo</a></li>
+              <li>✈️ <strong>Support Telegram:</strong> <a href="https://t.me/vibecodocoaching" style="color: #38bdf8; text-decoration: none;">Nhóm Hỗ trợ Telegram</a></li>
+              <li>👤 <strong>Zalo Admin:</strong> <a href="https://zalo.me/0989890022" style="color: #38bdf8; text-decoration: none;">Mr. Victor (0989.890.022)</a></li>
+              <li>🛸 <strong>Telegram Admin:</strong> <a href="https://t.me/victorchuyen" style="color: #38bdf8; text-decoration: none;">@victorchuyen</a></li>
+            </ul>
+          </div>
+          
+          <div style="margin-top: 20px; text-align: center;">
+            <p style="font-size: 11px; color: #64748b; margin: 0;">© 2026 CoachAI. Mọi quyền được bảo lưu.</p>
+          </div>
         </div>
       </div>
     `;
