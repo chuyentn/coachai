@@ -97,7 +97,7 @@ export const Contact = () => {
             
             <div className="flex-1 w-full relative rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-900/50">
               <iframe 
-                src="https://cal.com/victorchuyen/coaching?embed=true&theme=light" 
+                src="https://cal.com/victorchuyen/coachai?embed=true&theme=light" 
                 style={{ width: '100%', height: '100%', border: 'none' }}
                 title="Đặt lịch Coaching CoachAI"
                 className="absolute inset-0"
