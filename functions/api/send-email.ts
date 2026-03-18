@@ -83,7 +83,7 @@ export const onRequestPost = async (context: any) => {
 
     // Gửi Email
     const { data, error } = await resend.emails.send({
-      from: \`CoachAI Support <\${senderEmail}>\`,
+      from: `CoachAI Support <${senderEmail}>`,
       to: [targetEmail],
       subject: emailSubject,
       html: masterTemplate,
