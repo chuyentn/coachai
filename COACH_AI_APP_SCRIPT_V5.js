@@ -10,18 +10,18 @@
 
 // --- CẤU HÌNH CÁC CỘT (SCHEMA) DỰA TRÊN HÌNH ẢNH THỰC TẾ VÀ YÊU CẦU ---
 const SCHEMA = {
-  'Courses': [
+  'courses': [
     'id', 'title', 'title_en', 'description', 'description_en', 'short_description', 'short_description_en',
     'price_vnd', 'price_usd', 'thumbnail_url', 'instructor_id', 'published', 'featured', 
     'total_students', 'total_reviews', 'avg_rating', 'created_at', 'modules'
   ],
-  'Leads': [
+  'leads': [
     'Timestamp', 'Email', 'Name', 'Phone', 'note'
   ],
-  'Comments': [
+  'comments': [
     'Timestamp', 'User Name', 'User Email', 'Comment Text', 'User ID', 'Photo URL', 'Comment'
   ],
-  'Teachers': [
+  'teachers': [
     // Thông tin cơ bản từ Form đăng ký
     'Timestamp', 'Email', 'Full Name', 'Phone', 'Expertise (Chuyên môn)', 'Bio (Giới thiệu)', 
     // Các cột dành riêng cho Admin phân quyền nội bộ
@@ -64,11 +64,11 @@ function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
   if (action === 'getCourses') {
-    return getSheetDataAsJson(ss, 'Courses');
+    return getSheetDataAsJson(ss, 'courses');
   } else if (action === 'getLeads') {
-    return getSheetDataAsJson(ss, 'Leads');
+    return getSheetDataAsJson(ss, 'leads');
   } else if (action === 'getTeachers') {
-    return getSheetDataAsJson(ss, 'Teachers');
+    return getSheetDataAsJson(ss, 'teachers');
   } else if (action === 'getBots') {
     var role = e.parameter.role || 'all';
     var lang = e.parameter.lang || 'vi';
@@ -100,7 +100,7 @@ function doPost(e) {
 
     // Xử lý lưu Lead (Khách hàng đăng ký tư vấn)
     if (data.type === 'lead') {
-      var sheet = getOrCreateSheet(ss, 'Leads');
+      var sheet = getOrCreateSheet(ss, 'leads');
       sheet.appendRow([
         timestamp, 
         data.email, 
@@ -113,7 +113,7 @@ function doPost(e) {
     
     // Xử lý lưu Comment (Bình luận khóa học)
     else if (data.type === 'comment') {
-      var sheet = getOrCreateSheet(ss, 'Comments');
+      var sheet = getOrCreateSheet(ss, 'comments');
       sheet.appendRow([
         timestamp, 
         data.userName, 
@@ -128,7 +128,7 @@ function doPost(e) {
     
     // Xử lý lưu đơn Đăng ký Giáo Viên
     else if (data.type === 'teacher') {
-      var sheet = getOrCreateSheet(ss, 'Teachers');
+      var sheet = getOrCreateSheet(ss, 'teachers');
       sheet.appendRow([
         timestamp, 
         data.email, 
@@ -285,7 +285,7 @@ function seedDataForSheet(sheet, name) {
     sheet.appendRow(['cta_secondary', 'Xem Demo Dự Án', 'View Project Demo', 'active', timestamp]);
   }
 
-  if (name === 'Courses') {
+  if (name === 'courses') {
     sheet.appendRow([
       'course_001', 'Làm chủ AI & No-Code 2024 (Từ 0 đến 1)', 'Mastering AI & No-Code 2024 (0 to 1)', 
       'Khóa học thực chiến giúp bạn xây dựng ứng dụng AI mà không cần viết code.', 
