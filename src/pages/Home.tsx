@@ -140,9 +140,25 @@ export const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-white dark:bg-[#0B0E17] border-b border-slate-100 dark:border-slate-800/60">
         {/* Background Elements */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden xl:block hidden">
-          <div className="absolute -top-[10%] -left-[5%] w-[50%] h-[50%] bg-gradient-to-br from-indigo-100/50 to-purple-100/50 rounded-full blur-[120px] mix-blend-multiply" />
-          <div className="absolute top-[20%] right-[0%] w-[40%] h-[40%] bg-gradient-to-tl from-violet-100/50 to-fuchsia-100/50 rounded-full blur-[120px] mix-blend-multiply" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden hidden md:block">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.1, 1],
+              rotate: [0, 90, 0],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute -top-[10%] -left-[5%] w-[50%] h-[50%] bg-gradient-to-br from-indigo-400/40 to-purple-400/40 dark:from-indigo-600/20 dark:to-purple-600/20 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen" 
+          />
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, -90, 0],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[20%] right-[0%] w-[40%] h-[40%] bg-gradient-to-tl from-emerald-400/30 to-teal-400/30 dark:from-emerald-600/10 dark:to-teal-600/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen" 
+          />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
@@ -155,32 +171,53 @@ export const Home: React.FC = () => {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="text-left"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 text-[10px] md:text-xs font-black uppercase tracking-[0.15em] md:tracking-[0.2em] mb-6 shadow-sm border border-indigo-100/50 dark:border-indigo-800/50">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-indigo-600 dark:text-indigo-400 text-[10px] md:text-xs font-black uppercase tracking-[0.15em] md:tracking-[0.2em] mb-6 shadow-xl shadow-indigo-500/10 border border-white/50 dark:border-slate-700/50"
+              >
                 <Sparkles size={14} className="animate-pulse" />
                 <span>{t('home.heroBadge')}</span>
-              </div>
+              </motion.div>
               
-              <h1 className="text-3xl lg:text-5xl font-black tracking-tight mb-6 leading-[1.2] md:leading-[1.1] break-words">
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="text-4xl lg:text-6xl font-black tracking-tighter mb-6 leading-[1.1] md:leading-[1.1] break-words"
+              >
                 <span className="text-slate-900 dark:text-white block mb-2">
                   {heroConfig?.title1 || t('home.heroTitle1')}
                 </span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-400 block pb-2">
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-400 block pb-2 drop-shadow-sm">
                   {heroConfig?.title2 || t('home.heroTitle2')}
                 </span>
-              </h1>
+              </motion.h1>
               
-              <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed max-w-xl break-words">
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                className="text-base md:text-xl text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed max-w-xl break-words"
+              >
                 {heroConfig?.description || t('home.heroDesc')}
-              </p>
+              </motion.p>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-                <Link to="/auth/signup" className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center whitespace-nowrap">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                className="flex flex-col sm:flex-row items-center gap-4 mb-8"
+              >
+                <Link to="/auth/signup" className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center whitespace-nowrap">
                   {t('home.heroBtnStart')}
                 </Link>
-                <Link to="/projects" className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-black text-lg hover:border-indigo-100 dark:hover:border-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                <Link to="/projects" className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-2xl font-black text-lg hover:shadow-xl hover:shadow-slate-200 dark:hover:shadow-none hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-indigo-100 dark:hover:border-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
                    {t('home.heroBtnDemo')}
+                   <ArrowRight size={20} className="hidden sm:block" />
                 </Link>
-              </div>
+              </motion.div>
 
               {/* Trust text */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-bold text-slate-500 dark:text-slate-400">
@@ -193,9 +230,14 @@ export const Home: React.FC = () => {
             {/* Right Column: Visualizer/Video */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="relative w-full aspect-video md:aspect-[4/3] lg:aspect-video rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group cursor-pointer"
+              animate={{ opacity: 1, x: 0, y: [0, -8, 0] }}
+              transition={{ 
+                opacity: { duration: 0.8, delay: 0.2, ease: "easeOut" },
+                x: { duration: 0.8, delay: 0.2, ease: "easeOut" },
+                y: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 } 
+              }}
+              whileHover={{ scale: 1.02, rotateY: -5, rotateX: 5 }}
+              className="relative w-full aspect-video md:aspect-[4/3] lg:aspect-video rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-indigo-500/10 border-4 md:border-8 border-white/80 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 group cursor-pointer backdrop-blur-sm"
             >
               {/* Fallback pattern while video not present */}
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-repeat opacity-5" />

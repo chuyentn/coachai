@@ -1,12 +1,14 @@
 import React from 'react';
 import { Sparkles, BookOpen, Wrench, HeadphonesIcon, Info } from 'lucide-react';
+import { motion } from 'motion/react';
 import type { CoachAIBot } from './types';
 
 interface CoachAICardProps {
   bot: CoachAIBot;
+  index?: number;
 }
 
-export const CoachAICard: React.FC<CoachAICardProps> = ({ bot }) => {
+export const CoachAICard: React.FC<CoachAICardProps> = ({ bot, index = 0 }) => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'gem': return <Sparkles className="w-4 h-4 text-purple-600" />;
@@ -30,18 +32,27 @@ export const CoachAICard: React.FC<CoachAICardProps> = ({ bot }) => {
   };
 
   return (
-    <div className="group flex flex-col h-full bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-100 dark:border-slate-700/50 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      className="group flex flex-col h-full bg-white/80 dark:bg-[#111623]/80 backdrop-blur-xl rounded-[2rem] border border-slate-100 dark:border-slate-800/60 overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-300"
+    >
       
       {/* Thumbnail area */}
-      <div className="relative h-40 w-full bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center p-6 border-b border-gray-100 dark:border-slate-700/50 overflow-hidden">
+      <div className="relative h-44 w-full bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-900/50 dark:to-indigo-900/10 flex items-center justify-center p-6 border-b border-gray-100 dark:border-slate-800/60 overflow-hidden">
+        {/* Glow effect */}
+        <div className="absolute inset-0 bg-indigo-500/5 dark:bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl rounded-full scale-150" />
+        
         {bot.thumbnail_url ? (
           <img 
             src={bot.thumbnail_url} 
             alt={bot.title} 
-            className="w-20 h-20 object-contain drop-shadow-sm group-hover:scale-110 transition-transform duration-500"
+            className="w-24 h-24 object-contain drop-shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 relative z-10"
           />
         ) : (
-          <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+          <div className="w-24 h-24 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-inner relative z-10">
             {getCategoryIcon(bot.category)}
           </div>
         )}
@@ -56,19 +67,19 @@ export const CoachAICard: React.FC<CoachAICardProps> = ({ bot }) => {
       </div>
 
       {/* Content Area */}
-      <div className="p-6 flex flex-col flex-grow">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+      <div className="p-8 flex flex-col flex-grow relative z-20">
+        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-3 line-clamp-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 transition-all">
           {bot.title}
         </h3>
-        <p className="text-slate-600 dark:text-slate-300 text-sm mb-6 flex-grow line-clamp-3 leading-relaxed">
+        <p className="text-slate-500 font-medium text-sm mb-6 flex-grow line-clamp-3 leading-relaxed">
           {bot.short_desc}
         </p>
 
         {/* Tags */}
         {bot.tags && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-8 mt-auto">
             {bot.tags.split(',').map((tag, idx) => (
-              <span key={idx} className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 rounded-md">
+              <span key={idx} className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-slate-100 dark:bg-slate-800/50 dark:text-slate-400 rounded-lg group-hover:border-indigo-200 dark:group-hover:border-indigo-800/50 border border-transparent transition-colors">
                 {tag.trim()}
               </span>
             ))}
@@ -76,13 +87,13 @@ export const CoachAICard: React.FC<CoachAICardProps> = ({ bot }) => {
         )}
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 mt-auto relative z-10">
+        <div className="flex flex-col sm:flex-row gap-3 relative z-10">
           {bot.button_primary_url && (
             <a
               href={bot.button_primary_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 dark:bg-white group-hover:bg-indigo-600 group-hover:text-white text-white dark:text-slate-900 text-sm font-black rounded-xl transition-all shadow-xl shadow-slate-900/10 dark:shadow-white/10 group-hover:shadow-indigo-600/30 active:scale-95"
             >
               {bot.button_primary_text || 'Open'}
             </a>
@@ -92,13 +103,13 @@ export const CoachAICard: React.FC<CoachAICardProps> = ({ bot }) => {
               href={bot.button_secondary_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold rounded-xl border-2 border-slate-100 dark:border-slate-800 transition-all active:scale-95"
             >
               {bot.button_secondary_text || 'Details'}
             </a>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

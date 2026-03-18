@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CoachAICard } from '../components/CoachAI/CoachAICard';
 import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { CoachAIConfig, RoleTarget, BotCategory } from '../components/CoachAI/types';
 import { googleSheetsService } from '../services/googleSheetsService';
 import { useTranslation } from 'react-i18next';
@@ -168,8 +169,8 @@ export const CoachAI: React.FC = () => {
 
       <div className="container mx-auto px-6 max-w-7xl" id="hub-grid">
         {/* Role Tabs */}
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
+        <div className="flex justify-center mb-10 relative z-20">
+          <div className="inline-flex p-1.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-none">
             {[
               { id: 'student', label: 'Học viên' },
               { id: 'teacher', label: 'Giảng viên' },
@@ -181,13 +182,20 @@ export const CoachAI: React.FC = () => {
                   setActiveRole(role.id as RoleTarget);
                   setActiveCategory('all'); // Reset filter on role change
                 }}
-                className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${
+                className={`relative px-8 py-3 rounded-xl font-bold text-sm transition-all duration-500 ease-out ${
                   activeRole === role.id 
-                    ? 'bg-indigo-600 text-white shadow-md' 
-                    : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                    ? 'text-white' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                {role.label}
+                {activeRole === role.id && (
+                  <motion.div
+                    layoutId="activeRoleTabIndicator"
+                    className="absolute inset-0 bg-indigo-600 rounded-xl shadow-md shadow-indigo-600/20"
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  />
+                )}
+                <span className="relative z-10">{role.label}</span>
               </button>
             ))}
           </div>
@@ -222,16 +230,45 @@ export const CoachAI: React.FC = () => {
 
         {/* Content Grid */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-            <p className="text-slate-500 font-medium animate-pulse">Đang tải cấu hình AI Hub...</p>
-          </div>
-        ) : filteredBots.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {filteredBots.map(bot => (
-              <CoachAICard key={bot.id} bot={bot} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 min-h-[400px]">
+            {[...Array(6)].map((_, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="h-[340px] bg-white/50 dark:bg-slate-800/30 backdrop-blur-sm rounded-[2rem] border border-slate-200/50 dark:border-slate-700/50 overflow-hidden relative shadow-sm"
+              >
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 dark:via-white/5 to-transparent skew-x-12" />
+                <div className="h-44 bg-slate-100 dark:bg-slate-800/50 w-full mb-6" />
+                <div className="px-8 space-y-4">
+                  <div className="h-6 bg-slate-100 dark:bg-slate-800/50 rounded-lg w-3/4" />
+                  <div className="h-4 bg-slate-100 dark:bg-slate-800/50 rounded-lg w-full" />
+                  <div className="h-4 bg-slate-100 dark:bg-slate-800/50 rounded-lg w-2/3" />
+                </div>
+              </motion.div>
             ))}
           </div>
+        ) : filteredBots.length > 0 ? (
+          <motion.div 
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredBots.map((bot, idx) => (
+                <motion.div
+                  key={bot.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
+                  transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+                >
+                  <CoachAICard bot={bot} index={idx} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         ) : (
           <div className="text-center py-20 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
             <Sparkles className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />

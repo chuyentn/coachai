@@ -31,10 +31,15 @@ const Payment = lazy(() => import('./pages/Payment').then(m => ({ default: m.def
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 const CoachAI = lazy(() => import('./pages/CoachAI').then(m => ({ default: m.CoachAI })));
 
-// Page loading fallback
+// Premium Page loading fallback
 const PageLoader = () => (
-  <div className="h-screen flex items-center justify-center bg-[#F9FAFB] dark:bg-[#0B0E17]">
-    <div className="w-8 h-8 border-4 border-indigo-200 dark:border-indigo-900/50 border-t-indigo-600 dark:border-t-indigo-500 rounded-full animate-spin" />
+  <div className="h-screen flex flex-col items-center justify-center bg-[#F9FAFB] dark:bg-[#0B0E17] gap-4">
+    <div className="relative">
+      <div className="w-14 h-14 rounded-full border-4 border-indigo-100 dark:border-indigo-900/40" />
+      <div className="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-indigo-600 dark:border-t-indigo-400 animate-spin" />
+      <div className="absolute inset-2 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-500/10 dark:to-purple-500/10 animate-pulse" />
+    </div>
+    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest animate-pulse">Đang tải...</p>
   </div>
 );
 

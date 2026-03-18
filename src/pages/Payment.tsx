@@ -160,7 +160,7 @@ const Payment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] pt-28 pb-20 px-4">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] pt-20 sm:pt-28 pb-14 sm:pb-20 px-4">
       <div className="max-w-4xl mx-auto">
         <Link to="/pricing" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors mb-8 font-medium">
           <ArrowLeft size={18} />
@@ -168,7 +168,8 @@ const Payment = () => {
         </Link>
 
         {/* Payment Method Selector */}
-        <div className="flex flex-wrap gap-3 mb-8 bg-white dark:bg-[#111623] p-2 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit">
+        <div className="w-full overflow-x-auto hide-scrollbar mb-8">
+        <div className="flex gap-3 bg-white dark:bg-[#111623] p-2 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit min-w-full sm:min-w-0">
           <button 
             onClick={() => setPaymentMethod('vietqr')}
             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${paymentMethod === 'vietqr' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
@@ -188,8 +189,9 @@ const Payment = () => {
             {t('payment.methodPayPal')}
           </button>
         </div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
           {/* Main Payment Section */}
           {paymentMethod === 'vietqr' && (
             <div className="bg-white dark:bg-[#111623] rounded-3xl shadow-xl shadow-black/5 border border-slate-200 dark:border-slate-800 overflow-hidden">

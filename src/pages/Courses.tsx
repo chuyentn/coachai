@@ -89,7 +89,7 @@ export const Courses: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B0E17]">
-      <main className="flex-grow pt-32 pb-24 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow pt-24 sm:pt-32 pb-20 sm:pb-24 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}
         <div className="mb-12">
@@ -104,7 +104,7 @@ export const Courses: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl max-w-full"
+            className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl"
           >
             Hàng chục khóa học chuyên sâu từ cơ bản đến nâng cao về lập trình AI, No-Code và phát triển ứng dụng độc lập dành cho bạn.
           </motion.p>
@@ -146,9 +146,9 @@ export const Courses: React.FC = () => {
 
         {/* Course Grid */}
         {loading && courses.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-[450px] bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 animate-pulse" />
+              <div key={i} className="h-[380px] sm:h-[450px] bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 animate-pulse" />
             ))}
           </div>
         ) : error && courses.length === 0 ? (
@@ -165,7 +165,7 @@ export const Courses: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
           >
             {finalFilteredCourses.map((course) => (
               <CourseCard key={course.id} course={course} />

@@ -39,7 +39,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         
         {/* Badges */}
         <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
-          <span className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-indigo-200 flex items-center gap-1 border border-indigo-400">
+          <span className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-indigo-500/30 flex items-center gap-1 border border-indigo-400/50">
             <Zap size={10} fill="currentColor" />
             AI Coaching
           </span>
@@ -59,7 +59,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </div>
       </div>
 
-      <div className="p-8 flex flex-col flex-grow">
+      <div className="p-5 sm:p-8 flex flex-col flex-grow">
         <div className="flex items-center gap-2 mb-3">
           <div className="flex items-center gap-1 text-amber-500">
             <Star size={14} fill="currentColor" />
@@ -72,7 +72,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           </div>
         </div>
 
-        <h3 className="font-black text-xl text-slate-900 dark:text-white line-clamp-2 mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
+        <h3 className="font-black text-xl text-slate-900 dark:text-white line-clamp-2 mb-3 group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 dark:group-hover:from-indigo-400 dark:group-hover:to-purple-400 transition-all leading-tight">
           {displayTitle}
         </h3>
         
@@ -95,8 +95,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
               {t('courseCard.lifetimeAccess')}
             </span>
           </div>
-          <div className="px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-100 dark:shadow-none hover:shadow-indigo-100 flex items-center gap-1 whitespace-nowrap">
-            {t('courseCard.viewDetails')}
+          <div className="relative px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold transition-all shadow-xl shadow-slate-100 dark:shadow-none hover:shadow-indigo-500/20 flex items-center gap-1 whitespace-nowrap overflow-hidden group/btn bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent">
+            <span className="relative z-10">{t('courseCard.viewDetails')}</span>
+            <div className="absolute inset-0 -skew-x-12 translate-x-[-200%] group-hover/btn:translate-x-[200%] bg-white/20 transition-transform duration-700" />
           </div>
         </div>
       </div>

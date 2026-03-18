@@ -29,9 +29,9 @@
 - [ ] **Data Verification:** Complete collaborative check with User (Hero, Bots, Forms, Projects) <!-- id: exp_v16 -->
 
 ### 👤 Lucky (Frontend Maven)
-- [ ] **Premium Facelift:** Refactor `src/components` with advanced Tailwind & Framer Motion <!-- id: exp_l1 -->
-- [ ] **Core SPA Speed:** Implement Dynamic Imports for heavy dashboard modules <!-- id: exp_l2 -->
-- [ ] **Mobile-First UX:** Audit and fix UI regressions on the `/payment` and `/courses` routes <!-- id: exp_l3 -->
+- [x] **Premium Facelift:** Refactor `src/components` with advanced Tailwind & Framer Motion <!-- id: exp_l1 -->
+- [x] **Core SPA Speed:** Implement Dynamic Imports for heavy dashboard modules <!-- id: exp_l2 -->
+- [x] **Mobile-First UX:** Audit and fix UI regressions on the `/payment` and `/courses` routes <!-- id: exp_l3 -->
 
 ### 👤 Money (Backend Master)
 - [ ] **Main DB Migration:** Complete the jump from Mock JSON to Firestore `courses` <!-- id: exp_m1 -->

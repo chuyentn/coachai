@@ -160,16 +160,23 @@ export const Projects = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {projects.map((p, idx) => (
-            <div key={idx} className="bg-white dark:bg-[#111623] p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 hover:-translate-y-2 transition-transform duration-300 group">
+            <motion.div 
+              key={idx} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="bg-white/80 dark:bg-[#111623]/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800/60 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-300 group cursor-pointer"
+            >
               <div className="flex justify-between items-start mb-6">
-                <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest">{p.category}</div>
+                <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-black uppercase tracking-widest">{p.category}</div>
                 {p.badge && (
-                  <div className="px-2 py-1 bg-rose-500 text-white rounded-md text-[10px] font-black uppercase shadow-sm">
+                  <div className="px-2 py-1 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-md text-[10px] font-black uppercase shadow-lg shadow-rose-500/30">
                     {p.badge}
                   </div>
                 )}
               </div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 tracking-tight group-hover:text-indigo-600 transition-colors">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 transition-all">
                 {p.title}
               </h3>
               <p className="text-slate-500 font-medium leading-relaxed mb-8 h-24">
@@ -178,21 +185,21 @@ export const Projects = () => {
               
               <div className="flex flex-wrap gap-2 mb-8">
                 {p.tech.map((t, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400">
-                    <Code2 size={12} className="inline mr-1 text-slate-400" /> {t}
+                  <span key={i} className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:border-indigo-200 dark:group-hover:border-indigo-800/50 transition-colors">
+                    <Code2 size={12} className="inline mr-1 text-slate-400 group-hover:text-indigo-400" /> {t}
                   </span>
                 ))}
               </div>
 
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex justify-between items-center">
                 <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-500 text-sm font-bold">
                   <CheckCircle2 size={16} /> Tải miễn phí
                 </span>
-                <button onClick={() => openModal(p.title)} className="px-4 py-2 rounded-xl bg-indigo-600 flex items-center gap-2 text-white font-bold hover:bg-indigo-700 transition-colors text-sm shadow-xl shadow-indigo-600/20">
-                  Nhận ngay <ArrowUpRight size={16} />
+                <button onClick={() => openModal(p.title)} className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 group-hover:bg-indigo-600 group-hover:text-white flex items-center gap-2 font-black transition-all text-sm shadow-xl shadow-slate-900/10 dark:shadow-white/10 group-hover:shadow-indigo-600/30">
+                  Nhận Code <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
         )}

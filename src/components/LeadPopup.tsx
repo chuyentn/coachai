@@ -117,8 +117,12 @@ export const LeadPopup: React.FC = () => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-black/5 dark:border-slate-800"
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-black/5 dark:border-slate-700/50"
           >
+            {/* Decorative gradient blob */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-indigo-400/20 via-purple-400/15 to-transparent dark:from-indigo-500/10 dark:via-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-gradient-to-tr from-emerald-400/15 to-transparent dark:from-emerald-500/8 rounded-full blur-2xl pointer-events-none" />
             {/* Close Button */}
             <button
               onClick={handleClose}
@@ -129,8 +133,8 @@ export const LeadPopup: React.FC = () => {
             {!submitted ? (
               <div className="p-8 md:p-12">
                 <div className="mb-8">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500 rounded-full text-xs font-bold mb-4 border border-amber-200 dark:border-amber-500/20 shadow-sm">
-                    <Star size={12} fill="currentColor" /> {t('leadPopup.badge')}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full text-xs font-bold mb-4 border border-amber-200 dark:border-amber-500/30 shadow-sm shadow-amber-100 dark:shadow-none">
+                    <Star size={12} fill="currentColor" className="drop-shadow-sm" /> {t('leadPopup.badge')}
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{t('leadPopup.title')}</h2>
                   <p className="text-slate-500 dark:text-slate-400 mt-3 font-medium text-sm md:text-base">{t('leadPopup.subtitle')}</p>
@@ -192,9 +196,10 @@ export const LeadPopup: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-indigo-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="relative w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-indigo-500/20 disabled:opacity-50 flex items-center justify-center gap-2 overflow-hidden group"
                   >
-                    {loading ? t('leadPopup.loading') : `✉️ ${t('leadPopup.btnSubmit')}`}
+                    <span className="relative z-10">{loading ? t('leadPopup.loading') : `✉️ ${t('leadPopup.btnSubmit')}`}</span>
+                    <div className="absolute inset-0 -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] bg-white/10 transition-transform duration-700" />
                   </button>
                 </form>
 
@@ -204,8 +209,8 @@ export const LeadPopup: React.FC = () => {
               </div>
             ) : (
               <div className="p-12 text-center">
-                <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={40} />
+                <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-200 dark:shadow-emerald-500/20">
+                  <CheckCircle2 size={40} strokeWidth={2} />
                 </div>
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('leadPopup.successTitle')}</h2>
                 <p className="text-slate-500 dark:text-slate-400 mt-4 font-medium">
