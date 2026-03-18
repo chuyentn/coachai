@@ -299,6 +299,18 @@ function seedDataForSheet(sheet, name) {
         { id: 'm3', title: 'Xây dựng Web với AI & Replit', title_en: 'Building Web with AI & Replit', video_url: 'https://youtube.com/...', order: 3 }
       ])
     ]);
+    sheet.appendRow([
+      'course_002', 'MMO với Affiliate & AI Automation', 'MMO with Affiliate & AI Automation', 
+      'Công thức tạo thu nhập thụ động bền vững bằng cách kết hợp AI và Tiếp thị liên kết.', 
+      'Passive income formula by combining AI and Affiliate Marketing.',
+      'Kiếm tiền AI Automation', 'Earn money with AI Automation',
+      1500000, 65, 'https://picsum.photos/seed/mmo-ai/800/450', 'victor_chuyen', 
+      'true', 'true', 850, 42, 4.8, timestamp, 
+      JSON.stringify([
+        { id: 'm1', title: 'Tư duy chọn ngách Affiliate', title_en: 'Affiliate Niche Selection', video_url: 'https://youtube.com/...', order: 1 },
+        { id: 'm2', title: 'Tự động hóa nội dung đa kênh', title_en: 'Multi-channel Content Automation', video_url: 'https://youtube.com/...', order: 2 }
+      ])
+    ]);
   }
   
   if (name === 'bots') {
@@ -327,6 +339,23 @@ function seedDataForSheet(sheet, name) {
       'Lấy tin tức mỗi sáng, tóm tắt và tự viết bài dài chuẩn SEO, tự động schedule đăng bài lên web.', 
       'Phổ biến', 'https://github.com/...', 'active', 2, timestamp
     ]);
+  }
+
+  if (name === 'teachers') {
+    sheet.appendRow([timestamp, 'victor@example.com', 'Victor Chuyen', '090123456', 'AI Automation expert', 'Leading AI education in VN', 'Active', 'uid_123', 'admin']);
+    sheet.appendRow([timestamp, 'lucky@example.com', 'Lucky FE', '090778899', 'Frontend Maven', 'React & Tailwind specialist', 'Active', 'uid_456', 'teacher']);
+  }
+
+  if (name === 'leads') {
+    sheet.appendRow([timestamp, 'test_user@gmail.com', 'Học viên tiềm năng', '0987654321', 'Quan tâm khóa học AI No-code']);
+  }
+
+  if (name === 'comments') {
+    sheet.appendRow([timestamp, 'Minh Anh', 'minh_anh@example.com', 'Khóa học cực chất, app chạy mượt!', 'user_001', 'https://i.pravatar.cc/150?u=1', 'Khóa học cực chất, app chạy mượt!']);
+  }
+
+  if (name === 'courses_ai') {
+    sheet.appendRow(['course_001', 'Mastering AI', 'Victor', 'https://gemini.google.com/', 'https://notebooklm.google.com/', '', '', 'active']);
   }
 }
 
