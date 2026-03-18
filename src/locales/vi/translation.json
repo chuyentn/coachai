@@ -415,18 +415,29 @@
     "btnSendMore": "Gửi thêm câu hỏi khác",
     "formTitle": "Gửi tin nhắn",
     "formTitleHighlight": "cho chúng tôi",
-    "formName": "Họ và tên",
-    "formEmail": "Email",
-    "formPhone": "Số điện thoại",
-    "formTopic": "Chủ đề cần tư vấn",
-    "topicPlaceholder": "-- Mục đích liên hệ --",
-    "topicCoaching": "Nhận tư vấn Coaching 1:1 trực tiếp",
-    "topicCourse": "Hỏi đáp vướng mắc về Khóa học",
-    "topicAffiliate": "Trở thành Affiliate/Đối tác",
-    "topicOther": "Vấn đề khác (Thanh toán, Bug web...)",
-    "formContent": "Nội dung chi tiết",
-    "contentPlaceholder": "Mô tả cụ thể khó khăn hoặc mục tiêu bạn đang hướng tới...",
-    "btnSubmit": "Gửi yêu cầu ngay",
+    "fields": {
+      "name": "Họ và tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "topic": "Chủ đề cần tư vấn",
+      "topicPlaceholder": "Mục đích liên hệ",
+      "message": "Nội dung chi tiết",
+      "messagePlaceholder": "Mô tả cụ thể khó khăn hoặc mục tiêu bạn đang hướng tới...",
+      "submitting": "Đang gửi yêu cầu...",
+      "submit": "Gửi yêu cầu ngay"
+    },
+    "booking": {
+      "title": "Đặt lịch Coaching",
+      "subtitle": "Khai phá tiềm năng AI cùng Mentor (30 Phút MIỄN PHÍ)",
+      "btn": "ĐẶT LỊCH NGAY"
+    },
+    "topics": {
+      "consultant": "Tư vấn lộ trình học AI",
+      "coaching": "Đăng ký Coaching 1:1 chuyên sâu",
+      "b2b": "Giải pháp AI cho Doanh nghiệp",
+      "bug": "Báo lỗi hệ thống",
+      "other": "Vấn đề khác"
+    },
     "backHome": "Quay lại trang chủ"
   },
   "leadPopup": {

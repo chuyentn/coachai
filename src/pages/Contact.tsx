@@ -155,9 +155,9 @@ export const Contact = () => {
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <h3 className="text-2xl font-black mb-2 flex items-center gap-2">
-                    <Calendar className="text-amber-400" /> Đặt lịch Coaching
+                    <Calendar className="text-amber-400" /> {t('contact.booking.title')}
                   </h3>
-                  <p className="text-indigo-100 font-medium">Khai phá tiềm năng AI cùng Mentor (30 Phút MIỄN PHÍ)</p>
+                  <p className="text-indigo-100 font-medium">{t('contact.booking.subtitle')}</p>
                 </div>
                 <a 
                   href="https://cal.com/victorchuyen/coachai" 
@@ -165,7 +165,7 @@ export const Contact = () => {
                   rel="noopener noreferrer"
                   className="px-8 py-4 bg-white text-indigo-600 font-black rounded-xl hover:bg-indigo-50 transition-all flex items-center gap-2 shrink-0 shadow-lg group-hover:scale-105 active:scale-95"
                 >
-                  ĐẶT LỊCH NGAY <ArrowRight size={20} />
+                  {t('contact.booking.btn')} <ArrowRight size={20} />
                 </a>
               </div>
             </motion.div>
@@ -251,11 +251,11 @@ export const Contact = () => {
                           className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white appearance-none"
                         >
                           <option value="">-- {t('contact.fields.topicPlaceholder')} --</option>
-                          <option value="AI Consultant">Tư vấn lộ trình học AI</option>
-                          <option value="Coaching 1:1">Đăng ký Coaching 1:1 chuyên sâu</option>
-                          <option value="B2B Solutions">Giải pháp AI cho Doanh nghiệp</option>
-                          <option value="Bug Report">Báo lỗi hệ thống</option>
-                          <option value="Other">Vấn đề khác</option>
+                          <option value="AI Consultant">{t('contact.topics.consultant')}</option>
+                          <option value="Coaching 1:1">{t('contact.topics.coaching')}</option>
+                          <option value="B2B Solutions">{t('contact.topics.b2b')}</option>
+                          <option value="Bug Report">{t('contact.topics.bug')}</option>
+                          <option value="Other">{t('contact.topics.other')}</option>
                         </select>
                       </div>
                     </div>
@@ -281,11 +281,11 @@ export const Contact = () => {
                   >
                     {loading ? (
                       <span className="flex items-center gap-2">
-                        <Zap className="animate-pulse" /> Đang gửi yêu cầu...
+                        <Zap className="animate-pulse" /> {t('contact.fields.submitting')}
                       </span>
                     ) : (
                       <>
-                        Gửi yêu cầu ngay <Send size={20} />
+                        {t('contact.fields.submit')} <Send size={20} />
                       </>
                     )}
                   </button>

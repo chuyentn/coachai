@@ -414,18 +414,29 @@
     "btnSendMore": "Send another question",
     "formTitle": "Send us a",
     "formTitleHighlight": "message",
-    "formName": "Full Name",
-    "formEmail": "Email",
-    "formPhone": "Phone Number",
-    "formTopic": "Consultation Topic",
-    "topicPlaceholder": "-- Select Topic --",
-    "topicCoaching": "Direct 1:1 Coaching Consultation",
-    "topicCourse": "Course Inquiries",
-    "topicAffiliate": "Become an Affiliate/Partner",
-    "topicOther": "Other (Payment, Web bugs...)",
-    "formContent": "Detailed Content",
-    "contentPlaceholder": "Please describe specific difficulties or goals you are aiming for...",
-    "btnSubmit": "Send Request Now",
+    "fields": {
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "topic": "Consultation Topic",
+      "topicPlaceholder": "Select Topic",
+      "message": "Detailed Content",
+      "messagePlaceholder": "Please describe specific difficulties or goals you are aiming for...",
+      "submitting": "Sending request...",
+      "submit": "Send Request Now"
+    },
+    "booking": {
+      "title": "Coaching Booking",
+      "subtitle": "Unlock AI potential with Mentor (30 Minutes FREE)",
+      "btn": "BOOK NOW"
+    },
+    "topics": {
+      "consultant": "AI Roadmap Consultation",
+      "coaching": "Advanced 1:1 Coaching Registration",
+      "b2b": "AI Solutions for Business",
+      "bug": "System Bug Report",
+      "other": "Other Issues"
+    },
     "backHome": "Back to Home Page"
   },
   "leadPopup": {
