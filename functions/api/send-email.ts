@@ -26,7 +26,7 @@ export const onRequestPost = async (context: any) => {
     }
 
     const resend = new Resend(env.RESEND_API_KEY);
-    const senderEmail = "onboarding@resend.dev"; // Thay đổi khi chạy thật
+    const senderEmail = "no-reply@edu.victorchuyen.net"; // Đã chuyển sang Custom Domain
 
     // -- 1. CHUẨN HOÁ DỮ LIỆU ĐẦU VÀO --
     // Hỗ trợ cả chuẩn mới (body.to, body.subject, body.html) do crmService gọi
