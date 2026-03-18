@@ -1,10 +1,63 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MessageSquare, Calendar, Phone, Mail, CheckCircle2, User, Send, ArrowRight, Zap, Globe, ShieldCheck, Facebook, Youtube, Users, MessageCircle } from 'lucide-react';
+import { MessageSquare, Calendar, Phone, Mail, CheckCircle2, User, Send, ArrowRight, Zap, Globe, Facebook, MessageCircle, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { googleSheetsService } from '../services/googleSheetsService';
+import { crmService } from '../services/crmService';
+
 export const Contact = () => {
   const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    topic: '',
+    message: ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // 1. Submit to Google Sheets with Tag
+      await googleSheetsService.submitLead({
+        ...formData,
+        note: `[Liên Hệ - ${formData.topic}] ${formData.message}`
+      });
+
+      // 2. Send Notification Email via Smart Email Hub
+      await crmService.sendTransactionalEmail({
+        to: formData.email,
+        subject: `[Edu-Vibe] Xác nhận yêu cầu: ${formData.topic}`,
+        html: `
+          <p>Chào <strong>${formData.name}</strong>,</p>
+          <p>Cảm ơn bạn đã liên hệ với Edu-Vibe. Chúng mình đã nhận được yêu cầu về chủ đề <strong>${formData.topic}</strong>.</p>
+          <p>Đội ngũ hỗ trợ sẽ phản hồi bạn trong vòng 24h làm việc.</p>
+          <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 10px;">
+            <p style="margin: 0; color: #1e40af; font-weight: bold;">💡 Bạn muốn trao đổi trực tiếp ngay?</p>
+            <p style="margin: 5px 0 15px 0;">Hãy đặt lịch Coaching 1:1 miễn phí 30 phút để được giải đáp thắc mắc nhanh nhất.</p>
+            <a href="https://cal.com/victorchuyen/coachai" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Đặt lịch 30p Miễn Phí</a>
+          </div>
+        `
+      });
+
+      setSubmitted(true);
+      setFormData({ name: '', email: '', phone: '', topic: '', message: '' });
+    } catch (error) {
+      console.error('Contact submission error:', error);
+      alert('Có lỗi xảy ra, vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans relative overflow-hidden transition-colors duration-300">
@@ -88,20 +141,154 @@ export const Contact = () => {
             </div>
           </div>
 
-          {/* Form / Booking Lịch */}
-          <div className="bg-white dark:bg-[#111623] rounded-[2.5rem] p-4 md:p-8 shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col h-[700px]">
-            <div className="text-center mb-6 px-4">
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-2">Đặt lịch <span className="text-indigo-600">Coaching 1:1</span></h2>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Chọn khung giờ phù hợp bên dưới. Hệ thống sẽ tự động duyệt và gửi link Google Meet qua Email của bạn.</p>
-            </div>
-            
-            <div className="flex-1 w-full relative rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-900/50">
-              <iframe 
-                src="https://cal.com/victorchuyen/coachai?embed=true&theme=light" 
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                title="Đặt lịch Coaching CoachAI"
-                className="absolute inset-0"
-              />
+          {/* Form & Booking Section */}
+          <div className="space-y-6">
+            {/* Cal.com Quick Action Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-2xl rounded-full" />
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                  <h3 className="text-2xl font-black mb-2 flex items-center gap-2">
+                    <Calendar className="text-amber-400" /> Đặt lịch Coaching
+                  </h3>
+                  <p className="text-indigo-100 font-medium">Khai phá tiềm năng AI cùng Mentor (30 Phút MIỄN PHÍ)</p>
+                </div>
+                <a 
+                  href="https://cal.com/victorchuyen/coachai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-8 py-4 bg-white text-indigo-600 font-black rounded-xl hover:bg-indigo-50 transition-all flex items-center gap-2 shrink-0 shadow-lg group-hover:scale-105 active:scale-95"
+                >
+                  ĐẶT LỊCH NGAY <ArrowRight size={20} />
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Standard Message Form */}
+            <div className="bg-white dark:bg-[#111623] rounded-[2.5rem] p-8 md:p-10 shadow-xl border border-slate-100 dark:border-slate-800">
+              <h2 className="text-2xl font-black mb-8 text-slate-900 dark:text-white flex items-center gap-3">
+                <MessageSquare className="text-indigo-600" /> {t('contact.formTitle')}
+              </h2>
+              
+              {submitted ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-12"
+                >
+                  <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 size={40} />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2 dark:text-white">{t('contact.successTitle')}</h3>
+                  <p className="text-slate-500 dark:text-slate-400">{t('contact.successDesc')}</p>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{t('contact.fields.name')}</label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                          required
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="Ví dụ: Victor Chuyen"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{t('contact.fields.email')}</label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                          required
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="email@example.com"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{t('contact.fields.phone')}</label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                          required
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          placeholder="09xx xxx xxx"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{t('contact.fields.topic')}</label>
+                      <div className="relative">
+                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <select
+                          required
+                          name="topic"
+                          value={formData.topic}
+                          onChange={handleChange}
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white appearance-none"
+                        >
+                          <option value="">-- {t('contact.fields.topicPlaceholder')} --</option>
+                          <option value="AI Consultant">Tư vấn lộ trình học AI</option>
+                          <option value="Coaching 1:1">Đăng ký Coaching 1:1 chuyên sâu</option>
+                          <option value="B2B Solutions">Giải pháp AI cho Doanh nghiệp</option>
+                          <option value="Bug Report">Báo lỗi hệ thống</option>
+                          <option value="Other">Vấn đề khác</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{t('contact.fields.message')}</label>
+                    <textarea
+                      required
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder={t('contact.fields.messagePlaceholder')}
+                      className="w-full p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white resize-none"
+                    />
+                  </div>
+
+                  <button
+                    disabled={loading}
+                    type="submit"
+                    className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Zap className="animate-pulse" /> Đang gửi yêu cầu...
+                      </span>
+                    ) : (
+                      <>
+                        Gửi yêu cầu ngay <Send size={20} />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
