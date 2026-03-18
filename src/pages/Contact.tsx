@@ -28,16 +28,18 @@ export const Contact = () => {
 
     try {
       // 1. Submit to Google Sheets with Tag
-      await googleSheetsService.submitLead({
-        ...formData,
-        note: `[Liên Hệ - ${formData.topic}] ${formData.message}`
-      });
+      await googleSheetsService.submitLead(
+        formData.email,
+        formData.name,
+        formData.phone,
+        `[Liên Hệ - ${formData.topic}] ${formData.message}`
+      );
 
       // 2. Send Notification Email via Smart Email Hub
-      await crmService.sendTransactionalEmail({
-        to: formData.email,
-        subject: `[Edu-Vibe] Xác nhận yêu cầu: ${formData.topic}`,
-        html: `
+      await crmService.sendTransactionalEmail(
+        formData.email,
+        `[Edu-Vibe] Xác nhận yêu cầu: ${formData.topic}`,
+        `
           <p>Chào <strong>${formData.name}</strong>,</p>
           <p>Cảm ơn bạn đã liên hệ với Edu-Vibe. Chúng mình đã nhận được yêu cầu về chủ đề <strong>${formData.topic}</strong>.</p>
           <p>Đội ngũ hỗ trợ sẽ phản hồi bạn trong vòng 24h làm việc.</p>
@@ -47,7 +49,7 @@ export const Contact = () => {
             <a href="https://cal.com/victorchuyen/coachai" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Đặt lịch 30p Miễn Phí</a>
           </div>
         `
-      });
+      );
 
       setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', topic: '', message: '' });
