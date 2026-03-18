@@ -329,8 +329,6 @@ function seedDataForSheet(sheet, name) {
     ]);
   }
 }
-  return sheet;
-}
 
 /**
  * Đọc dữ liệu từ Sheet và chuyển sang định dạng JSON
