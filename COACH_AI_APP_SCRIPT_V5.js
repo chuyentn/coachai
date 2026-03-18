@@ -238,6 +238,10 @@ function getCoachAIConfig(ss, lang) {
 /**
  * Lấy hoặc tạo mới một Sheet nếu chưa tồn tại
  */
+/**
+ * Lấy hoặc tạo mới một Sheet nếu chưa tồn tại. 
+ * Nếu sheet tồn tại nhưng chỉ có 1 dòng (tiêu đề), tiến hành bơm data mẫu.
+ */
 function getOrCreateSheet(ss, name) {
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
@@ -245,92 +249,86 @@ function getOrCreateSheet(ss, name) {
     var headers = SCHEMA[name];
     if (headers) {
       sheet.appendRow(headers);
-      // Định dạng tiêu đề: In đậm, nền xám nhạt, kẻ bảng
-      sheet.getRange(1, 1, 1, headers.length)
-        .setFontWeight('bold')
-        .setBackground('#f3f3f3')
-        .setBorder(true, true, true, true, true, true);
-      sheet.setFrozenRows(1); // Cố định dòng đầu tiên
-
-      // Nếu là sheet page_content, thêm dữ liệu mẫu (Seed Data)
-      if (name === 'page_content') {
-        sheet.appendRow(['hero_title', 'Coach AI | Chọn trợ lý đúng mục tiêu', 'Coach AI | Choose the right assistant', 'active', new Date().toISOString()]);
-        sheet.appendRow(['hero_subtitle', 'Hệ sinh thái học tập AI thực chiến. Từ người mới bắt đầu đến chuyên gia No-code & MMO.', 'Practical AI learning ecosystem. From beginners to No-code & MMO experts.', 'active', new Date().toISOString()]);
-        sheet.appendRow(['cta_primary', 'Bắt đầu ngay', 'Get Started', 'active', new Date().toISOString()]);
-        sheet.appendRow(['cta_secondary', 'Xem Demo Dự Án', 'View Project Demo', 'active', new Date().toISOString()]);
-      }
-
-      // Seed data mẫu cho Courses (High Conversion Structure)
-      if (name === 'Courses') {
-        sheet.appendRow([
-          'course_001', 'Làm chủ AI & No-Code 2024 (Từ 0 đến 1)', 'Mastering AI & No-Code 2024 (0 to 1)', 
-          'Khóa học thực chiến giúp bạn xây dựng ứng dụng AI mà không cần viết code.', 
-          'Build real AI apps without writing code. From idea to deployment in 4 weeks.',
-          'Xây app AI 0đ với No-code', 'Build AI apps with 0$ using No-code',
-          1200000, 50, 'https://picsum.photos/seed/ai-no-code/800/450', 'victor_chuyen', 
-          'true', 'true', 1250, 85, 4.9, new Date().toISOString(), 
-          JSON.stringify([
-            { id: 'm1', title: 'Tổng quan hệ sinh thái AI', title_en: 'AI Ecosystem Overview', video_url: 'https://youtube.com/...', order: 1 },
-            { id: 'm2', title: 'Prompt Engineering thực chiến', title_en: 'Practical Prompt Engineering', video_url: 'https://youtube.com/...', order: 2 },
-            { id: 'm3', title: 'Xây dựng Web với AI & Replit', title_en: 'Building Web with AI & Replit', video_url: 'https://youtube.com/...', order: 3 }
-          ])
-        ]);
-        sheet.appendRow([
-          'course_002', 'MMO với Affiliate & AI Automation', 'MMO with Affiliate & AI Automation', 
-          'Công thức tạo thu nhập thụ động bền vững bằng cách kết hợp AI và Tiếp thị liên kết.', 
-          'Passive income formula by combining AI and Affiliate Marketing.',
-          'Kiếm tiền AI Automation', 'Earn money with AI Automation',
-          1500000, 65, 'https://picsum.photos/seed/mmo-ai/800/450', 'victor_chuyen', 
-          'true', 'true', 850, 42, 4.8, new Date().toISOString(), 
-          JSON.stringify([
-            { id: 'm1', title: 'Tư duy chọn ngách Affiliate', title_en: 'Affiliate Niche Selection', video_url: 'https://youtube.com/...', order: 1 },
-            { id: 'm2', title: 'Tự động hóa nội dung đa kênh', title_en: 'Multi-channel Content Automation', video_url: 'https://youtube.com/...', order: 2 }
-          ])
-        ]);
-      }
-      
-      // Seed data mẫu cho bots
-      if (name === 'bots') {
-         sheet.appendRow([
-            'bot_student_01', 'Trợ Lý Lộ Trình Học AI', 'student-pathway', 'student', 'gem', 
-            'Hỏi về lộ trình học AI từ cơ bản đến nâng cao.', '', 'Mở Cố Vấn Gem', 'https://gemini.google.com/', 
-            'Bắt đầu học', '/courses', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
-            '', 'admin', 'admin@example.com', 'active', true, 1, 'vibe-coach,newbie', 'vi', new Date().toISOString(), ''
-         ]);
-         sheet.appendRow([
-          'bot_mmo_01', 'AI Affiliate Mastermind', 'mmo-master', 'student', 'gem', 
-          'Chiến lược MMO & Affiliate thực chiến với AI.', '', 'Mở Mastermind', 'https://gemini.google.com/', 
-          'Cộng đồng', 'https://facebook.com/groups/...', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
-          '', 'admin', 'admin@example.com', 'active', true, 2, 'mmo,money', 'vi', new Date().toISOString(), ''
-        ]);
-        sheet.appendRow([
-          'bot_admin_01', 'Coach AI - Admin & Support', 'admin-support-gem', 'admin', 'support', 
-          'Hỗ trợ trả lời FAQ, tra cứu SOP nội bộ vận hành.', '', 'Mở Gem', 'https://gemini.google.com/', 
-          'Quy trình', 'https://docs.google.com/', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
-          '', 'admin', 'admin@example.com', 'active', false, 3, 'admin,support', 'vi', new Date().toISOString(), ''
-        ]);
-      }
-
-      // Seed data cho Projects (Mẫu thực tế từ edu.victorchuyen.net)
-      if (name === 'projects') {
-        sheet.appendRow([
-          'proj_001', 'Chatbot Tư Vấn Bất Động Sản AI', 'AI/No-Code', 'Typebot, ChatGPT API, Google Sheets', 
-          'Tự động thu thập lead, trả lời 24/7 thay thế nhân viên trực page. Đồng bộ dữ liệu real-time.', 
-          'Mới', 'https://github.com/...', 'active', 1, new Date().toISOString()
-        ]);
-        sheet.appendRow([
-          'proj_002', 'Hệ Thống Tự Động Viết Bài SEO', 'Automation', 'Make.com, OpenAI, WordPress', 
-          'Lấy tin tức mỗi sáng, tóm tắt và tự viết bài dài chuẩn SEO, tự động schedule đăng bài lên web.', 
-          'Phổ biến', 'https://github.com/...', 'active', 2, new Date().toISOString()
-        ]);
-        sheet.appendRow([
-          'proj_003', 'Auto Voice Call Customer Service', 'Voice AI', 'Vapi, ElevenLabs, Twilio', 
-          'Gọi điện tự động báo lịch hẹn, xác nhận đơn hàng bằng giọng AI tiếng Việt tự nhiên 100%.', 
-          '', 'https://github.com/...', 'active', 3, new Date().toISOString()
-        ]);
-      }
+      formatHeader(sheet, headers.length);
     }
   }
+  
+  // Kiểm tra nếu sheet chỉ có 1 dòng (chỉ có tiêu đề) thì bơm data mẫu
+  if (sheet.getLastRow() === 1) {
+    seedDataForSheet(sheet, name);
+  }
+  
+  return sheet;
+}
+
+/**
+ * Định dạng dòng tiêu đề
+ */
+function formatHeader(sheet, colCount) {
+  sheet.getRange(1, 1, 1, colCount)
+    .setFontWeight('bold')
+    .setBackground('#f3f3f3')
+    .setBorder(true, true, true, true, true, true);
+  sheet.setFrozenRows(1);
+}
+
+/**
+ * Bơm dữ liệu mẫu (Seed Data) chuẩn Marketing & High-conversion
+ */
+function seedDataForSheet(sheet, name) {
+  var timestamp = new Date().toISOString();
+  
+  if (name === 'page_content') {
+    sheet.appendRow(['hero_title', 'Coach AI | Chọn trợ lý đúng mục tiêu', 'Coach AI | Choose the right assistant', 'active', timestamp]);
+    sheet.appendRow(['hero_subtitle', 'Hệ sinh thái học tập AI thực chiến. Từ người mới bắt đầu đến chuyên gia No-code & MMO.', 'Practical AI learning ecosystem. From beginners to No-code & MMO experts.', 'active', timestamp]);
+    sheet.appendRow(['cta_primary', 'Bắt đầu ngay', 'Get Started', 'active', timestamp]);
+    sheet.appendRow(['cta_secondary', 'Xem Demo Dự Án', 'View Project Demo', 'active', timestamp]);
+  }
+
+  if (name === 'Courses') {
+    sheet.appendRow([
+      'course_001', 'Làm chủ AI & No-Code 2024 (Từ 0 đến 1)', 'Mastering AI & No-Code 2024 (0 to 1)', 
+      'Khóa học thực chiến giúp bạn xây dựng ứng dụng AI mà không cần viết code.', 
+      'Build real AI apps without writing code. From idea to deployment in 4 weeks.',
+      'Xây app AI 0đ với No-code', 'Build AI apps with 0$ using No-code',
+      1200000, 50, 'https://picsum.photos/seed/ai-no-code/800/450', 'victor_chuyen', 
+      'true', 'true', 1250, 85, 4.9, timestamp, 
+      JSON.stringify([
+        { id: 'm1', title: 'Tổng quan hệ sinh thái AI', title_en: 'AI Ecosystem Overview', video_url: 'https://youtube.com/...', order: 1 },
+        { id: 'm2', title: 'Prompt Engineering thực chiến', title_en: 'Practical Prompt Engineering', video_url: 'https://youtube.com/...', order: 2 },
+        { id: 'm3', title: 'Xây dựng Web với AI & Replit', title_en: 'Building Web with AI & Replit', video_url: 'https://youtube.com/...', order: 3 }
+      ])
+    ]);
+  }
+  
+  if (name === 'bots') {
+     sheet.appendRow([
+        'bot_student_01', 'Trợ Lý Lộ Trình Học AI', 'student-pathway', 'student', 'gem', 
+        'Hỏi về lộ trình học AI từ cơ bản đến nâng cao.', '', 'Mở Cố Vấn Gem', 'https://gemini.google.com/', 
+        'Bắt đầu học', '/courses', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
+        '', 'admin', 'admin@example.com', 'active', true, 1, 'vibe-coach,newbie', 'vi', timestamp, ''
+     ]);
+     sheet.appendRow([
+      'bot_mmo_01', 'AI Affiliate Mastermind', 'mmo-master', 'student', 'gem', 
+      'Chiến lược MMO & Affiliate thực chiến với AI.', '', 'Mở Mastermind', 'https://gemini.google.com/', 
+      'Cộng đồng', 'https://facebook.com/groups/...', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
+      '', 'admin', 'admin@example.com', 'active', true, 2, 'mmo,money', 'vi', timestamp, ''
+    ]);
+  }
+
+  if (name === 'projects') {
+    sheet.appendRow([
+      'proj_001', 'Chatbot Tư Vấn Bất Động Sản AI', 'AI/No-Code', 'Typebot, ChatGPT API, Google Sheets', 
+      'Tự động thu thập lead, trả lời 24/7 thay thế nhân viên trực page. Đồng bộ dữ liệu real-time.', 
+      'Mới', 'https://github.com/...', 'active', 1, timestamp
+    ]);
+    sheet.appendRow([
+      'proj_002', 'Hệ Thống Tự Động Viết Bài SEO', 'Automation', 'Make.com, OpenAI, WordPress', 
+      'Lấy tin tức mỗi sáng, tóm tắt và tự viết bài dài chuẩn SEO, tự động schedule đăng bài lên web.', 
+      'Phổ biến', 'https://github.com/...', 'active', 2, timestamp
+    ]);
+  }
+}
   return sheet;
 }
 
