@@ -1,0 +1,292 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { CoachAICard } from '../components/CoachAI/CoachAICard';
+import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import type { CoachAIConfig, RoleTarget, BotCategory } from '../components/CoachAI/types';
+
+// For Phase 1: You can replace this with the actual deployed Apps Script URL later
+const APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycby0T22w5frWYgVmcUDgCJgHa5fBr8sEgkePYpBnRL7YUWWQ061pn7LWFylBUectVNSd/exec'; 
+
+const FALLBACK_DATA: CoachAIConfig = {
+  hero: {
+    title: "Coach AI - Chọn trợ lý đúng mục tiêu",
+    subtitle: "Học AI, làm dự án, kiếm tiền cùng trợ lý phù hợp."
+  },
+  bots: [
+    {
+      id: "bot_student_01",
+      title: "Coach AI cho Học viên",
+      slug: "student-gem",
+      role_target: "student",
+      category: "gem",
+      short_desc: "Hỏi nhanh về lộ trình học AI và cách bắt đầu.",
+      button_primary_text: "Mở Gem",
+      button_primary_url: "https://gemini.google.com/gem/...",
+      button_secondary_text: "Xem khóa học",
+      button_secondary_url: "https://edu.victorchuyen.net/courses/ai-basic",
+      thumbnail_url: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg",
+      status: "active",
+      featured: true,
+      sort_order: 1,
+      tags: "ai,học tập,cơ bản"
+    },
+    {
+      id: "bot_teacher_01",
+      title: "Coach AI - Trợ lý giảng viên",
+      slug: "teacher-gem",
+      role_target: "teacher",
+      category: "gem",
+      short_desc: "Giúp soạn outline, tối ưu khóa học, tạo FAQ nhanh.",
+      button_primary_text: "Mở Gem",
+      button_primary_url: "https://gemini.google.com/gem/...",
+      button_secondary_text: "Hỗ trợ Docs",
+      button_secondary_url: "https://docs.google.com/",
+      thumbnail_url: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg",
+      status: "active",
+      featured: true,
+      sort_order: 2,
+      tags: "teacher,outline,soạn bài"
+    },
+    {
+      id: "bot_admin_01",
+      title: "Coach AI - Admin & Support",
+      slug: "admin-support-gem",
+      role_target: "admin",
+      category: "support",
+      short_desc: "Hỗ trợ trả lời FAQ, tra cứu SOP nội bộ vận hành.",
+      button_primary_text: "Mở Gem",
+      button_primary_url: "https://gemini.google.com/gem/...",
+      button_secondary_text: "Quy trình",
+      button_secondary_url: "https://docs.google.com/",
+      thumbnail_url: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg",
+      status: "active",
+      featured: false,
+      sort_order: 3,
+      tags: "admin,support,quy trình"
+    },
+    {
+      id: "bot_nblm_01",
+      title: "NotebookLM - AI cho người mới",
+      slug: "nblm-ai-newbie",
+      role_target: "student",
+      category: "notebooklm",
+      short_desc: "Kho tri thức AI từ 0-1 được cấu trúc sẵn để hỏi đáp sâu.",
+      button_primary_text: "Mở NotebookLM",
+      button_primary_url: "https://notebooklm.google.com/...",
+      button_secondary_text: "Tham gia nhóm",
+      button_secondary_url: "https://facebook.com/groups/...",
+      thumbnail_url: "https://upload.wikimedia.org/wikipedia/commons/7/77/NotebookLM.svg",
+      status: "active",
+      featured: true,
+      sort_order: 4,
+      tags: "notebooklm,kiến thức"
+    },
+    {
+      id: "bot_nblm_02",
+      title: "NotebookLM - Kiếm tiền MMO",
+      slug: "nblm-mmo-money",
+      role_target: "student",
+      category: "notebooklm",
+      short_desc: "Kinh nghiệm thực chiến Affiliate & MMO với AI.",
+      button_primary_text: "Mở NotebookLM",
+      button_primary_url: "https://notebooklm.google.com/...",
+      button_secondary_text: "Khóa Affiliate",
+      button_secondary_url: "https://edu.victorchuyen.net/courses/",
+      thumbnail_url: "https://upload.wikimedia.org/wikipedia/commons/7/77/NotebookLM.svg",
+      status: "active",
+      featured: false,
+      sort_order: 5,
+      tags: "mmo,affiliate"
+    }
+  ]
+};
+
+export const CoachAI: React.FC = () => {
+  const [data, setData] = useState<CoachAIConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [activeRole, setActiveRole] = useState<RoleTarget | 'all'>('student');
+  const [activeCategory, setActiveCategory] = useState<BotCategory | 'all'>('all');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!APPS_SCRIPT_API_URL) {
+          // Simulate network delay for fallback
+          setTimeout(() => {
+            setData(FALLBACK_DATA);
+            setLoading(false);
+          }, 800);
+          return;
+        }
+
+        const res = await fetch(`${APPS_SCRIPT_API_URL}?action=config&lang=vi`);
+        if (!res.ok) throw new Error('API fetch failed');
+        const json = await res.json();
+        setData(json);
+      } catch (error) {
+        console.warn('Failed to fetch Coach AI config, using fallback data:', error);
+        setData(FALLBACK_DATA);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredBots = useMemo(() => {
+    if (!data) return [];
+    return data.bots.filter(bot => {
+      const matchRole = activeRole === 'all' || bot.role_target === activeRole || bot.role_target === 'all';
+      const matchCat = activeCategory === 'all' || bot.category === activeCategory;
+      return matchRole && matchCat;
+    });
+  }, [data, activeRole, activeCategory]);
+
+  return (
+    <div className="min-h-screen pt-24 pb-16 bg-[#F9FAFB] dark:bg-[#0B0E17]">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden mb-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 dark:from-indigo-900/10 dark:via-slate-900 dark:to-purple-900/10" />
+        
+        <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl py-12 lg:py-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium text-sm mb-6 border border-indigo-100 dark:border-indigo-800/50 shadow-sm">
+            <Sparkles className="w-4 h-4" />
+            <span>AI Ecosystem Hub</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight tracking-tight">
+            {data?.hero.title || "Coach AI - Chọn đúng trợ lý"}
+          </h1>
+          
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 leading-relaxed max-w-2xl mx-auto">
+            {data?.hero.subtitle || "Học AI, xây khóa học, kiếm tiền online với trợ lý phù hợp."}
+          </p>
+
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <button className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5" onClick={() => document.getElementById('hub-grid')?.scrollIntoView({ behavior: 'smooth' })}>
+              Mở trợ lý cho tôi
+            </button>
+            <button className="w-full sm:w-auto px-8 py-3.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-semibold transition-all shadow-sm">
+              Khám phá kho tri thức
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-6 max-w-7xl" id="hub-grid">
+        {/* Role Tabs */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
+            {[
+              { id: 'student', label: 'Học viên' },
+              { id: 'teacher', label: 'Giảng viên' },
+              { id: 'admin', label: 'Admin/Hỗ trợ' }
+            ].map(role => (
+              <button
+                key={role.id}
+                onClick={() => {
+                  setActiveRole(role.id as RoleTarget);
+                  setActiveCategory('all'); // Reset filter on role change
+                }}
+                className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${
+                  activeRole === role.id 
+                    ? 'bg-indigo-600 text-white shadow-md' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                }`}
+              >
+                {role.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-8 pb-4 border-b border-gray-100 dark:border-slate-800">
+          <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-2">
+            Lọc theo:
+          </span>
+          {[
+            { id: 'all', label: 'Tất cả' },
+            { id: 'gem', label: 'Gemini Gems' },
+            { id: 'notebooklm', label: 'NotebookLM' },
+            { id: 'course', label: 'Khóa học' },
+            { id: 'support', label: 'Hỗ trợ' },
+            { id: 'tool', label: 'Công cụ' }
+          ].map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id as any)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                activeCategory === cat.id
+                  ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content Grid */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
+            <p className="text-slate-500 font-medium animate-pulse">Đang tải cấu hình AI Hub...</p>
+          </div>
+        ) : filteredBots.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {filteredBots.map(bot => (
+              <CoachAICard key={bot.id} bot={bot} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+            <Sparkles className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Chưa có trợ lý nào</h3>
+            <p className="text-slate-500 dark:text-slate-400">Không tìm thấy AI hoặc công cụ nào trong danh mục này.</p>
+          </div>
+        )}
+        
+        {/* FAQ & Support Section at the bottom */}
+        <section className="mt-24 pt-16 border-t border-gray-100 dark:border-slate-800 grid md:grid-cols-2 gap-12">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">FAQ: Dành cho người mới</h2>
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-slate-200 mb-2">Gemini Gems là gì?</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                  Là các trợ lý AI chuyên biệt được lập trình sẵn mục tiêu và ngữ cảnh. Khác với ChatGPT chung chung, Gem của CoachAI giống như một người cố vấn đã học qua toàn bộ phương pháp giảng dạy của Edu Vibe.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-slate-200 mb-2">NotebookLM khác gì Gem?</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                  NotebookLM là công cụ "hỏi đáp đúng nguồn". Nó chỉ dựa vào tài liệu được tải lên (PDF, Google Sheets, SOP) và tuyệt đối không "bịa" câu trả lời (hallucination). Rất tốt khi cần tra cứu SOP, tài liệu khóa học nâng cao..
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 p-8 rounded-3xl h-fit border border-indigo-100 dark:border-indigo-800/30">
+            <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-100 mb-2">Tham gia cộng đồng AI</h3>
+            <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-6">Nhận lộ trình cập nhật mới nhất về các công cụ AI, MMO và Xây khóa học mỗi tuần.</p>
+            <form className="flex flex-col sm:flex-row gap-3">
+              <input 
+                type="email" 
+                placeholder="Nhập email của bạn..." 
+                className="flex-1 px-4 py-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800/80 dark:text-white placeholder:text-slate-400"
+              />
+              <button 
+                type="button"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all active:scale-95"
+              >
+                Nhận Roadmap <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+};

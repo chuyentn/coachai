@@ -1,0 +1,29 @@
+# Team Task Board: Edu-Vibe Project Upgrade
+
+## 🏁 Milestones
+- [ ] Phase 1: Architecture Audit & Environment Setup (Victor)
+- [ ] Phase 2: Database Schema & API Foundation (Money)
+- [ ] Phase 3: Premium UI Overhaul & Integration (Lucky)
+- [ ] Phase 4: Full System Verification & Launch (Team)
+
+## 📋 Ongoing Tasks
+
+### 👤 Victor (Leader)
+- [ ] Audit `MVP_ARCHITECTURE_MAP.md` and sync requirements <!-- id: v1 -->
+- [ ] Verify environment variables (.env) consistency <!-- id: v2 -->
+- [ ] Review PRs from Lucky and Money <!-- id: v3 -->
+
+### 👤 Lucky (Frontend)
+- [ ] Audit `src/components` for design consistency <!-- id: l1 -->
+- [ ] Implement premium micro-animations for landing page <!-- id: l2 -->
+- [ ] Connect frontend to validated API endpoints <!-- id: l3 -->
+
+### 👤 Money (Backend)
+- [ ] Review `supabase_schema.sql` and run optimizations <!-- id: m1 -->
+- [ ] Refactor Firebase Functions for performance <!-- id: m2 -->
+- [ ] Secure API endpoints against unauthorized access <!-- id: m3 -->
+
+---
+
+> [!NOTE]
+> AI agents should update this file using `multi_replace_file_content` after completing sub-tasks.

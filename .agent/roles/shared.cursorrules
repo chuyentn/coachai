@@ -1,0 +1,37 @@
+# Shared Project Rules / Quy tắc chung cho Dự án
+
+---
+
+## 🇺🇸 English Version (For AI Understanding)
+
+### 1. Working Principles
+- **Task First:** Always check the `task.md` file before starting and update it immediately after completion.
+- **Atomic Commits:** Every code change must be accompanied by a clear, concise explanation.
+- **No Placeholders:** Never leave dummy code or TODO markers without a specific plan/timeline for resolution.
+- **Skill Usage:** Prioritize using available `@skills` from the `.agent/skills` directory to ensure quality and consistency.
+
+### 2. Standard Project Structure
+- Maintain clean code following DRY (Don't Repeat Yourself) and SOLID principles.
+- Use Vietnamese for documentation and guides if requested, but code identifiers (variables, functions, classes) must always be in English.
+
+### 3. Collaboration Flow
+- **Victor (Leader):** Design & Plan -> **Money (BE):** Foundation & API -> **Lucky (FE):** UI & Interactive Handoff.
+- All team members are empowered to Audit code using `@lint-and-validate`.
+
+---
+
+## 🇻🇳 Vietnamese Version (Dành cho người dùng)
+
+### 1. Nguyên tắc làm việc
+- **Task First:** Luôn kiểm tra file `task.md` trước khi bắt đầu và cập nhật sau khi hoàn thành.
+- **Atomic Commits:** Mỗi lần thay đổi code phải đi kèm với giải thích rõ ràng.
+- **No Placeholders:** Tuyệt đối không để lại code giả hoặc đánh dấu TODO mà không có kế hoạch xử lý.
+- **Skill Usage:** Ưu tiên sử dụng các `@skills` có sẵn trong thư mục `.agent/skills` để đảm bảo chất lượng.
+
+### 2. Cấu trúc dự án tiêu chuẩn
+- Luôn giữ code sạch, tuân thủ nguyên tắc DRY (Don't Repeat Yourself) và SOLID.
+- Sử dụng Vietnamese cho hướng dẫn/comment nếu người dùng yêu cầu, nhưng code (biến, hàm) luôn là English.
+
+### 3. Quy trình phối hợp
+- **Victor (Leader):** Duyệt kế hoạch -> **Money (BE):** Xây dựng nền tảng -> **Lucky (FE)::** Hoàn thiện giao diện.
+- Mọi nhân sự đều có quyền Audit (kiểm tra) code của nhau thông qua `@lint-and-validate`.

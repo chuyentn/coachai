@@ -70,6 +70,30 @@ export const googleSheetsService = {
     }
   },
 
+  async fetchBots(role: string = 'all', lang: string = 'vi'): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getBots&role=${role}&lang=${lang}`);
+      if (!response.ok) throw new Error('Failed to fetch bots');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching bots:', error);
+      return [];
+    }
+  },
+
+  async fetchConfig(lang: string = 'vi'): Promise<any> {
+    if (!WEBHOOK_URL) return null;
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getConfig&lang=${lang}`);
+      if (!response.ok) throw new Error('Failed to fetch config');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching config:', error);
+      return null;
+    }
+  },
+
   async fetchComments(courseId: string): Promise<any[]> {
     if (!WEBHOOK_URL) return [];
     try {
@@ -104,11 +128,36 @@ export const googleSheetsService = {
     });
   },
 
+  async submitTeacher(teacherData: {
+    email: string;
+    name: string;
+    phone: string;
+    expertise: string;
+    bio: string;
+  }): Promise<boolean> {
+    return this.submitToWebhook({
+      type: 'teacher',
+      ...teacherData
+    });
+  },
+
   async submitCourse(courseData: any): Promise<boolean> {
     return this.submitToWebhook({
       type: 'course',
       ...courseData
     });
+  },
+
+  async initializeSystem(): Promise<boolean> {
+    if (!WEBHOOK_URL) return false;
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=setup`);
+      const data = await response.json();
+      return data.result === 'success';
+    } catch (error) {
+      console.error('Error initializing system:', error);
+      return false;
+    }
   },
 
   async submitToWebhook(data: any): Promise<boolean> {

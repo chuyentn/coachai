@@ -2,7 +2,6 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { LeadPopup } from './components/LeadPopup';
-import { AICoachWidget } from './components/AICoachWidget';
 import { SalesNotification } from './components/ui/SalesNotification';
 import { GoogleAnalytics } from './components/GoogleAnalytics';
 import { useAuth } from './hooks/useAuth';
@@ -30,6 +29,7 @@ const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Con
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const Payment = lazy(() => import('./pages/Payment').then(m => ({ default: m.default })));
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
+const CoachAI = lazy(() => import('./pages/CoachAI').then(m => ({ default: m.CoachAI })));
 
 // Page loading fallback
 const PageLoader = () => (
@@ -102,11 +102,11 @@ export default function App() {
       <RoleToast />
         <Navbar />
         <LeadPopup />
-        <AICoachWidget />
         <SalesNotification />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/coachai" element={<CoachAI />} />
             <Route path="/auth/signin" element={<SignIn />} />
             <Route path="/auth/signup" element={<SignUp />} />
             <Route path="/auth/reset" element={<ResetPassword />} />

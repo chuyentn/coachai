@@ -11,8 +11,8 @@
 // --- CẤU HÌNH CÁC CỘT (SCHEMA) DỰA TRÊN HÌNH ẢNH THỰC TẾ VÀ YÊU CẦU ---
 const SCHEMA = {
   'Courses': [
-    'id', 'title', 'description', 'price_vnd', 'price_usd', 
-    'thumbnail_url', 'instructor_id', 'published', 'featured', 
+    'id', 'title', 'title_en', 'description', 'description_en', 'short_description', 'short_description_en',
+    'price_vnd', 'price_usd', 'thumbnail_url', 'instructor_id', 'published', 'featured', 
     'total_students', 'total_reviews', 'avg_rating', 'created_at', 'modules'
   ],
   'Leads': [
