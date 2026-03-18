@@ -21,8 +21,12 @@
 - [x] **Data Sync Audit (Frontend):** Audit UI components for correct data integration <!-- id: exp_v10 -->
 - [x] **Refactor CoachAI:** Connect AI Hub to googleSheetsService and verified URL <!-- id: exp_v11 -->
 - [x] **Refactor Home:** Sync Hero section with dynamic Google Sheets config <!-- id: exp_v12 -->
-- [ ] **Navbar Integration:** Add link to CoachAI for easy access <!-- id: exp_v13 -->
-- [ ] **Full Flow Verification:** Test write operations (Leads, Comments, Teachers) <!-- id: exp_v14 -->
+- [x] **Refactor Home:** Sync Hero section with dynamic Google Sheets config <!-- id: exp_v12 -->
+- [x] **Navbar Integration:** Add link to CoachAI for easy access <!-- id: exp_v13 -->
+- [x] **Full Flow Verification:** Test write operations (Leads, Comments, Teachers) <!-- id: exp_v14 -->
+- [x] **Cloneable Service:** Expand Apps Script seed data with high-conversion demo content <!-- id: exp_v15 -->
+- [x] **Projects Sync:** Connect Projects page to Google Sheets dynamic data <!-- id: exp_v17 -->
+- [ ] **Data Verification:** Complete collaborative check with User (Hero, Bots, Forms, Projects) <!-- id: exp_v16 -->
 
 ### 👤 Lucky (Frontend Maven)
 - [ ] **Premium Facelift:** Refactor `src/components` with advanced Tailwind & Framer Motion <!-- id: exp_l1 -->

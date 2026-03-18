@@ -1,39 +1,42 @@
-import React, { useState } from 'react';
-import { Code2, Terminal, ArrowUpRight, CheckCircle2, Zap, X, Send, User, Mail, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Code2, Terminal, ArrowUpRight, CheckCircle2, Zap, X, Send, User, Mail, Phone, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../hooks/useAuth';
+import { googleSheetsService } from '../services/googleSheetsService';
 
 export const Projects = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
   
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const isVip = profile?.role === 'vip' || profile?.role === 'admin';
 
-  const projects = [
-    {
-      title: "Chatbot Tư Vấn Bất Động Sản AI",
-      category: "AI/No-Code",
-      tech: ["Typebot", "ChatGPT API", "Google Sheets"],
-      desc: "Tự động thu thập lead, trả lời 24/7 thay thế nhân viên trực page. Đồng bộ dữ liệu real-time.",
-      badge: "Mới"
-    },
-    {
-      title: "Hệ Thống Tự Động Viết Bài SEO",
-      category: "Automation",
-      tech: ["Make.com", "OpenAI", "WordPress"],
-      desc: "Lấy tin tức mỗi sáng, tóm tắt và tự viết bài dài chuẩn SEO, tự động schedule đăng bài lên web.",
-      badge: "Phổ biến"
-    },
-    {
-      title: "Auto Voice Call Customer Service",
-      category: "Voice AI",
-      tech: ["Vapi", "ElevenLabs", "Twilio"],
-      desc: "Gọi điện tự động báo lịch hẹn, xác nhận đơn hàng bằng giọng AI tiếng Việt tự nhiên 100%.",
-      badge: ""
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const data = await googleSheetsService.fetchProjects();
+      // Tech field might be a comma-separated string in Sheet
+      const formatted = data.map(p => ({
+        ...p,
+        tech: typeof p.tech === 'string' ? p.tech.split(',').map((t: string) => t.trim()) : p.tech
+      }));
+      setProjects(formatted);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+      setError('Unable to load projects.');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -139,8 +142,24 @@ export const Projects = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-24 relative z-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {projects.map((p, idx) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+            <p className="text-slate-500 font-bold">Đang tải dự án thực chiến...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 bg-rose-50 rounded-[3rem] border border-rose-100">
+            <p className="text-rose-600 mb-6 font-bold">{error}</p>
+            <button 
+              onClick={fetchProjects}
+              className="px-10 py-4 bg-rose-600 text-white rounded-2xl hover:bg-rose-700 transition-all font-black"
+            >
+              Thử lại
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {projects.map((p, idx) => (
             <div key={idx} className="bg-white dark:bg-[#111623] p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 hover:-translate-y-2 transition-transform duration-300 group">
               <div className="flex justify-between items-start mb-6">
                 <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest">{p.category}</div>
@@ -176,6 +195,7 @@ export const Projects = () => {
             </div>
           ))}
         </div>
+        )}
 
         <div className="mt-20 text-center">
           <Link to="/" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline">

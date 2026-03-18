@@ -82,6 +82,18 @@ export const googleSheetsService = {
     }
   },
 
+  async fetchProjects(): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getProjects`);
+      if (!response.ok) throw new Error('Failed to fetch projects');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      return [];
+    }
+  },
+
   async fetchConfig(lang: string = 'vi'): Promise<any> {
     if (!WEBHOOK_URL) return null;
     try {
