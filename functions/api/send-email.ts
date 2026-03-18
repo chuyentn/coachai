@@ -90,8 +90,8 @@ export const onRequestPost = async (context: any) => {
     });
 
     if (error) {
-      console.error('Lỗi Resend:', error);
-      return new Response(JSON.stringify({ error }), { 
+      console.error('Lỗi Resend Chi Tiết:', JSON.stringify(error, null, 2));
+      return new Response(JSON.stringify({ error, detail: 'Lỗi từ Resend API' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
