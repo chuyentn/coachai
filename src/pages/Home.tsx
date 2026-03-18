@@ -39,9 +39,10 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 
 export const Home: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { profile } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [heroConfig, setHeroConfig] = useState<{ title1?: string; title2?: string; description?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,11 +55,40 @@ export const Home: React.FC = () => {
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState(false);
 
+  const lang = i18n.language === 'en' ? 'en' : 'vi';
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Fetch courses
+      const coursesData = await googleSheetsService.fetchCourses();
+      setCourses(coursesData.filter(c => c.published));
+
+      // Fetch Hero Config from Sheet
+      const config = await googleSheetsService.fetchConfig(lang);
+      if (config && config.hero) {
+        // Split title into 2 parts if it contains '|' or just use as is
+        const fullTitle = config.hero.title || '';
+        const [t1, t2] = fullTitle.includes('|') ? fullTitle.split('|') : [fullTitle, ''];
+        setHeroConfig({
+          title1: t1 || undefined,
+          title2: t2 || undefined,
+          description: config.hero.subtitle || undefined
+        });
+      }
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setError('Không thể tải dữ liệu từ Google Sheets.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   usePageTitle(t('home.pageTitle'));
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    fetchData();
+  }, [lang]);
 
   useEffect(() => {
     const q = searchParams.get('q') || '';
@@ -72,20 +102,6 @@ export const Home: React.FC = () => {
       setSearchParams({ q: value.trim() });
     } else {
       setSearchParams({});
-    }
-  };
-
-  const fetchCourses = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const coursesData = await googleSheetsService.fetchCourses();
-      setCourses(coursesData.filter(c => c.published));
-    } catch (err: any) {
-      console.error('Error fetching courses:', err);
-      setError('Không thể tải danh sách khóa học từ Google Sheets.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -145,14 +161,16 @@ export const Home: React.FC = () => {
               </div>
               
               <h1 className="text-3xl lg:text-5xl font-black tracking-tight mb-6 leading-[1.2] md:leading-[1.1] break-words">
-                <span className="text-slate-900 dark:text-white block mb-2">{t('home.heroTitle1')}</span>
+                <span className="text-slate-900 dark:text-white block mb-2">
+                  {heroConfig?.title1 || t('home.heroTitle1')}
+                </span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-400 block pb-2">
-                  {t('home.heroTitle2')}
+                  {heroConfig?.title2 || t('home.heroTitle2')}
                 </span>
               </h1>
               
               <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed max-w-xl break-words">
-                {t('home.heroDesc')}
+                {heroConfig?.description || t('home.heroDesc')}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
@@ -352,7 +370,7 @@ export const Home: React.FC = () => {
           <div className="text-center py-20 bg-rose-50 rounded-[3rem] border border-rose-100">
             <p className="text-rose-600 mb-6 font-bold">{error}</p>
             <button 
-              onClick={fetchCourses}
+              onClick={fetchData}
               className="px-10 py-4 bg-rose-600 text-white rounded-2xl hover:bg-rose-700 transition-all font-black shadow-xl shadow-rose-200"
             >
               Thử lại ngay

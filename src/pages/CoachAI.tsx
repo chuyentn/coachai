@@ -2,9 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { CoachAICard } from '../components/CoachAI/CoachAICard';
 import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import type { CoachAIConfig, RoleTarget, BotCategory } from '../components/CoachAI/types';
-
-// For Phase 1: You can replace this with the actual deployed Apps Script URL later
-const APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycby0T22w5frWYgVmcUDgCJgHa5fBr8sEgkePYpBnRL7YUWWQ061pn7LWFylBUectVNSd/exec'; 
+import { googleSheetsService } from '../services/googleSheetsService';
+import { useTranslation } from 'react-i18next';
 
 const FALLBACK_DATA: CoachAIConfig = {
   hero: {
@@ -107,22 +106,15 @@ export const CoachAI: React.FC = () => {
   const [activeRole, setActiveRole] = useState<RoleTarget | 'all'>('student');
   const [activeCategory, setActiveCategory] = useState<BotCategory | 'all'>('all');
 
+  const { i18n } = useTranslation();
+  const lang = i18n.language === 'en' ? 'en' : 'vi';
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!APPS_SCRIPT_API_URL) {
-          // Simulate network delay for fallback
-          setTimeout(() => {
-            setData(FALLBACK_DATA);
-            setLoading(false);
-          }, 800);
-          return;
-        }
-
-        const res = await fetch(`${APPS_SCRIPT_API_URL}?action=config&lang=vi`);
-        if (!res.ok) throw new Error('API fetch failed');
-        const json = await res.json();
-        setData(json);
+        const config = await googleSheetsService.fetchConfig(lang);
+        if (!config || config.error) throw new Error('API fetch failed or returned error');
+        setData(config);
       } catch (error) {
         console.warn('Failed to fetch Coach AI config, using fallback data:', error);
         setData(FALLBACK_DATA);
@@ -132,7 +124,7 @@ export const CoachAI: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [lang]);
 
   const filteredBots = useMemo(() => {
     if (!data) return [];

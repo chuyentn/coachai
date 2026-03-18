@@ -19,7 +19,8 @@ import {
   Settings,
   Sun,
   Moon,
-  DollarSign
+  DollarSign,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
@@ -102,6 +103,7 @@ export const Navbar: React.FC = () => {
             <nav className="inline-flex p-1.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl gap-1 mr-2">
               {[
                 { label: t('common.courses'), href: '/courses', match: '/#courses' },
+                { label: 'AI Hub', href: '/coachai', match: '/coachai' },
                 { label: t('common.projects'), href: '/projects', match: '/projects' },
                 { label: t('common.coaching'), href: '/coaching', match: '/coaching' },
                 { label: t('common.affiliate'), href: '/affiliate', match: '/affiliate' },
@@ -245,6 +247,7 @@ export const Navbar: React.FC = () => {
                 
                 {[
                   { label: t('common.courses'), href: '/courses', icon: BookOpen },
+                  { label: 'AI Hub', href: '/coachai', icon: Sparkles },
                   { label: t('common.projects'), href: '/projects', icon: Zap },
                   { label: t('common.coaching'), href: '/coaching', icon: User },
                   { label: t('common.affiliate'), href: '/affiliate', icon: Users },

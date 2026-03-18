@@ -17,6 +17,12 @@
 - [x] **GAS Schema Upgrade:** Add missing EN fields and optimize result parsing <!-- id: exp_v6 -->
 - [x] **GAS Service Extension:** Implement getBots, getConfig, and submitTeacher <!-- id: exp_v7 -->
 - [x] **GAS URL Update:** Verify and update the VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL <!-- id: exp_v8 -->
+- [x] **Push to GitHub:** Deploy all architectural and security upgrades <!-- id: exp_v9 -->
+- [x] **Data Sync Audit (Frontend):** Audit UI components for correct data integration <!-- id: exp_v10 -->
+- [x] **Refactor CoachAI:** Connect AI Hub to googleSheetsService and verified URL <!-- id: exp_v11 -->
+- [x] **Refactor Home:** Sync Hero section with dynamic Google Sheets config <!-- id: exp_v12 -->
+- [ ] **Navbar Integration:** Add link to CoachAI for easy access <!-- id: exp_v13 -->
+- [ ] **Full Flow Verification:** Test write operations (Leads, Comments, Teachers) <!-- id: exp_v14 -->
 
 ### 👤 Lucky (Frontend Maven)
 - [ ] **Premium Facelift:** Refactor `src/components` with advanced Tailwind & Framer Motion <!-- id: exp_l1 -->
