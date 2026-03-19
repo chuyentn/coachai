@@ -499,6 +499,8 @@ function seedDataForSheet(sheet, name) {
   if (name === 'page_content') {
     sheet.appendRow(['hero_title', 'Coach AI | Đột phá thu nhập với AI & No-Code', 'Coach AI | Breakthrough Income with AI & No-Code', 'active', timestamp]);
     sheet.appendRow(['hero_subtitle', 'Lộ trình từ Zero đến HERO cho người mới. Xây dựng trợ lý AI, Tự động hóa công việc và kiếm tiền bền vững.', 'Zero-to-HERO roadmap for beginners. Build AI assistants, automate tasks, and earn sustainable income.', 'active', timestamp]);
+    sheet.appendRow(['logo_url', 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo_2017.svg', 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo_2017.svg', 'active', timestamp]);
+    sheet.appendRow(['seo_description', 'Hệ thống đào tạo AI & No-Code chuyên nghiệp. Xây dựng trợ lý AI và tự động hóa doanh nghiệp.', 'Professional AI & No-Code training system. Build AI assistants and automate your business.', 'active', timestamp]);
     sheet.appendRow(['cta_primary', 'Tham gia Ngay', 'Join Now', 'active', timestamp]);
     sheet.appendRow(['cta_secondary', 'Lịch hẹn Coaching', 'Book Coaching', 'active', timestamp]);
     

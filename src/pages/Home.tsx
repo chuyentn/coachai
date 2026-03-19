@@ -110,12 +110,12 @@ export const Home: React.FC = () => {
       // Gửi Email tự động tặng quà từ Hệ sinh thái
       await crmService.sendTransactionalEmail(
         leadEmail,
-        `🎁 [${import.meta.env.VITE_APP_NAME || 'CoachAI'}] Xác nhận Đăng ký Newsletter & Nhận Quà`,
+        `🎁 [${config.appName}] Xác nhận Đăng ký Newsletter & Nhận Quà`,
         `
-          <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với Cộng đồng ${import.meta.env.VITE_APP_NAME || 'CoachAI'}!</h2>
+          <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với Cộng đồng ${config.appName}!</h2>
           <p style="font-size: 16px;">Cảm ơn bạn đã đăng ký theo dõi Newsletter. Tại đây, chúng tôi chia sẻ đều đặn các Kiến thức Lập trình thực chiến, xu hướng AI và tư duy vận hành sản phẩm công nghệ.</p>
           <div style="background: #f0f7ff; padding: 15px; border-radius: 10px; margin: 20px 0;">
-            <p style="margin: 0; color: #15803d;">Sách điện tử: "Hành Trang Trở Thành Lập Trình Viên Độc Lập" - Đính kèm bên dưới bài viết VIP của ${import.meta.env.VITE_APP_NAME || 'CoachAI'}.</p>
+            <p style="margin: 0; color: #15803d;">Sách điện tử: "Hành Trang Trở Thành Lập Trình Viên Độc Lập" - Đính kèm bên dưới bài viết VIP của ${config.appName}.</p>
           </div>
           <p style="font-size: 16px;">Hãy kiểm tra Hộp thư Thường xuyên nhé. Nếu bạn muốn bứt tốc sớm hơn, đừng ngần ngại truy cập trực tiếp các lộ trình tại Coaching Hub.</p>
         `
@@ -717,8 +717,12 @@ export const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-20">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                  <Zap size={24} />
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg overflow-hidden">
+                  {config.logoUrl ? (
+                    <img src={config.logoUrl} alt={config.appName} className="w-7 h-7 object-contain" />
+                  ) : (
+                    <Zap size={24} />
+                  )}
                 </div>
                 <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{config.appName}</span>
               </div>

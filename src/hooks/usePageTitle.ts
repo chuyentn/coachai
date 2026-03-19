@@ -10,12 +10,13 @@ import { useTranslation } from 'react-i18next';
  *
  * Appends the brand suffix automatically unless the title already includes it.
  */
-const BRAND = import.meta.env.VITE_APP_NAME || 'CoachAI';
+import { useSaaSConfig } from './useSaaSConfig';
 
 export const usePageTitle = (title: string) => {
-  const { t, i18n } = useTranslation();
+  const config = useSaaSConfig();
   
   useEffect(() => {
+    const BRAND = config.appName;
     const suffix = t('common.pageTitleSuffix');
     const fullTitle = title.includes(BRAND) ? title : `${title} | ${BRAND} - ${suffix}`;
     document.title = fullTitle;
@@ -24,5 +25,5 @@ export const usePageTitle = (title: string) => {
     return () => {
       document.title = `${BRAND} | ${t('home.pageTitle')}`;
     };
-  }, [title, i18n.language, t]);
+  }, [title, i18n.language, t, config.appName]);
 };

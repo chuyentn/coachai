@@ -5,6 +5,8 @@ import { googleSheetsService } from '../services/googleSheetsService';
 export interface SaaSConfig {
   appName: string;
   companyName: string;
+  logoUrl?: string;
+  seoDescription?: string;
   supportEmail: string;
   adminZalo: string;
   adminTelegram: string;
@@ -28,7 +30,9 @@ export const useSaaSConfig = () => {
   
   const [config, setConfig] = useState<SaaSConfig>({
     appName: import.meta.env.VITE_APP_NAME || 'CoachAI',
-    companyName: import.meta.env.VITE_COMPANY_NAME || 'Victor Chuyen',
+    companyName: import.meta.env.VITE_COMPANY_NAME || 'CoachAI',
+    logoUrl: '',
+    seoDescription: '',
     supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'support@coachai.vn',
     adminZalo: import.meta.env.VITE_ADMIN_ZALO_PHONE || '0989.890.022',
     adminTelegram: import.meta.env.VITE_ADMIN_TELEGRAM_USER || '@victorchuyen',
@@ -50,6 +54,8 @@ export const useSaaSConfig = () => {
             ...prev,
             appName: remoteData.app_name || prev.appName,
             companyName: remoteData.company_name || prev.companyName,
+            logoUrl: remoteData.logo_url || prev.logoUrl,
+            seoDescription: remoteData.seo_description || prev.seoDescription,
             supportEmail: remoteData.support_email || prev.supportEmail,
             adminZalo: remoteData.admin_zalo_phone || prev.adminZalo,
             adminTelegram: remoteData.admin_telegram_user || prev.adminTelegram,
@@ -78,6 +84,38 @@ export const useSaaSConfig = () => {
 
     fetchRemoteConfig();
   }, [lang]);
+
+  useEffect(() => {
+    // Update SEO Meta Description
+    if (config.seoDescription) {
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', config.seoDescription);
+
+      // Update Open Graph Description
+      let ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', config.seoDescription);
+    }
+
+    // Update Favicon / App Logo in Meta
+    if (config.logoUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = config.logoUrl;
+
+      // Update OG Image
+      let ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.setAttribute('content', config.logoUrl);
+    }
+  }, [config.seoDescription, config.logoUrl]);
 
   return config;
 };

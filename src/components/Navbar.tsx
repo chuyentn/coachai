@@ -25,8 +25,11 @@ import {
 import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
 
+import { useSaaSConfig } from '../hooks/useSaaSConfig';
+
 export const Navbar: React.FC = () => {
   const { profile, signOut } = useAuth();
+  const config = useSaaSConfig();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -102,11 +105,15 @@ export const Navbar: React.FC = () => {
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center gap-3 group">
-                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                  <Zap className="text-white w-5 h-5" fill="currentColor" />
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex items-center justify-center overflow-hidden">
+                  {config.logoUrl ? (
+                    <img src={config.logoUrl} alt={config.appName} className="w-6 h-6 object-contain" />
+                  ) : (
+                    <Zap className="text-white w-5 h-5" fill="currentColor" />
+                  )}
                 </div>
                 <span className="font-black text-2xl tracking-tighter text-slate-900 dark:text-white hidden sm:block bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 transition-all duration-300">
-                  {import.meta.env.VITE_APP_NAME || 'CoachAI'}
+                  {config.appName}
                 </span>
               </Link>
             </div>
@@ -333,8 +340,6 @@ export const Navbar: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-    </nav>
     </>
   );
 };
