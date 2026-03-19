@@ -14,6 +14,7 @@ import { useSaaSConfig } from './useSaaSConfig';
 
 export const usePageTitle = (title: string) => {
   const config = useSaaSConfig();
+  const { t, i18n } = useTranslation();
   
   useEffect(() => {
     const BRAND = config.appName;
