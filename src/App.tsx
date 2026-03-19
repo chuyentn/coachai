@@ -86,7 +86,12 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: 
   return <>{children}</>;
 };
 
+import { useTenantContext } from './contexts/TenantContext';
+import { DomainNotFound } from './pages/DomainNotFound';
+
 export default function App() {
+  const { tenant } = useTenantContext();
+
   React.useEffect(() => {
     async function testConnection() {
       try {
@@ -103,6 +108,9 @@ export default function App() {
   return (
     <Router>
       <GoogleAnalytics />
+      {tenant?.fallback && window.location.hostname !== 'coach.online' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? (
+        <DomainNotFound />
+      ) : (
       <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans text-gray-900 dark:text-slate-300 transition-colors duration-300">
       <RoleToast />
         <Navbar />
@@ -112,6 +120,13 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/coachai" element={<CoachAI />} />
+            
+            {/* SaaS Onboarding Route */}
+            <Route path="/start" element={
+              <React.Suspense fallback={<PageLoader />}>
+                 {React.createElement(lazy(() => import('./pages/SaaSOnboarding').then(m => ({ default: m.SaaSOnboarding }))))}
+              </React.Suspense>
+            } />
             <Route path="/auth/signin" element={<SignIn />} />
             <Route path="/auth/signup" element={<SignUp />} />
             <Route path="/auth/reset" element={<ResetPassword />} />
@@ -208,6 +223,7 @@ export default function App() {
           </Routes>
         </Suspense>
       </div>
+      )}
     </Router>
   );
 }
