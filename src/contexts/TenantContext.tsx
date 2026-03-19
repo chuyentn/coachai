@@ -36,10 +36,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     const fetchTenant = async () => {
+      let tenantDomain = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'coach.io.vn' : window.location.hostname;
       try {
-        let tenantDomain = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'coach.io.vn' : window.location.hostname;
         try {
-          const override = new URLSearchParams(window.location.search).get('test_domain');
+          const params = new URLSearchParams(window.location.search);
+          const override = params.get('test_domain');
           if (override) tenantDomain = override;
         } catch(e) {}
         
@@ -56,7 +57,12 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setTenant({ 
           domain: tenantDomain, 
           app_name: 'Coach.io.vn', 
+          logo_url: '/logo.png',
           primary_color: '#4f46e5', 
+          contact_email: 'support@coach.io.vn',
+          zalo_url: '',
+          facebook_url: '',
+          sepay_md5: '',
           status: 'error', 
           fallback: true 
         });

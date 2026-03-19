@@ -114,10 +114,18 @@ export default function App() {
                            window.location.hostname === '127.0.0.1';
         const hasTestDomainOverride = new URLSearchParams(window.location.search).has('test_domain');
         
+        console.log('[QA DEBUG] Domain Check:', { 
+          hostname: window.location.hostname, 
+          isMainDomain, 
+          hasTestDomainOverride, 
+          tenantFallback: tenant?.fallback 
+        });
+
         // Show DomainNotFound if:
         // 1. Tenant is marked as fallback (not specifically found in DB)
         // 2. AND (We are not on the main domain OR we are testing with a custom domain param)
         if (tenant?.fallback && (!isMainDomain || hasTestDomainOverride)) {
+          console.log('[QA DEBUG] Rendering DomainNotFound');
           return <DomainNotFound />;
         }
         return null;
@@ -148,11 +156,7 @@ export default function App() {
             <Route path="/affiliate" element={<Affiliate />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/coaching" element={<Contact />} />
-            <Route path="/payment" element={
-              <ProtectedRoute>
-                <Payment />
-              </ProtectedRoute>
-            } />
+            <Route path="/payment" element={<Payment />} />
             <Route path="/projects" element={<Projects />} />
             <Route 
               path="/learn/:id" 
