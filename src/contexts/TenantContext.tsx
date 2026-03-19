@@ -37,7 +37,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const fetchTenant = async () => {
       try {
-        let tenantDomain = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'coach.online' : window.location.hostname;
+        let tenantDomain = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'coach.io.vn' : window.location.hostname;
         try {
           const override = new URLSearchParams(window.location.search).get('test_domain');
           if (override) tenantDomain = override;

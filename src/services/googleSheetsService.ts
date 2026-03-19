@@ -8,7 +8,7 @@ const getTenantId = () => {
     if (override) return override;
   } catch(e) {}
   const host = window.location.hostname;
-  return (host === 'localhost' || host === '127.0.0.1') ? 'coach.online' : host;
+  return (host === 'localhost' || host === '127.0.0.1') ? 'coach.io.vn' : host;
 };
 
 const getBaseUrl = (action: string) => {

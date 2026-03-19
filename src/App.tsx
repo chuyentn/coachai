@@ -108,7 +108,7 @@ export default function App() {
   return (
     <Router>
       <GoogleAnalytics />
-      {tenant?.fallback && window.location.hostname !== 'coach.online' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? (
+      {tenant?.fallback && window.location.hostname !== 'coach.io.vn' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? (
         <DomainNotFound />
       ) : (
       <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans text-gray-900 dark:text-slate-300 transition-colors duration-300">

@@ -92,7 +92,7 @@ export const SaaSOnboarding: React.FC = () => {
                           value={formData.domain}
                           onChange={e => setFormData({...formData, domain: e.target.value})}
                         />
-                        <span className="px-5 py-4 bg-slate-100 dark:bg-slate-800 border-y border-r border-slate-200 dark:border-slate-700 text-slate-500 font-bold whitespace-nowrap">.coach.online</span>
+                        <span className="px-5 py-4 bg-slate-100 dark:bg-slate-800 border-y border-r border-slate-200 dark:border-slate-700 text-slate-500 font-bold whitespace-nowrap">.coach.io.vn</span>
                       </div>
                       <p className="text-xs text-slate-500 mt-2 ml-1">Bạn có thể trỏ tên miền riêng (.com, .vn) sau khi hệ thống hoạt động.</p>
                     </div>
@@ -210,7 +210,7 @@ export const SaaSOnboarding: React.FC = () => {
                     Đội ngũ AI của Cloudflare và Google đang quét dữ liệu và thiết lập nền tảng cho bạn. Vui lòng kiểm tra hòm thư <strong>{formData.email}</strong> trong vòng 30 phút tới.
                   </p>
                   <a href="/" className="inline-block py-4 px-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-2xl transition-all hover:-translate-y-1 shadow-xl">
-                    Về Trang Chủ Coach.online
+                    Về Trang Chủ Coach.io.vn
                   </a>
                 </motion.div>
               )}

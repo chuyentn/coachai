@@ -25,7 +25,7 @@ function doGet(e) {
     const action = e.parameter.action || 'config';
     const role = e.parameter.role || 'all';
     const lang = e.parameter.lang || 'vi';
-    const tenantId = e.parameter.tenant_id || 'coach.online'; // V2 Multi-tenant Routing
+    const tenantId = e.parameter.tenant_id || 'coach.io.vn'; // V2 Multi-tenant Routing
 
     let responseData = {};
 
@@ -76,7 +76,7 @@ function doPost(e) {
       
       // Reconstruct Row based on HEADERS.tenants: 
       // ['domain', 'app_name', 'logo_url', 'primary_color', 'contact_email', 'zalo_url', 'facebook_url', 'sepay_md5', 'bank_id', 'bank_account', 'bank_owner', 'status']
-      const newDomain = postData.domain.includes('.') ? postData.domain : `${postData.domain}.coach.online`;
+      const newDomain = postData.domain.includes('.') ? postData.domain : `${postData.domain}.coach.io.vn`;
       
       const newRow = [
         newDomain,                 // domain
@@ -111,7 +111,7 @@ function doPost(e) {
  */
 function getTenantConfig(domain) {
   if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') {
-    return { domain: domain, app_name: "Coach.online (Demo)", primary_color: "#1d4ed8", status: "active" };
+    return { domain: domain, app_name: "Coach.io.vn (Demo)", primary_color: "#1d4ed8", status: "active" };
   }
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -123,7 +123,7 @@ function getTenantConfig(domain) {
   
   // Fallback to origin coach.online if custom domain is not active
   if (!tenant) {
-    tenant = tenantsData.find(t => t.domain === 'coach.online') || { domain: "coach.online", app_name: "Coach.online", fallback: true };
+    tenant = tenantsData.find(t => t.domain === 'coach.io.vn') || { domain: "coach.io.vn", app_name: "Coach.io.vn", fallback: true };
   }
   
   return tenant;
@@ -229,12 +229,12 @@ function sheetToObjects(sheet, headers) {
 function getFallbackSeedData() {
   return {
     "hero": {
-      "title": "Welcome to Coach.online",
+      "title": "Welcome to Coach.io.vn",
       "subtitle": "Kích hoạt Nền tảng Đào tạo trong 30 Phút."
     },
     "bots": [
       {
-        "tenant_id": "coach.online",
+        "tenant_id": "coach.io.vn",
         "id": "bot_student_01",
         "title": "Trợ lý Nội dung (Demo)",
         "slug": "student-gem",

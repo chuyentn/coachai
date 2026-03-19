@@ -37,7 +37,7 @@ export const DomainNotFound: React.FC = () => {
               Biến tên miền này thành một Hệ thống LMS Đào tạo mang thương hiệu riêng của bạn chỉ trong 30 phút. Không cần biết code!
             </p>
             <a 
-              href="https://coach.online/start" 
+              href="https://coach.io.vn/start" 
               className="relative z-10 inline-flex items-center justify-center w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40 hover:-translate-y-0.5"
             >
               <span>Khởi tạo Nền tảng ngay</span>
@@ -45,8 +45,8 @@ export const DomainNotFound: React.FC = () => {
             </a>
           </div>
           
-          <a href="https://coach.online" className="text-sm font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors inline-block">
-            Tìm hiểu thêm về nền tảng Coach.online
+          <a href="https://coach.io.vn" className="text-sm font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors inline-block">
+            Tìm hiểu thêm về nền tảng Coach.io.vn
           </a>
         </motion.div>
       </div>
