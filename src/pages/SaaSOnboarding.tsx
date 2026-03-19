@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { googleSheetsService } from '../services/googleSheetsService';
 
 export const SaaSOnboarding: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -11,12 +12,12 @@ export const SaaSOnboarding: React.FC = () => {
     email: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) return;
     setStep(4);
-    // In a real scenario, this would post to the N8N/Webhook
-    // which then creates the Tenant row in Google Sheets
+    
+    await googleSheetsService.submitTenantRegistration(formData);
   };
 
   return (

@@ -10,6 +10,9 @@ export interface TenantConfig {
   zalo_url: string;
   facebook_url: string;
   sepay_md5: string;
+  bank_id?: string;
+  bank_account?: string;
+  bank_owner?: string;
   status: string;
   fallback?: boolean;
 }
@@ -34,8 +37,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const fetchTenant = async () => {
       try {
-        const hostname = window.location.hostname;
-        const tenantDomain = (hostname === 'localhost' || hostname === '127.0.0.1') ? 'coach.online' : hostname;
+        let tenantDomain = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'coach.online' : window.location.hostname;
+        try {
+          const override = new URLSearchParams(window.location.search).get('test_domain');
+          if (override) tenantDomain = override;
+        } catch(e) {}
         
         const config = await googleSheetsService.fetchTenantConfig(tenantDomain);
         setTenant(config);

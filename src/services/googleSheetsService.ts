@@ -3,6 +3,10 @@ import { Course } from '../types';
 const WEBHOOK_URL = import.meta.env.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL;
 
 const getTenantId = () => {
+  try {
+    const override = new URLSearchParams(window.location.search).get('test_domain');
+    if (override) return override;
+  } catch(e) {}
   const host = window.location.hostname;
   return (host === 'localhost' || host === '127.0.0.1') ? 'coach.online' : host;
 };
@@ -22,6 +26,23 @@ export const googleSheetsService = {
     } catch (error) {
       console.error('Error fetching tenant config:', error);
       return null;
+    }
+  },
+
+  async submitTenantRegistration(data: any): Promise<boolean> {
+    if (!WEBHOOK_URL) return false;
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify({ action: 'register-tenant', ...data }),
+      });
+      return true;
+    } catch (error) {
+      console.error('Tenant registration error:', error);
+      return false;
     }
   },
 

@@ -9,8 +9,8 @@
 const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE'; // Replace with actual ID
 
 const HEADERS = {
-  // [NEW] SaaS Tenant Configurations
-  tenants: ['domain', 'app_name', 'logo_url', 'primary_color', 'contact_email', 'zalo_url', 'facebook_url', 'sepay_md5', 'status'],
+  // [NEW] SaaS Tenant Configurations (Added Bank info for Dynamic Checkout)
+  tenants: ['domain', 'app_name', 'logo_url', 'primary_color', 'contact_email', 'zalo_url', 'facebook_url', 'sepay_md5', 'bank_id', 'bank_account', 'bank_owner', 'status'],
   // [MODIFIED] Added tenant_id column for data isolation
   bots: ['tenant_id', 'id', 'title', 'slug', 'role_target', 'category', 'short_desc', 'long_desc', 'button_primary_text', 'button_primary_url', 'button_secondary_text', 'button_secondary_url', 'thumbnail_url', 'course_slug', 'owner_role', 'owner_email', 'status', 'featured', 'sort_order', 'tags', 'language', 'updated_at', 'updated_by'],
   courses_ai: ['tenant_id', 'course_slug', 'course_name', 'teacher_name', 'gem_url', 'notebooklm_url', 'support_doc_url', 'pricing_url', 'status'],
@@ -47,9 +47,62 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       error: error.message,
       stack: error.stack
     })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * [NEW] Handle POST requests (Webhooks from Frontend)
+ * Implements Phase 5: Auto-Onboarding Tenant Creation
+ */
+function doPost(e) {
+  try {
+    // Enable CORS by returning JSON properly
+    if (!e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ error: 'No POST data received' })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const postData = JSON.parse(e.postData.contents);
+    const action = postData.action;
+
+    if (action === 'register-tenant') {
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      const sheet = ss.getSheetByName('Tenants');
+      
+      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ error: 'Tenants sheet not found' })).setMimeType(ContentService.MimeType.JSON);
+      
+      // Reconstruct Row based on HEADERS.tenants: 
+      // ['domain', 'app_name', 'logo_url', 'primary_color', 'contact_email', 'zalo_url', 'facebook_url', 'sepay_md5', 'bank_id', 'bank_account', 'bank_owner', 'status']
+      const newDomain = postData.domain.includes('.') ? postData.domain : `${postData.domain}.coach.online`;
+      
+      const newRow = [
+        newDomain,                 // domain
+        postData.appName || '',    // app_name
+        '',                        // logo_url
+        postData.color || '',      // primary_color
+        postData.email || '',      // contact_email
+        '',                        // zalo_url
+        '',                        // facebook_url
+        '',                        // sepay_md5
+        'techcombank',             // bank_id (default fallback)
+        '8486568666',              // bank_account
+        'TRAN NGOC CHUYEN',        // bank_owner (default support)
+        'pending'                  // status
+      ];
+      
+      sheet.appendRow(newRow);
+      
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Tenant created successfully! Dashboard will be ready shortly.' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ error: 'Invalid backend action' })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ error: error.message })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 

@@ -14,12 +14,14 @@ import { useTranslation } from 'react-i18next';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../hooks/useAuth';
+import { useTenantContext } from '../contexts/TenantContext';
 
 const Payment = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { tenant } = useTenantContext();
   
   const plan = searchParams.get('plan') || 'vip';
   const amountStr = searchParams.get('amount') || '1500000';
@@ -33,7 +35,11 @@ const Payment = () => {
   const amountNum = parseInt(amountStr.replace(/\D/g, ''), 10) || 1500000;
   const formattedAmount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amountNum);
   
-  const qrUrl = `https://img.vietqr.io/image/techcombank-8486568666-compact2.png?amount=${amountNum}&addInfo=${transactionCode}&accountName=Trần Ngọc Chuyền`;
+  const bankId = tenant?.bank_id || 'techcombank';
+  const bankAccount = tenant?.bank_account || '8486568666';
+  const bankOwner = tenant?.bank_owner || 'TRAN NGOC CHUYEN';
+  
+  const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${amountNum}&addInfo=${transactionCode}&accountName=${encodeURIComponent(bankOwner)}`;
 
   // Load PayPal Script dynamically
   React.useEffect(() => {
@@ -213,10 +219,10 @@ const Payment = () => {
 
                 <div className="space-y-4">
                   <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Vietnam Technological And Commercial Joint Stock Bank (VTCBVNVX)</p>
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{bankId.toUpperCase()}</p>
                      <div className="flex items-center justify-between">
-                       <span className="font-bold text-slate-900 dark:text-white uppercase tracking-tight tabular-nums">8486 568 666</span>
-                       <button onClick={() => copyToClipboard('8486568666')} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                       <span className="font-bold text-slate-900 dark:text-white uppercase tracking-tight tabular-nums">{bankAccount} - {bankOwner}</span>
+                       <button onClick={() => copyToClipboard(bankAccount)} className="text-slate-400 hover:text-indigo-600 transition-colors">
                          <Copy size={16} />
                        </button>
                      </div>
