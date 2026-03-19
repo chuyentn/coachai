@@ -15,14 +15,16 @@ import {
   Settings,
   Star,
   Search,
-  Bell,
+  UserPlus,
   MessageSquare,
   TrendingUp,
   PlayCircle,
   Calendar,
   ExternalLink,
+  AlertTriangle,
+  ShieldCheck,
   Zap,
-  UserPlus
+  Bell
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -111,7 +113,7 @@ export const StudentDashboard: React.FC = () => {
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
               <Zap size={24} />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">CoachAI</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{import.meta.env.VITE_APP_NAME || 'CoachAI'}</span>
           </div>
 
           <nav className="inline-flex p-1.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl gap-1 flex-col w-full">
@@ -138,9 +140,16 @@ export const StudentDashboard: React.FC = () => {
               <Award size={64} fill="white" />
             </div>
             <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1">{t('studentDashboard.proStudentBadge')}</p>
-            <p className="text-sm font-medium text-slate-300 mb-4">{t('studentDashboard.proStudentDesc')}</p>
+            <p className="text-sm font-medium text-slate-300 mb-4">
+              {enrollments.length > 0 
+                ? t('studentDashboard.proStudentProgressDesc', { progress: Math.round(enrollments.reduce((acc, curr) => acc + (curr.completion_percentage || 0), 0) / enrollments.length) })
+                : t('studentDashboard.proStudentDesc')}
+            </p>
             <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-4">
-              <div className="w-[85%] h-full bg-indigo-400"></div>
+              <div 
+                className="h-full bg-indigo-400 transition-all duration-1000" 
+                style={{ width: `${enrollments.length > 0 ? enrollments.reduce((acc, curr) => acc + (curr.completion_percentage || 0), 0) / enrollments.length : 0}%` }}
+              ></div>
             </div>
             <button className="w-full py-2 bg-white text-slate-900 rounded-lg text-xs font-bold hover:bg-indigo-50 transition-colors">
               {t('studentDashboard.viewDetailsBtn')}
@@ -342,6 +351,30 @@ export const StudentDashboard: React.FC = () => {
               )}
             </div>
 
+             {/* Certificates Section (V7 Elite) */}
+             <div className="bg-white dark:bg-slate-900/50 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                   <ShieldCheck size={20} className="text-indigo-500" />
+                   Chứng Chỉ Chuyên Nghiệp
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="p-4 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center justify-between group hover:border-indigo-500/30 transition-all">
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 bg-indigo-600/10 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <Award size={20} />
+                         </div>
+                         <div>
+                            <p className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-tight">AI Automation Expert</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Cấp ngày 18/03/2026</p>
+                         </div>
+                      </div>
+                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-black text-[10px] hover:bg-indigo-700 transition-all">
+                         XEM PDF
+                      </button>
+                   </div>
+                </div>
+             </div>
+
             {/* Sidebar Widgets */}
             <div className="space-y-8">
               {/* AI Coach Assistant */}
@@ -393,7 +426,7 @@ export const StudentDashboard: React.FC = () => {
               <div className="bg-slate-900 text-white p-6 rounded-[2rem] border border-slate-800 shadow-xl overflow-hidden relative group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] pointer-events-none" />
                 <div className="relative z-10">
-                  <h3 className="font-bold text-sm flex items-center gap-2 mb-2"><TrendingUp size={16} className="text-emerald-400" /> Kiếm Tiền Cùng CoachAI</h3>
+                  <h3 className="font-bold text-sm flex items-center gap-2 mb-2"><TrendingUp size={16} className="text-emerald-400" /> Kiếm Tiền Cùng {import.meta.env.VITE_APP_NAME || 'CoachAI'}</h3>
                   <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Chia sẻ tài nguyên cho bạn bè, nhận hoa hồng lên đến 50% khi có người đăng ký từ link của bạn.</p>
                   <div className="bg-black/50 border border-white/10 p-3 rounded-xl flex items-center justify-between mb-4">
                     <span className="text-xs font-mono text-emerald-400 truncate opacity-90 select-all">https://edu.victorchuyen.net/?ref={profile?.id?.substring(0,8)}</span>

@@ -84,7 +84,7 @@ export const Projects = () => {
       try {
         await crmService.sendTransactionalEmail(
           email,
-          `🎉 [CoachAI] Yêu cầu Mã Nguồn: ${selectedProject}`,
+          `🎉 [${import.meta.env.VITE_APP_NAME || 'CoachAI'}] Yêu cầu Mã Nguồn: ${selectedProject}`,
           `
             <h2 style="color: #4f46e5; margin-top: 0;">Yêu cầu mã nguồn thành công!</h2>
             <p>Chào <strong>${name || 'bạn'}</strong>,</p>

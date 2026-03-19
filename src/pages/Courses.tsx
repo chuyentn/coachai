@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Course } from '../types';
+import { googleSheetsService } from '../services/googleSheetsService';
 import { useTranslation } from 'react-i18next';
 
 export const Courses: React.FC = () => {
@@ -15,27 +16,20 @@ export const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterLevel, setFilterLevel] = useState<string>('All');
+  const [filterRating, setFilterRating] = useState<number>(0);
+  const [filterPrice, setFilterPrice] = useState<string>('All');
 
   const filters = ['All', 'Free', 'AI Projects', 'No-Code', 'Bestseller'];
 
   const fetchCourses = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const coursesRef = collection(db, 'courses');
-      const q = query(coursesRef, where('status', '==', 'published'));
-      const querySnapshot = await getDocs(q);
-      const fetchedCourses = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Course[];
-      setCourses(fetchedCourses);
+      const data = await googleSheetsService.fetchCourses();
+      setCourses(data.filter(c => c.status === 'published' || c.published));
     } catch (err: any) {
       console.error('Error fetching courses:', err);
-      // Fallback Mock Data if Firebase fails or returns empty
-      if (err.message?.includes('Missing or insufficient permissions')) {
-        // Assume unauthenticated user reading from protected endpoint during development
-      }
       setError('Mất kết nối với máy chủ. Vui lòng tải lại trang.');
     } finally {
       setLoading(false);
@@ -55,36 +49,25 @@ export const Courses: React.FC = () => {
       const matchesSearch = course.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             course.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesFilter = 
+      const matchesTab = 
         activeFilter === 'All' ? true :
         activeFilter === 'Free' ? (!course.price_vnd || course.price_vnd === 0) :
         activeFilter === 'AI Projects' ? course.title?.toLowerCase().includes('ai') :
         activeFilter === 'No-Code' ? course.title?.toLowerCase().includes('no-code') :
         activeFilter === 'Bestseller' ? (course.total_students || 0) > 50 : true;
 
-      return matchesSearch && matchesFilter;
-    });
-  }, [courses, searchQuery, activeFilter]);
+      const matchesLevel = filterLevel === 'All' ? true : course.level === filterLevel;
+      const matchesRating = Number(course.rating_avg || 0) >= filterRating;
+      const matchesPrice = filterPrice === 'All' ? true :
+                           filterPrice === 'Free' ? (!course.price_vnd || course.price_vnd === 0) :
+                           (course.price_vnd || 0) > 0;
 
-  // Use Mock Data if the list is empty and still loading
-  const displayCourses = courses.length > 0 ? filteredCourses : (loading ? [] : mockCourses);
-  const finalFilteredCourses = React.useMemo(() => {
-    if (courses.length > 0) return filteredCourses;
-    // Apply filters to mock data if real data is empty
-    return mockCourses.filter(course => {
-      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            course.description.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesFilter = 
-        activeFilter === 'All' ? true :
-        activeFilter === 'Free' ? course.price_vnd === 0 :
-        activeFilter === 'AI Projects' ? course.title.toLowerCase().includes('ai') :
-        activeFilter === 'No-Code' ? course.title.toLowerCase().includes('no-code') :
-        activeFilter === 'Bestseller' ? course.total_students > 50 : true;
-
-      return matchesSearch && matchesFilter;
+      return matchesSearch && matchesTab && matchesLevel && matchesRating && matchesPrice;
     });
-  }, [courses, filteredCourses, searchQuery, activeFilter]);
+  }, [courses, searchQuery, activeFilter, filterLevel, filterRating, filterPrice]);
+
+  // Display only real courses from Firestore
+  const finalFilteredCourses = filteredCourses;
 
 
   return (
@@ -110,39 +93,89 @@ export const Courses: React.FC = () => {
           </motion.p>
         </div>
 
-        {/* Filters & Search */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          {/* Tabs */}
-          <div className="flex overflow-x-auto hide-scrollbar pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="inline-flex p-1.5 bg-white dark:bg-slate-800/50 shadow-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl gap-1">
-              {filters.map(filter => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`flex-shrink-0 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
-                    activeFilter === filter 
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100' 
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 scale-95'
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
+        <div className="flex flex-col lg:flex-row gap-10">
+          {/* Sidebar Filters */}
+          <aside className="lg:w-64 shrink-0 space-y-8">
+            <div>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Trình độ</h3>
+              <div className="space-y-2">
+                {['All', 'Beginner', 'Intermediate', 'Expert'].map(l => (
+                  <label key={l} className="flex items-center gap-3 cursor-pointer group">
+                    <input 
+                      type="radio" 
+                      name="level" 
+                      checked={filterLevel === l} 
+                      onChange={() => setFilterLevel(l)}
+                      className="w-4 h-4 accent-indigo-600" 
+                    />
+                    <span className={`text-sm font-bold transition-colors ${filterLevel === l ? 'text-indigo-600' : 'text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'}`}>{l}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Search Bar */}
-          <div className="relative w-full md:w-80 group shrink-0">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
-            <input
-              type="text"
-              placeholder={t('home.searchPlaceholder') || "Tìm kiếm khóa học..."}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium shadow-sm"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
-        </div>
+            <div>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Đánh giá</h3>
+              <div className="space-y-2">
+                {[4.5, 4.0, 3.5, 0].map(r => (
+                  <label key={r} className="flex items-center gap-3 cursor-pointer group">
+                    <input 
+                      type="radio" 
+                      name="rating" 
+                      checked={filterRating === r} 
+                      onChange={() => setFilterRating(r)}
+                      className="w-4 h-4 accent-indigo-600" 
+                    />
+                    <span className="text-sm font-bold text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300">
+                      {r === 0 ? 'Tất cả' : `${r} sao trở lên`}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 bg-indigo-600 rounded-3xl text-white shadow-xl shadow-indigo-600/20">
+               <h3 className="font-black text-sm mb-2">Hỗ trợ đặc biệt?</h3>
+               <p className="text-[10px] text-indigo-100 font-medium leading-relaxed mb-4">Chat trực tiếp với Mentors để được tư vấn lộ trình học phù hợp nhất với bạn.</p>
+               <button className="w-full py-2 bg-white text-indigo-600 rounded-xl font-black text-[10px] hover:bg-indigo-50 transition-all">NHẬN TƯ VẤN</button>
+            </div>
+          </aside>
+
+          {/* Main List */}
+          <div className="flex-1">
+            {/* Search and Tab Filters */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+              {/* Tabs */}
+              <div className="flex overflow-x-auto hide-scrollbar pb-2 md:pb-0">
+                <div className="inline-flex p-1.5 bg-white dark:bg-slate-800/50 shadow-sm border border-slate-200 dark:border-slate-700/50 rounded-2xl gap-1">
+                  {filters.map(filter => (
+                    <button
+                      key={filter}
+                      onClick={() => setActiveFilter(filter)}
+                      className={`flex-shrink-0 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
+                        activeFilter === filter 
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100' 
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 scale-95'
+                      }`}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full md:w-64 group shrink-0">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+                <input
+                  type="text"
+                  placeholder="Tìm khóa học..."
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium shadow-sm"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </div>
 
         {/* Course Grid */}
         {loading && courses.length === 0 ? (
@@ -181,83 +214,11 @@ export const Courses: React.FC = () => {
           </div>
         )}
 
+          </div>
+        </div>
       </main>
     </div>
   );
 };
 
-// --- MOCK DATA FALLBACK ---
-const mockCourses: any[] = [
-  {
-    id: 'mock-1',
-    title: 'Làm Chủ Cursor AI & Bolt.new Từ Bắt Đầu',
-    description: 'Khóa học toàn diện hướng dẫn cách sử dụng Cursor AI làm trợ lý lập trình chuyên nghiệp và Bolt.new để deploy web applications siêu tốc.',
-    short_description: 'Combo vũ khí mạnh mẽ nhất cho lập trình viên No-Code.',
-    instructor_name: 'Trần Ngọc Chuyền',
-    price_vnd: 2990000,
-    thumbnail_url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600&h=400',
-    total_students: 156,
-    avg_rating: 4.9,
-    status: 'published'
-  },
-  {
-    id: 'mock-2',
-    title: 'Phát Triển Web App Chuyên Nghiệp Không Cần Viết Code',
-    description: 'Học cách xây dựng các ứng dụng web phức tạp, có cơ sở dữ liệu và tích hợp API mạnh mẽ mà không cần động đến một dòng code nào.',
-    short_description: 'Giải pháp No-Code cho doanh nghiệp và khởi nghiệp tinh gọn.',
-    instructor_name: 'Vibe Code Coaching',
-    price_vnd: 0,
-    thumbnail_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600&h=400',
-    total_students: 843,
-    avg_rating: 4.8,
-    status: 'published'
-  },
-  {
-    id: 'mock-3',
-    title: 'Xây Dựng AI Chatbot Nội Bộ Với RAG Architecture',
-    description: 'Cách ingest tài liệu nội bộ, setup vector database, và xây dựng UI cho AI chatbot thông minh nội bộ.',
-    short_description: 'Ứng dụng AI đột phá vào quy trình làm việc.',
-    instructor_name: 'Trần Ngọc Chuyền',
-    price_vnd: 1500000,
-    thumbnail_url: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=600&h=400',
-    total_students: 89,
-    avg_rating: 5.0,
-    status: 'published'
-  },
-  {
-    id: 'mock-4',
-    title: 'Tự Động Hóa Workflow Với n8n & Make',
-    description: 'Kết nối toàn bộ công cụ làm việc của bạn (Slack, Gmail, Sheets, Airtable) để tự động hóa tối đa quy trình thủ công.',
-    short_description: 'Làm việc thông minh hơn (Work smarter, not harder).',
-    instructor_name: 'AI Agent Tùng',
-    price_vnd: 0,
-    thumbnail_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600&h=400',
-    total_students: 412,
-    avg_rating: 4.7,
-    status: 'published'
-  },
-  {
-    id: 'mock-5',
-    title: 'Học ReactJS Qua 10 Dự Án Thực Tế (Phần 1)',
-    description: 'Thực hành ReactJS từ cơ bản với Hooks, Router, State Management thông qua chuỗi dự án tăng dần độ khó.',
-    short_description: 'Khóa học nền tảng React bắt buộc phải có.',
-    instructor_name: 'Vibe Code Coaching',
-    price_vnd: 500000,
-    thumbnail_url: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80&w=600&h=400',
-    total_students: 45,
-    avg_rating: 4.9,
-    status: 'published'
-  },
-  {
-    id: 'mock-6',
-    title: 'Tạo Tiền Từ AI Generated Art (Midjourney/DALL-E)',
-    description: 'Bí kíp thiết lập Prompt engineering, luyện model riêng và kinh doanh các sản phẩm nghệ thuật sinh ra từ AI.',
-    short_description: 'Hành trình bán ý tưởng cho kỷ nguyên mới.',
-    instructor_name: 'Creator Minh Đức',
-    price_vnd: 0,
-    thumbnail_url: 'https://images.unsplash.com/photo-1686191128892-3b3b44b6c3bd?auto=format&fit=crop&q=80&w=600&h=400',
-    total_students: 1205,
-    avg_rating: 4.6,
-    status: 'published'
-  }
-];  
+export default Courses;

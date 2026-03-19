@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
  *
  * Appends the brand suffix automatically unless the title already includes it.
  */
-const BRAND = 'CoachAI';
+const BRAND = import.meta.env.VITE_APP_NAME || 'CoachAI';
 
 export const usePageTitle = (title: string) => {
   const { t, i18n } = useTranslation();

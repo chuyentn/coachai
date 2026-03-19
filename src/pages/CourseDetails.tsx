@@ -3,10 +3,10 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { Course, Enrollment } from '../types';
+import { Course, Enrollment, Lesson } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { googleSheetsService } from '../services/googleSheetsService';
-import { CheckCircle2, Lock, PlayCircle, ShieldCheck, Clock, Award, Loader2, MessageSquare, Send, User as UserIcon, List, FileText, FileBox, Calendar, CreditCard, Share2, AlertTriangle, X, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, Lock, PlayCircle, ShieldCheck, Clock, Award, Loader2, MessageSquare, Send, User as UserIcon, List, FileText, FileBox, Calendar, CreditCard, Share2, AlertTriangle, X, Eye, EyeOff, Star } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -21,7 +21,7 @@ export const CourseDetails: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [course, setCourse] = useState<Course | null>(null);
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -46,17 +46,25 @@ export const CourseDetails: React.FC = () => {
     setLoading(true);
     try {
       const allCourses = await googleSheetsService.fetchCourses();
-      const courseData = allCourses.find(c => c.id === id);
+      const courseData = allCourses.find(c => String(c.id) === String(id));
 
       if (courseData) {
         setCourse(courseData);
-        if (courseData.modules && Array.isArray(courseData.modules)) {
+        // Fetch detailed lessons from the new lessons sheet
+        const lessonsData = await googleSheetsService.fetchLessons(id);
+        if (lessonsData && lessonsData.length > 0) {
+          setLessons(lessonsData);
+        } else if (courseData.modules && Array.isArray(courseData.modules)) {
+          // Fallback to legacy modules column if lessons sheet is empty
           setLessons(courseData.modules.map((m: any) => ({
             id: m.id,
+            course_id: id,
+            chapter: 'Tổng quan',
             title: isEn && m.title_en ? m.title_en : m.title,
             video_url: m.video_url,
-            order_index: m.order
-          })));
+            order: m.order,
+            is_free: false
+          })) as Lesson[]);
         }
       }
 
@@ -171,9 +179,16 @@ export const CourseDetails: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-bold uppercase tracking-widest mb-8">
-              <ShieldCheck size={14} />
-              <span>{t('courseDetails.specialBadge')}</span>
+            <div className="flex flex-wrap items-center gap-3 mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-bold uppercase tracking-widest">
+                <ShieldCheck size={14} />
+                <span>{course?.level || t('courseDetails.specialBadge')}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-xs font-black uppercase tracking-widest">
+                <Star size={14} fill="currentColor" />
+                <span>{course?.rating_avg || course?.avg_rating || 4.8}</span>
+                <span className="text-[10px] opacity-60">({course?.rating_count || 128} đánh giá)</span>
+              </div>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-8 leading-[1.1] tracking-tight break-words">
               {isEn && course.title_en ? course.title_en : course.title}
@@ -186,7 +201,7 @@ export const CourseDetails: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
                   <Clock size={18} className="text-indigo-400" />
                 </div>
-                <span>{t('courseDetails.lessonsCount', { count: lessons.length })}</span>
+                <span>{course?.duration_text || t('courseDetails.lessonsCount', { count: lessons.length })}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
@@ -257,38 +272,93 @@ export const CourseDetails: React.FC = () => {
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('courseDetails.lessonsSubtitle', { count: lessons.length })}</span>
             </div>
 
-            <div className="divide-y divide-slate-50">
-              {activeTab === 'curriculum' && lessons.map((lesson, idx) => (
-                <div 
-                  key={lesson.id}
-                  className="group flex items-center justify-between p-6 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-6">
-                    <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 font-black text-xs group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
-                    <div>
-                      <span className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors block mb-1">{lesson.title}</span>
-                      <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <span className="flex items-center gap-1"><Clock size={10} /> 15:30</span>
-                        <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                        <span>{t('courseDetails.videoSubtitle')}</span>
-                      </div>
+            <div className="divide-y divide-slate-50 dark:divide-slate-800">
+              {activeTab === 'curriculum' && (() => {
+                // Group lessons by chapter
+                const chapters: Record<string, Lesson[]> = {};
+                lessons.forEach(l => {
+                  if (!chapters[l.chapter]) chapters[l.chapter] = [];
+                  chapters[l.chapter].push(l);
+                });
+
+                return Object.entries(chapters).map(([chapterName, chapterLessons]) => (
+                  <div key={chapterName}>
+                    <div className="bg-slate-50/50 dark:bg-slate-800/30 px-6 py-3 border-b border-slate-100 dark:border-slate-800">
+                      <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{chapterName}</h3>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {isEnrolled ? (
-                      <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-                        <PlayCircle size={20} />
+                    {chapterLessons.sort((a, b) => a.order - b.order).map((lesson, idx) => (
+                      <div 
+                        key={lesson.id}
+                        className="group flex items-center justify-between p-6 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer border-b border-slate-50 dark:border-slate-800 last:border-0"
+                        onClick={() => isEnrolled ? navigate(`/learn/${course.id}/${lesson.id}`) : !lesson.is_free && handleEnroll()}
+                      >
+                        <div className="flex items-center gap-6">
+                          <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 font-black text-xs group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {String(idx + 1).padStart(2, '0')}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors block">{isEn && lesson.title_en ? lesson.title_en : lesson.title}</span>
+                              {lesson.is_free && (
+                                <span className="text-[9px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-widest">Học thử</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
+                              <span className="flex items-center gap-1"><Clock size={10} /> {lesson.video_url ? 'Video' : 'Nội dung'}</span>
+                              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                              <span>{t('courseDetails.videoSubtitle')}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {(isEnrolled || lesson.is_free) ? (
+                            <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                              <PlayCircle size={20} />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-300 dark:text-slate-600">
+                              <Lock size={18} />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
-                        <Lock size={18} />
-                      </div>
-                    )}
+                    ))}
                   </div>
+                ));
+              })()}
+
+              {activeTab === 'resources' && (
+                <div className="p-8 space-y-4">
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Tài liệu đính kèm ({lessons.filter(l => l.doc_url).length})</h3>
+                  {lessons.filter(l => l.doc_url).map(l => (
+                    <div key={l.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                          <FileText size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{l.title}</p>
+                          <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Resource Link</p>
+                        </div>
+                      </div>
+                      <a 
+                        href={l.doc_url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-600 hover:bg-slate-50 transition-all shadow-sm"
+                      >
+                        Mở tài liệu
+                      </a>
+                    </div>
+                  ))}
+                  {lessons.filter(l => l.doc_url).length === 0 && (
+                    <div className="text-center py-12 text-slate-400">
+                       <FileBox size={40} className="mx-auto mb-4 opacity-10" />
+                       <p className="text-sm font-bold uppercase tracking-widest">Chưa có tài liệu đính kèm.</p>
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
 
               {activeTab === 'notes' && (
                 <div className="p-8">

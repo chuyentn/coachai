@@ -10,52 +10,141 @@
 
 // --- CẤU HÌNH CÁC CỘT (SCHEMA) DỰA TRÊN HÌNH ẢNH THỰC TẾ VÀ YÊU CẦU ---
 const SCHEMA = {
-  'courses': [
-    'id', 'title', 'title_en', 'description', 'description_en', 'short_description', 'short_description_en',
-    'price_vnd', 'price_usd', 'thumbnail_url', 'instructor_id', 'published', 'featured', 
-    'total_students', 'total_reviews', 'avg_rating', 'created_at', 'modules'
-  ],
-  'leads': [
-    'Timestamp', 'Email', 'Name', 'Phone', 'note'
-  ],
-  'comments': [
-    'Timestamp', 'User Name', 'User Email', 'Comment Text', 'User ID', 'Photo URL', 'Comment'
-  ],
-  'teachers': [
-    // Thông tin cơ bản từ Form đăng ký
-    'Timestamp', 'Email', 'Full Name', 'Phone', 'Expertise (Chuyên môn)', 'Bio (Giới thiệu)', 
-    // Các cột dành riêng cho Admin phân quyền nội bộ
-    'Status (Trạng thái)', 'Firebase UID', 'Role (Phân quyền)'
-  ],
-  
-  // -- CÁC MODULE MỚI THÊM VÀO CHO AI HUB --
-  'bots': [
-    'id', 'title', 'slug', 'role_target', 'category', 'short_desc', 'long_desc', 
-    'button_primary_text', 'button_primary_url', 'button_secondary_text', 'button_secondary_url', 
-    'thumbnail_url', 'course_slug', 'owner_role', 'owner_email', 'status', 'featured', 
-    'sort_order', 'tags', 'language', 'updated_at', 'updated_by'
-  ],
-  'courses_ai': [
-    'course_slug', 'course_name', 'teacher_name', 'gem_url', 'notebooklm_url', 
-    'support_doc_url', 'pricing_url', 'status'
-  ],
-  'page_content': [
-    'key', 'value_vi', 'value_en', 'status', 'updated_at'
-  ],
-  'projects': [
-    'id', 'title', 'category', 'tech', 'desc', 'badge', 'source_url', 'status', 'sort_order', 'created_at'
-  ]
+  /**
+   * CHUẨN DATA V6 - WORLD CLASS STANDARD
+   * -------------------------------------------------------------
+   */
+  'courses': ['id', 'title', 'title_en', 'description', 'description_en', 'instructor', 'price', 'thumbnail_url', 'category_id', 'level', 'duration_text', 'rating_avg', 'rating_count', 'created_at'],
+  'lessons': ['id', 'course_id', 'chapter', 'title', 'title_en', 'content', 'video_url', 'doc_url', 'order', 'is_free', 'created_at'],
+  'leads': ['id', 'name', 'email', 'phone', 'message', 'course_id', 'created_at'],
+  'comments': ['id', 'course_id', 'user_id', 'user_name', 'content', 'rating', 'created_at'],
+  'lesson_progress': ['id', 'user_id', 'course_id', 'lesson_id', 'status', 'updated_at'],
+  'notes': ['id', 'user_id', 'course_id', 'lesson_id', 'content', 'created_at'],
+  'bots': ['id', 'name', 'description', 'avatar_url', 'system_prompt', 'welcome_message', 'category', 'language', 'role_target', 'status', 'is_active', 'sort_order', 'tags', 'created_at'],
+  'projects': ['id', 'title', 'category', 'tech_stack', 'description', 'badge', 'demo_url', 'status', 'sort_order', 'created_at'],
+  'page_content': ['key', 'value_vi', 'value_en', 'status', 'updated_at'],
+  'courses_ai': ['id', 'title', 'instructor', 'gemini_url', 'notebook_url', 'thumbnail_url', 'description', 'status'],
+  'quizzes': ['id', 'course_id', 'lesson_id', 'question', 'options', 'correct_answer', 'explanation'],
+  'quiz_attempts': ['id', 'user_id', 'lesson_id', 'score', 'total_questions', 'timestamp'],
+  'certificates': ['id', 'user_id', 'course_id', 'issue_date', 'cert_url', 'status'],
+  'withdrawals': ['id', 'user_id', 'amount', 'status', 'payment_info', 'created_at'],
+  'config': ['key', 'value', 'description'],
+  'teachers': ['id', 'name', 'email', 'phone', 'bio', 'status', 'created_at']
 };
+
+/**
+ * Helper to get raw data from a sheet (alias for getSheetDataAsJsonRaw)
+ */
+function getSheetDataRaw(ss, sheetName) {
+  return getSheetDataAsJsonRaw(ss, sheetName);
+}
 
 /**
  * Xử lý yêu cầu GET
  * Sử dụng: ?action=getCourses hoặc ?action=getLeads hoặc ?action=getTeachers hoặc ?action=setup, v.v
  */
+/**
+ * Tạo menu tùy chỉnh khi mở Sheet
+ */
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('🚀 CoachAI Admin')
+    .addItem('Cài đặt lại hệ thống (Reset)', 'manualReset')
+    .addSeparator()
+    .addItem('Bơm data mẫu chuẩn', 'manualSeed')
+    .addToUi();
+}
+
+function manualReset() {
+  var ui = SpreadsheetApp.getUi();
+  var response = ui.alert('CẢNH BÁO', 'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu hiện tại để cài đặt lại theo chuẩn mới?', ui.ButtonSet.YES_NO);
+  if (response == ui.Button.YES) {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheets = ss.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getName() !== 'Sheet1') { // Giữ lại sheet mặc định nếu cần
+        ss.deleteSheet(sheets[i]);
+      }
+    }
+    setupSheets(ss);
+    ui.alert('Thành công', 'Hệ thống đã được reset về chuẩn Standard V5.', ui.ButtonSet.OK);
+  }
+}
+
+function manualSeed() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  setupSheets(ss);
+  SpreadsheetApp.getUi().alert('Đã kiểm tra và bơm thêm data nếu thiếu.');
+}
+
+/**
+ * Cập nhật tiến độ bài học (Standard V6)
+ */
+function updateLessonProgress(ss, data) {
+  var sheet = getOrCreateSheet(ss, 'lesson_progress');
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var userIdIdx = headers.indexOf('user_id');
+  var courseIdIdx = headers.indexOf('course_id');
+  var lessonIdIdx = headers.indexOf('lesson_id');
+  var statusIdx = headers.indexOf('status');
+  var updatedAtIdx = headers.indexOf('updated_at');
+  
+  var found = false;
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][userIdIdx]) === String(data.user_id) && 
+        String(rows[i][lessonIdIdx]) === String(data.lesson_id)) {
+      sheet.getRange(i + 1, statusIdx + 1).setValue(data.status);
+      sheet.getRange(i + 1, updatedAtIdx + 1).setValue(new Date().toISOString());
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    if (!data.id) data.id = 'prog_' + Utilities.getUuid().substring(0, 8);
+    data.updated_at = new Date().toISOString();
+    return saveRecord(ss, 'lesson_progress', data);
+  }
+  
+  return createJsonResponse({ success: true, message: "Progress updated" });
+}
+
+/**
+ * Lưu ghi chú bài học (Standard V6)
+ */
+function saveNote(ss, data) {
+  var sheet = getOrCreateSheet(ss, 'notes');
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var userIdIdx = headers.indexOf('user_id');
+  var lessonIdIdx = headers.indexOf('lesson_id');
+  var contentIdx = headers.indexOf('content');
+  
+  var found = false;
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][userIdIdx]) === String(data.user_id) && 
+        String(rows[i][lessonIdIdx]) === String(data.lesson_id)) {
+      sheet.getRange(i + 1, contentIdx + 1).setValue(data.content);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    if (!data.id) data.id = 'note_' + Utilities.getUuid().substring(0, 8);
+    data.created_at = new Date().toISOString();
+    return saveRecord(ss, 'notes', data);
+  }
+  
+  return createJsonResponse({ success: true, message: "Note saved" });
+}
+
 function doGet(e) {
   // Kiểm tra nếu chạy trực tiếp trong trình soạn thảo
   if (!e || !e.parameter) {
     return createJsonResponse({ 
-      message: "Script is active. Use ?action=getCourses, getLeads, getTeachers, getBots, getConfig or setup",
+      message: "Script is active. Use ?action=getCourses, getLeads, getLessons, getBots, getConfig or setup",
       status: "online"
     });
   }
@@ -65,6 +154,33 @@ function doGet(e) {
   
   if (action === 'getCourses') {
     return getSheetDataAsJson(ss, 'courses');
+  } else if (action === 'getLessons') {
+    var courseId = e.parameter.courseId;
+    var data = getSheetDataAsJsonRaw(ss, 'lessons');
+    if (courseId) {
+      data = data.filter(function(row) { 
+        return String(row.course_id || row.CourseID) === String(courseId); 
+      });
+    }
+    return createJsonResponse(data);
+  } else if (action === 'getLessonProgress') {
+    var userId = e.parameter.userId;
+    var courseId = e.parameter.courseId;
+    var data = getSheetDataAsJsonRaw(ss, 'lesson_progress');
+    if (userId) {
+      data = data.filter(function(row) { return String(row.user_id) === String(userId); });
+    }
+    if (courseId) {
+      data = data.filter(function(row) { return String(row.course_id) === String(courseId); });
+    }
+    return createJsonResponse(data);
+  } else if (action === 'getNotes') {
+    var userId = e.parameter.userId;
+    var lessonId = e.parameter.lessonId;
+    var data = getSheetDataAsJsonRaw(ss, 'notes');
+    if (userId) data = data.filter(function(row) { return String(row.user_id) === String(userId); });
+    if (lessonId) data = data.filter(function(row) { return String(row.lesson_id) === String(lessonId); });
+    return createJsonResponse(data);
   } else if (action === 'getLeads') {
     return getSheetDataAsJson(ss, 'leads');
   } else if (action === 'getTeachers') {
@@ -75,9 +191,24 @@ function doGet(e) {
     return getCoachAIBots(ss, role, lang);
   } else if (action === 'getProjects') {
     return getSheetDataAsJson(ss, 'projects');
+  } else if (action === 'getComments') {
+    return getSheetDataAsJson(ss, 'comments');
   } else if (action === 'getConfig') {
     var lang = e.parameter.lang || 'vi';
     return getCoachAIConfig(ss, lang);
+  } else if (action === 'getQuizzes') {
+    var lessonId = e.parameter.lessonId;
+    var data = getSheetDataRaw(ss, 'quizzes');
+    if (lessonId) data = data.filter(function(row) { return String(row.lesson_id) === String(lessonId); });
+    return createJsonResponse(data);
+  } else if (action === 'getCertificates') {
+    var userId = e.parameter.userId;
+    var data = getSheetDataRaw(ss, 'certificates');
+    if (userId) data = data.filter(function(row) { return String(row.user_id) === String(userId); });
+    return createJsonResponse(data);
+  } else if (action === 'getInstructorStats') {
+    var instructorId = e.parameter.instructorId;
+    return getInstructorStats(ss, instructorId);
   } else if (action === 'setup') {
     return setupSheets(ss);
   }
@@ -143,6 +274,61 @@ function doPost(e) {
       return createJsonResponse({ result: 'success', message: 'Teacher application saved successfully' });
     }
 
+    // Xử lý CẬP NHẬT tiến độ học tập (V6)
+    else if (data.type === 'updateLessonProgress') {
+      return updateLessonProgress(ss, data);
+    }
+    
+    // Xử lý LƯU ghi chú bài học (V6)
+    else if (data.type === 'saveNote') {
+      return saveNote(ss, data);
+    }
+    
+    // Xử lý NỘP bài trắc nghiệm (V7)
+    else if (data.type === 'submitQuiz') {
+      data.id = 'qa_' + Utilities.getUuid().substring(0,8);
+      data.timestamp = new Date().toISOString();
+      return saveRecord(ss, 'quiz_attempts', data);
+    }
+
+    // Xử lý YÊU CẦU rút tiền (V7)
+    else if (data.type === 'withdrawal') {
+      data.id = 'wdr_' + Utilities.getUuid().substring(0,8);
+      data.status = 'pending';
+      data.created_at = new Date().toISOString();
+      return saveRecord(ss, 'withdrawals', data);
+    }
+
+    // Xử lý CẬP NHẬT dữ liệu (Dành cho Admin/Teacher)
+    else if (data.type === 'update') {
+      var sheetName = data.sheet;
+      var id = data.id;
+      var updates = data.updates; // Object { field: value }
+      
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return createJsonResponse({ result: 'error', message: 'Sheet not found: ' + sheetName });
+      
+      var dataRange = sheet.getDataRange().getValues();
+      var headers = dataRange[0];
+      var idIndex = headers.indexOf('id');
+      if (idIndex === -1) idIndex = headers.indexOf('ID');
+      if (idIndex === -1) idIndex = 0; // Fallback to first column
+
+      for (var i = 1; i < dataRange.length; i++) {
+        if (String(dataRange[i][idIndex]) === String(id)) {
+           // Found the row! Update the columns
+           for (var key in updates) {
+             var colIndex = headers.indexOf(key);
+             if (colIndex !== -1) {
+                sheet.getRange(i + 1, colIndex + 1).setValue(updates[key]);
+             }
+           }
+           return createJsonResponse({ result: 'success', message: 'Record updated successfully' });
+        }
+      }
+      return createJsonResponse({ result: 'error', message: 'Record with ID ' + id + ' not found in ' + sheetName });
+    }
+
     return createJsonResponse({ result: 'error', message: 'Unknown data type' });
   } catch (err) {
     return createJsonResponse({ result: 'error', error: err.toString() });
@@ -152,6 +338,33 @@ function doPost(e) {
 }
 
 // --- CÁC HÀM HỖ TRỢ (HELPER FUNCTIONS) ---
+
+/**
+ * Lấy thống kê cho Giảng viên (V7 Elite)
+ */
+function getInstructorStats(ss, instructorId) {
+  var courses = getSheetDataRaw(ss, 'courses');
+  var instructorCourses = courses.filter(function(c) { return String(c.instructor_id) === String(instructorId); });
+  var courseIds = instructorCourses.map(function(c) { return String(c.id); });
+  
+  var totalStudents = instructorCourses.reduce(function(sum, c) { return sum + (Number(c.total_students) || 0); }, 0);
+  var totalRevenueVND = instructorCourses.reduce(function(sum, c) { return sum + (Number(c.price_vnd) * (Number(c.total_students) || 0)); }, 0);
+  
+  // Lấy đánh giá trung bình
+  var avgRating = instructorCourses.length > 0 
+    ? instructorCourses.reduce(function(sum, c) { return sum + (Number(c.rating_avg) || 0); }, 0) / instructorCourses.length 
+    : 0;
+
+  return createJsonResponse({
+    course_count: instructorCourses.length,
+    total_students: totalStudents,
+    total_revenue_vnd: totalRevenueVND,
+    avg_rating: Math.round(avgRating * 10) / 10,
+    courses: instructorCourses.map(function(c) {
+      return { id: c.id, title: c.title, students: c.total_students, rating: c.rating_avg };
+    })
+  });
+}
 
 /**
  * Lấy danh sách Bots theo role và language (Hệ thống AI Hub)
@@ -200,20 +413,25 @@ function getCoachAIConfig(ss, lang) {
       return createJsonResponse({ error: "Required sheets not found. Run ?action=setup first." });
   }
 
-  // Parse Config
+  // Parse Config (Dynamic Keys)
   var pageData = sheetPage.getDataRange().getValues();
   var pHeaders = pageData[0];
-  var hero = { title: "", subtitle: "" };
+  var pageContent = {};
   
   for (var i = 1; i < pageData.length; i++) {
      var row = {};
      for (var j = 0; j < pHeaders.length; j++) row[pHeaders[j]] = pageData[i][j];
      
-     if (row.status === 'active') {
-       if (row.key === 'hero_title') hero.title = lang === 'en' ? row.value_en : row.value_vi;
-       if (row.key === 'hero_subtitle') hero.subtitle = lang === 'en' ? row.value_en : row.value_vi;
+     if (row.status === 'active' && row.key) {
+       pageContent[row.key] = lang === 'en' ? row.value_en : row.value_vi;
      }
   }
+  
+  // Legacy support for hero object
+  var hero = { 
+    title: pageContent['hero_title'] || "", 
+    subtitle: pageContent['hero_subtitle'] || "" 
+  };
   
   // Parse All Bots instead of just filtered
   var botsData = sheetBots.getDataRange().getValues();
@@ -232,7 +450,7 @@ function getCoachAIConfig(ss, lang) {
      return (parseInt(a.sort_order) || 99) - (parseInt(b.sort_order) || 99);
   });
   
-  return createJsonResponse({ hero: hero, bots: activeBots });
+  return createJsonResponse({ hero: hero, content: pageContent, bots: activeBots });
 }
 
 /**
@@ -279,38 +497,79 @@ function seedDataForSheet(sheet, name) {
   var timestamp = new Date().toISOString();
   
   if (name === 'page_content') {
-    sheet.appendRow(['hero_title', 'Coach AI | Chọn trợ lý đúng mục tiêu', 'Coach AI | Choose the right assistant', 'active', timestamp]);
-    sheet.appendRow(['hero_subtitle', 'Hệ sinh thái học tập AI thực chiến. Từ người mới bắt đầu đến chuyên gia No-code & MMO.', 'Practical AI learning ecosystem. From beginners to No-code & MMO experts.', 'active', timestamp]);
-    sheet.appendRow(['cta_primary', 'Bắt đầu ngay', 'Get Started', 'active', timestamp]);
-    sheet.appendRow(['cta_secondary', 'Xem Demo Dự Án', 'View Project Demo', 'active', timestamp]);
+    sheet.appendRow(['hero_title', 'Coach AI | Đột phá thu nhập với AI & No-Code', 'Coach AI | Breakthrough Income with AI & No-Code', 'active', timestamp]);
+    sheet.appendRow(['hero_subtitle', 'Lộ trình từ Zero đến HERO cho người mới. Xây dựng trợ lý AI, Tự động hóa công việc và kiếm tiền bền vững.', 'Zero-to-HERO roadmap for beginners. Build AI assistants, automate tasks, and earn sustainable income.', 'active', timestamp]);
+    sheet.appendRow(['cta_primary', 'Tham gia Ngay', 'Join Now', 'active', timestamp]);
+    sheet.appendRow(['cta_secondary', 'Lịch hẹn Coaching', 'Book Coaching', 'active', timestamp]);
+    
+    // Social & Support Links
+    sheet.appendRow(['fb_group_url', 'https://www.facebook.com/groups/vibecodecoaching', 'https://www.facebook.com/groups/vibecodecoaching', 'active', timestamp]);
+    sheet.appendRow(['zalo_group_url', 'https://zalo.me/g/tdhmtu261', 'https://zalo.me/g/tdhmtu261', 'active', timestamp]);
+    sheet.appendRow(['telegram_group_url', 'https://t.me/vibecodocoaching', 'https://t.me/vibecodocoaching', 'active', timestamp]);
+    sheet.appendRow(['whatsapp_group_url', 'https://chat.whatsapp.com/E2SNci7FscqCi3i4yCUt2W', 'https://chat.whatsapp.com/E2SNci7FscqCi3i4yCUt2W', 'active', timestamp]);
+    sheet.appendRow(['whatsapp_channel_url', 'https://whatsapp.com/channel/0029VbD8X5jLNSZzIImuYz3w', 'https://whatsapp.com/channel/0029VbD8X5jLNSZzIImuYz3w', 'active', timestamp]);
+    
+    // Admin Contact (Direct Links)
+    sheet.appendRow(['admin_zalo_phone', '0989890022', '0989890022', 'active', timestamp]);
+    sheet.appendRow(['admin_telegram_user', 'https://t.me/victorchuyen', 'https://t.me/victorchuyen', 'active', timestamp]);
+    sheet.appendRow(['support_email', 'support@coachai.vn', 'support@coachai.vn', 'active', timestamp]);
+    sheet.appendRow(['company_name', 'CoachAI - Victor Chuyen', 'CoachAI - Victor Chuyen', 'active', timestamp]);
+    sheet.appendRow(['admin_whatsapp_link', 'https://zalo.me/0989890022', 'https://zalo.me/0989890022', 'active', timestamp]);
   }
 
   if (name === 'courses') {
+    // Khóa 01
     sheet.appendRow([
-      'course_001', 'Làm chủ AI & No-Code 2024 (Từ 0 đến 1)', 'Mastering AI & No-Code 2024 (0 to 1)', 
-      'Khóa học thực chiến giúp bạn xây dựng ứng dụng AI mà không cần viết code.', 
-      'Build real AI apps without writing code. From idea to deployment in 4 weeks.',
-      'Xây app AI 0đ với No-code', 'Build AI apps with 0$ using No-code',
-      1200000, 50, 'https://picsum.photos/seed/ai-no-code/800/450', 'victor_chuyen', 
-      'true', 'true', 1250, 85, 4.9, timestamp, 
+      'ai-no-code-mastery', 'Làm chủ AI & No-Code 2024 (Thực chiến)', 'Mastering AI & No-Code 2024 (Practical)', 
+      'Khóa học giúp bạn xây dựng ứng dụng AI hoàn chỉnh mà không cần biết lập trình.', 
+      'Build complete AI applications without writing any code. From 0 to deployment.',
+      'Lộ trình Xây App AI Không Code', 'Roadmap to Build AI Apps No-Code',
+      1200000, 50, 'https://picsum.photos/seed/ai-mastery/800/450', 'victor_chuyen', 
+      'true', 'true', 1420, 92, 4.9, timestamp, 
       JSON.stringify([
-        { id: 'm1', title: 'Tổng quan hệ sinh thái AI', title_en: 'AI Ecosystem Overview', video_url: 'https://youtube.com/...', order: 1 },
-        { id: 'm2', title: 'Prompt Engineering thực chiến', title_en: 'Practical Prompt Engineering', video_url: 'https://youtube.com/...', order: 2 },
-        { id: 'm3', title: 'Xây dựng Web với AI & Replit', title_en: 'Building Web with AI & Replit', video_url: 'https://youtube.com/...', order: 3 }
+        { id: 'l1', title: 'Video 1: Tổng quan AI & Cơ hội No-Code', title_en: 'Video 1: AI Overview & No-Code Ops', video_url: 'https://vimeo.com/demo1', order: 1 },
+        { id: 'l2', title: 'Video 2: Thiết lập trợ lý AI với GPT-4o', title_en: 'Video 2: Setup AI Assistant with GPT-4o', video_url: 'https://vimeo.com/demo2', order: 2 },
+        { id: 'l3', title: 'Video 3: Đóng gói sản phẩm thành Web App', title_en: 'Video 3: Packaging into Web App', video_url: 'https://vimeo.com/demo3', order: 3 }
       ])
     ]);
+    // Khóa 02
     sheet.appendRow([
-      'course_002', 'MMO với Affiliate & AI Automation', 'MMO with Affiliate & AI Automation', 
-      'Công thức tạo thu nhập thụ động bền vững bằng cách kết hợp AI và Tiếp thị liên kết.', 
-      'Passive income formula by combining AI and Affiliate Marketing.',
-      'Kiếm tiền AI Automation', 'Earn money with AI Automation',
-      1500000, 65, 'https://picsum.photos/seed/mmo-ai/800/450', 'victor_chuyen', 
-      'true', 'true', 850, 42, 4.8, timestamp, 
+      'mmo-ai-automation', 'Kiếm tiền với Affiliate & AI Automation', 'MMO with Affiliate & AI Automation', 
+      'Sử dụng AI để tự động hóa việc tạo nội dung và tối ưu chuyển đổi Affiliate.', 
+      'Use AI to automate content creation and optimize Affiliate conversions.',
+      'Kiếm tiền thụ động với AI', 'Passive Income with AI',
+      1500000, 75, 'https://picsum.photos/seed/mmo-automation/800/450', 'victor_chuyen', 
+      'true', 'true', 2150, 68, 4.8, timestamp, 
       JSON.stringify([
-        { id: 'm1', title: 'Tư duy chọn ngách Affiliate', title_en: 'Affiliate Niche Selection', video_url: 'https://youtube.com/...', order: 1 },
-        { id: 'm2', title: 'Tự động hóa nội dung đa kênh', title_en: 'Multi-channel Content Automation', video_url: 'https://youtube.com/...', order: 2 }
+        { id: 'l1', title: 'Video 1: Tư duy MMO & Chọn ngách ngàn đô', title_en: 'Video 1: MMO Mindset & Niche Selection', video_url: 'https://vimeo.com/demo4', order: 1 },
+        { id: 'l2', title: 'Video 2: AI tự động hóa Video ngắn (TikTok/Reels)', title_en: 'Video 2: AI Automation for Short Videos', video_url: 'https://vimeo.com/demo5', order: 2 }
       ])
     ]);
+    // Khóa 03
+    sheet.appendRow([
+      'ai-marketing-advanced', 'AI Marketing & Branding Chuyên Sâu', 'Advanced AI Marketing & Branding', 
+      'Xây dựng thương hiệu cá nhân và quy trình Marketing tự động 100% bằng AI.', 
+      'Build a personal brand and 100% automated AI marketing workflows.',
+      'Đột phá Marketing với AI', 'Breakthrough Marketing with AI',
+      1800000, 90, 'https://picsum.photos/seed/ai-marketing/800/450', 'victor_chuyen', 
+      'true', 'true', 850, 45, 4.7, timestamp, 
+      JSON.stringify([
+        { id: 'l1', title: 'Video 1: Branding 4.0 với AI', title_en: 'Video 1: Branding 4.0 with AI', video_url: 'https://vimeo.com/demo6', order: 1 }
+      ])
+    ]);
+  }
+
+  if (name === 'lessons') {
+    // Chương 1 cho Khóa 01
+    sheet.appendRow(['l1', 'ai-no-code-mastery', 'Chương 1: Tư duy & Công cụ', 'Bài 1: Tổng quan AI 2024', 'Lesson 1: AI 2024 Overview', 'Nội dung bài học về xu hướng AI...', 'https://vimeo.com/demo1', 'https://docs.google.com/doc1', 1, 'true', timestamp]);
+    sheet.appendRow(['l2', 'ai-no-code-mastery', 'Chương 1: Tư duy & Công cụ', 'Bài 2: Tại sao chọn No-Code?', 'Lesson 2: Why No-Code?', 'Lợi ích của việc build app nhanh...', 'https://vimeo.com/demo2', 'https://docs.google.com/doc2', 2, 'false', timestamp]);
+    
+    // Chương 2 cho Khóa 01
+    sheet.appendRow(['l3', 'ai-no-code-mastery', 'Chương 2: Thực chiến dự án', 'Bài 3: Xây dựng Chatbot GPT', 'Lesson 3: Building GPT Chatbot', 'Hướng dẫn chi tiết từng bước...', 'https://vimeo.com/demo3', 'https://docs.google.com/doc3', 3, 'false', timestamp]);
+    
+    
+    // Khóa 03
+    sheet.appendRow(['l5', 'ai-marketing-advanced', 'Chương 1: Branding cơ bản', 'Bài 1: AI & Thương hiệu cá nhân', 'Lesson 1: AI & Personal Brand', 'Cách dùng AI để branding...', 'https://vimeo.com/demo6', 'https://docs.google.com/doc6', 1, 'true', timestamp]);
   }
   
   if (name === 'bots') {
@@ -320,11 +579,17 @@ function seedDataForSheet(sheet, name) {
         'Bắt đầu học', '/courses', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
         '', 'admin', 'admin@example.com', 'active', true, 1, 'vibe-coach,newbie', 'vi', timestamp, ''
      ]);
-     sheet.appendRow([
+      sheet.appendRow([
       'bot_mmo_01', 'AI Affiliate Mastermind', 'mmo-master', 'student', 'gem', 
       'Chiến lược MMO & Affiliate thực chiến với AI.', '', 'Mở Mastermind', 'https://gemini.google.com/', 
       'Cộng đồng', 'https://facebook.com/groups/...', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
       '', 'admin', 'admin@example.com', 'active', true, 2, 'mmo,money', 'vi', timestamp, ''
+    ]);
+    sheet.appendRow([
+      'bot_coding_01', 'AI Coding Coach', 'coding-coach', 'student', 'gem', 
+      'Hỗ trợ lập trình viên tối ưu code và debug bằng AI.', '', 'Mở Workshop', 'https://gemini.google.com/', 
+      'Tài liệu', '/docs', 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg', 
+      '', 'admin', 'admin@example.com', 'active', true, 3, 'coding,debug', 'vi', timestamp, ''
     ]);
   }
 
@@ -338,6 +603,11 @@ function seedDataForSheet(sheet, name) {
       'proj_002', 'Hệ Thống Tự Động Viết Bài SEO', 'Automation', 'Make.com, OpenAI, WordPress', 
       'Lấy tin tức mỗi sáng, tóm tắt và tự viết bài dài chuẩn SEO, tự động schedule đăng bài lên web.', 
       'Phổ biến', 'https://github.com/...', 'active', 2, timestamp
+    ]);
+    sheet.appendRow([
+      'proj_003', 'Hệ Thống Quản Lý Giáo Dục LMS 2024', 'LMS', 'React, Firebase, Google Sheets', 
+      'Giải pháp quản lý đào tạo tinh gọn cho các trung tâm và chuyên gia dạy online.', 
+      'Elite', 'https://github.com/...', 'active', 3, timestamp
     ]);
   }
 
@@ -357,17 +627,39 @@ function seedDataForSheet(sheet, name) {
   if (name === 'courses_ai') {
     sheet.appendRow(['course_001', 'Mastering AI', 'Victor', 'https://gemini.google.com/', 'https://notebooklm.google.com/', '', '', 'active']);
   }
+
+  if (name === 'quizzes') {
+    sheet.appendRow(['q1', 'ai-no-code-mastery', 'l1', 'AI là gì?', 'Trí tuệ nhân tạo,Trí tuệ con người,Máy tính,Robot', 'Trí tuệ nhân tạo', 'AI là Artificial Intelligence.']);
+    sheet.appendRow(['q2', 'ai-no-code-mastery', 'l1', 'No-code là gì?', 'Không dùng code,Dùng code,Lập trình,Web', 'Không dùng code', 'No-code cho phép xây dựng ứng dụng không cần lập trình.']);
+  }
+
+  if (name === 'certificates') {
+    sheet.appendRow(['cert_001', 'user_123', 'ai-no-code-mastery', timestamp, 'https://edu.victorchuyen.com/cert/123', 'verified']);
+  }
+
+  if (name === 'config') {
+    sheet.appendRow(['min_withdrawal', '500000', 'Mức rút tối thiểu']);
+    sheet.appendRow(['commission_rate', '0.2', 'Tỷ lệ hoa hồng']);
+  }
 }
 
 /**
  * Đọc dữ liệu từ Sheet và chuyển sang định dạng JSON
  */
 function getSheetDataAsJson(ss, sheetName) {
+  var data = getSheetDataAsJsonRaw(ss, sheetName);
+  return createJsonResponse(data);
+}
+
+/**
+ * Lấy dữ liệu từ Sheet dưới dạng mảng JSON Objects (Raw data)
+ */
+function getSheetDataAsJsonRaw(ss, sheetName) {
   var sheet = getOrCreateSheet(ss, sheetName);
-  if (!sheet) return createJsonResponse({ error: "Sheet not found even after creation logic: " + sheetName });
+  if (!sheet) return [];
   
   var data = sheet.getDataRange().getValues();
-  if (data.length < 2) return createJsonResponse([]); // Chỉ có tiêu đề hoặc trống
+  if (data.length < 2) return []; // Chỉ có tiêu đề hoặc trống
   
   var headers = data[0];
   var json = [];
@@ -376,17 +668,19 @@ function getSheetDataAsJson(ss, sheetName) {
     var obj = {};
     for (var j = 0; j < headers.length; j++) {
       var cellValue = data[i][j];
+      var head = headers[j];
+      if (!head) continue;
+      
       // Xử lý các trường hợp đặc biệt (ví dụ: ngày tháng)
       if (cellValue instanceof Date) {
-        obj[headers[j]] = cellValue.toISOString();
+        obj[head] = cellValue.toISOString();
       } else {
-        obj[headers[j]] = cellValue;
+        obj[head] = cellValue;
       }
     }
     json.push(obj);
   }
-  
-  return createJsonResponse(json);
+  return json;
 }
 
 /**

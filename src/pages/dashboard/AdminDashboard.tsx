@@ -28,10 +28,12 @@ import {
   RefreshCw,
   Unlock,
   ShieldAlert,
-  Edit
+  Edit,
+  FileSpreadsheet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { googleSheetsService } from '../../services/googleSheetsService';
 import { db } from '../../lib/firebase';
 import { 
   collection, 
@@ -54,8 +56,8 @@ export const AdminDashboard: React.FC = () => {
   
   // Settings form state
   const [settingsSaved, setSettingsSaved] = useState(false);
-  const [appName, setAppName] = useState('CoachAI – Vibe Code');
-  const [supportEmail, setSupportEmail] = useState('support@coachai.vn');
+  const [appName, setAppName] = useState(import.meta.env.VITE_APP_NAME || 'CoachAI');
+  const [supportEmail, setSupportEmail] = useState(import.meta.env.VITE_SUPPORT_EMAIL || 'support@coachai.vn');
   const [supportPhone, setSupportPhone] = useState('0987.654.321');
   const [affiliateRate, setAffiliateRate] = useState('30');
   const [freeTrialDays, setFreeTrialDays] = useState('7');
@@ -99,39 +101,32 @@ export const AdminDashboard: React.FC = () => {
       }));
     });
 
-    // 2. Fetch Leads
-    const unsubLeads = onSnapshot(
-      query(collection(db, 'leads'), orderBy('created_at', 'desc'), limit(5)),
-      (snapshot) => {
-        setRecentLeads(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setStats(prev => ({ ...prev, totalLeads: snapshot.size })); // Simple size for now
+    // 2. Fetch Leads from Google Sheets
+    const fetchLeads = async () => {
+      try {
+        const leads = await googleSheetsService.fetchLeads();
+        // The Apps Script returns them in a specific order, we might want to slice the 5 most recent
+        setRecentLeads(leads.slice(0, 5));
+        setStats(prev => ({ ...prev, totalLeads: leads.length }));
+      } catch (error) {
+        console.error('Error fetching leads:', error);
       }
-    );
+    };
+    fetchLeads();
 
-    // 3. Fetch Pending Payments
-    const unsubPayments = onSnapshot(
-      query(collection(db, 'payments'), where('status', '==', 'pending'), orderBy('created_at', 'desc')),
-      (snapshot) => {
-        setPendingPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      },
-      (error) => {
-        console.error('Error fetching pending payments:', error);
-        if (error.message.includes('requires an index')) {
-          console.warn('⚠️ Admin: Missing Firestore Index for payments. Click the link in console to create it.');
-        }
-      }
-    );
+    // 3. (Optional) Fetch Pending Payments - Still in Firestore as it's sensitive
+    // ...
 
-    // 4. Fetch All Courses
-    const unsubCourses = onSnapshot(
-      query(collection(db, 'courses'), orderBy('created_at', 'desc')),
-      (snapshot) => {
-        setAllCourses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      },
-      (error) => {
+    // 4. Fetch All Courses from Google Sheets
+    const fetchCourses = async () => {
+      try {
+        const coursesList = await googleSheetsService.fetchCourses();
+        setAllCourses(coursesList);
+      } catch (error) {
         console.error('Error fetching courses:', error);
       }
-    );
+    };
+    fetchCourses();
 
     // 5. Fetch Payout Requests
     const unsubPayouts = onSnapshot(
@@ -147,9 +142,8 @@ export const AdminDashboard: React.FC = () => {
     setLoading(false);
     return () => {
       unsubUsers();
-      unsubLeads();
-      unsubPayments();
-      unsubCourses();
+      // unsubLeads(); // No longer used if switched to fetch
+      // unsubCourses(); // No longer used if switched to fetch
       unsubPayouts();
     };
   }, []);
@@ -195,6 +189,47 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleApproveCourse = async (courseId: string) => {
+    try {
+      setLoading(true);
+      const success = await googleSheetsService.updateRecord('courses', courseId, { status: 'published', published: true });
+      if (success) {
+        alert('Đã phê duyệt khóa học thành công!');
+        // Refresh courses
+        const data = await googleSheetsService.fetchCourses();
+        setAllCourses(data);
+      } else {
+        alert('Lỗi khi phê duyệt. Vui lòng kiểm tra lại Google Sheet.');
+      }
+    } catch (error) {
+      console.error('Error approving course:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectCourse = async (courseId: string) => {
+    try {
+      setLoading(true);
+      const success = await googleSheetsService.updateRecord('courses', courseId, { status: 'rejected', published: false });
+      if (success) {
+        alert('Đã từ chối khóa học.');
+        const data = await googleSheetsService.fetchCourses();
+        setAllCourses(data);
+      }
+    } catch (error) {
+      console.error('Error rejecting course:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenSheet = () => {
+    const url = import.meta.env.VITE_GOOGLE_SHEET_EDIT_URL;
+    if (url) window.open(url, '_blank');
+    else alert('Chưa cấu hình VITE_GOOGLE_SHEET_EDIT_URL trong .env');
+  };
+
   const handleSaveSettings = () => {
     setSettingsSaved(true);
     setTimeout(() => setSettingsSaved(false), 3000);
@@ -231,27 +266,6 @@ export const AdminDashboard: React.FC = () => {
      u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleApproveCourse = async (courseId: string) => {
-    if (!window.confirm('Xác nhận duyệt khóa học này? Khóa học sẽ được hiển thị công khai.')) return;
-    try {
-      await updateDoc(doc(db, 'courses', courseId), { status: 'published', updated_at: serverTimestamp() });
-      // Notify implementation placeholder
-    } catch (error) {
-      console.error('Error approving course:', error);
-      alert('Lỗi duyệt khóa học.');
-    }
-  };
-
-  const handleRejectCourse = async (courseId: string) => {
-    const reason = window.prompt('Nhập lý do từ chối (bắt buộc):');
-    if (!reason) return;
-    try {
-      await updateDoc(doc(db, 'courses', courseId), { status: 'rejected', reject_reason: reason, updated_at: serverTimestamp() });
-    } catch (error) {
-       console.error('Error rejecting course:', error);
-       alert('Lỗi từ chối khóa học.');
-    }
-  };
 
   const formatPrice = (p: string | number) => {
      if (typeof p === 'string') return p;
@@ -268,7 +282,7 @@ export const AdminDashboard: React.FC = () => {
               <Zap size={24} />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white block">CoachAI</span>
+              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white block">{import.meta.env.VITE_APP_NAME || 'CoachAI'}</span>
               <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Admin Panel</span>
             </div>
           </div>
@@ -938,6 +952,18 @@ export const AdminDashboard: React.FC = () => {
                         <div className="text-left">
                           <p className="text-sm font-bold text-rose-600 dark:text-rose-400">Kiểm tra Security Rules</p>
                           <p className="text-xs text-slate-400">Firestore Audit</p>
+                        </div>
+                      </button>
+                      <button 
+                        onClick={handleOpenSheet}
+                        className="flex items-center gap-3 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/40 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-500">
+                          <FileSpreadsheet size={16} />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Quản lý trên Sheets</p>
+                          <p className="text-xs text-slate-400">Open Google Spreadsheet</p>
                         </div>
                       </button>
                     </div>

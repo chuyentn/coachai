@@ -7,7 +7,7 @@
     "signOut": "Sign Out",
     "dashboard": "Dashboard",
     "profile": "Profile",
-    "teach": "Teach on CoachAI",
+    "teach": "Teach on {{appName}}",
     "courses": "Courses",
     "projects": "Real Projects",
     "coaching": "1:1 Coaching",
@@ -18,7 +18,7 @@
     "menuNavbar": "Menu",
     "accountNavbar": "Account",
     "contact": "Contact",
-    "footerDesc": "Leading AI No-Code self-learning ecosystem by Victor Chuyen. Helping you master new tech without coding.",
+    "footerDesc": "Leading AI No-Code self-learning ecosystem by {{companyName}}. Helping you master new tech without coding.",
     "footerProgram": "PROGRAMS",
     "footerSupport": "Support",
     "footerConnect": "Connect",
@@ -26,7 +26,7 @@
     "footerTerms": "Terms of Service",
     "footerPrivacy": "Privacy Policy",
     "footerContact": "Contact",
-    "footerCopyright": "© 2026 CoachAI. All rights reserved.",
+    "footerCopyright": "© 2026 {{appName}}. All rights reserved.",
     "footerSSL": "SSL Secure",
     "footerLang": "English",
     "referFriend": "Refer a Friend",
@@ -61,7 +61,7 @@
     "searchNotFound": "No results found",
     "searchTryAnother": "Try searching with different keywords.",
     "pricingTitle": "Choose the Right Plan for You",
-    "pricingSubtitle": "Invest once, use for a lifetime. Quality guaranteed by Vibe Code AI.",
+    "pricingSubtitle": "Invest once, use for a lifetime. Quality guaranteed by {{appName}}.",
     "pricingFreeBadge": "Start now",
     "pricingFreePrefix": "PLAN",
     "pricingVipBadge": "🔥 Most popular",
@@ -109,7 +109,7 @@
   },
   "teach": {
     "title": "Your Passion. Spread to thousands of students.",
-    "desc": "Become an instructor on CoachAI today to share knowledge, build a brilliant personal brand and master an unlimited source of income.",
+    "desc": "Become an instructor on {{appName}} today to share knowledge, build a brilliant personal brand and master an unlimited source of income.",
     "registerBtn": "Register to teach now"
   },
   "auth": {
@@ -150,7 +150,8 @@
     "discussions": "Discussions",
     "settings": "Settings",
     "proStudentBadge": "Pro Student",
-    "proStudentDesc": "You have completed 85% of this month's path.",
+    "proStudentDesc": "Complete your path today.",
+    "proStudentProgressDesc": "You have completed {{progress}}% of your learning path.",
     "viewDetailsBtn": "View Details",
     "searchPlaceholder": "Search lessons, resources...",
     "activeStudent": "Active Student",
@@ -371,7 +372,7 @@
   "affiliate": {
     "badge": "Partner Program",
     "headline": "Make Unlimited Income",
-    "headlineHighlight": "With CoachAI",
+    "headlineHighlight": "With {{appName}}",
     "subHeadline": "Become a course distributor. Share value - Earn lifetime commissions up to 50%.",
     "stat1Value": "Up to 50%",
     "stat1Label": "Commission per sale",
@@ -394,7 +395,7 @@
     "footerDesc": "Leading AI No-Code self-learning ecosystem by Victor Chuyen. Helping you master new tech without coding.",
     "footerCol1": "PROGRAMS",
     "footerCol2": "Connect",
-    "footerCopyright": "© 2026 CoachAI. All rights reserved.",
+    "footerCopyright": "© 2026 {{appName}}. All rights reserved.",
     "footerSSL": "SSL Secure",
     "footerLang": "English"
   },
@@ -454,7 +455,7 @@
     "btnSubmit": "Get your free personalized path",
     "privacy": "100% privacy guaranteed. We will contact you within 24 hours.",
     "successTitle": "Successfully Sent!",
-    "successDesc": "Thank you for your interest. The Edu Victor Chuyen team will contact you shortly."
+    "successDesc": "Thank you for your interest. The {{companyName}} team will contact you shortly."
   },
   "courseCard": {
     "bestseller": "Bestseller",

@@ -18,7 +18,7 @@
     "menuNavbar": "Menu",
     "accountNavbar": "Tài khoản",
     "contact": "Liên hệ",
-    "footerDesc": "Hệ sinh thái Tự học AI No-Code hàng đầu của Victor Chuyen. Giúp bạn chinh phục công nghệ mới không cần code.",
+    "footerDesc": "Hệ sinh thái Tự học AI No-Code hàng đầu của {{companyName}}. Giúp bạn chinh phục công nghệ mới không cần code.",
     "footerProgram": "CHƯƠNG TRÌNH",
     "footerSupport": "Hỗ trợ",
     "footerConnect": "Kết nối",
@@ -26,7 +26,7 @@
     "footerTerms": "Điều khoản dịch vụ",
     "footerPrivacy": "Chính sách bảo mật",
     "footerContact": "Liên hệ",
-    "footerCopyright": "© 2026 CoachAI. All rights reserved.",
+    "footerCopyright": "© 2026 {{appName}}. All rights reserved.",
     "footerSSL": "Bảo mật SSL",
     "footerLang": "Tiếng Việt",
     "referFriend": "Giới thiệu bạn bè",
@@ -61,7 +61,7 @@
     "searchNotFound": "Không tìm thấy kết quả",
     "searchTryAnother": "Hãy thử tìm kiếm với từ khóa khác.",
     "pricingTitle": "Chọn Gói Phù Hợp Với Bạn",
-    "pricingSubtitle": "Đầu tư một lần, sử dụng trọn đời. Cam kết chất lượng từ Vibe Code AI.",
+    "pricingSubtitle": "Đầu tư một lần, sử dụng trọn đời. Cam kết chất lượng từ {{appName}}.",
     "pricingFreeBadge": "Bắt đầu ngay",
     "pricingFreePrefix": "GÓI",
     "pricingVipBadge": "🔥 Phổ biến nhất",
@@ -110,7 +110,7 @@
   },
   "teach": {
     "title": "Đam mê của bạn. Lan tỏa tới hàng ngàn học viên.",
-    "desc": "Trở thành giảng viên trên CoachAI ngay hôm nay để chia sẻ kiến thức, xây dựng thương hiệu cá nhân rực rỡ và tự chủ nguồn thu nhập không giới hạn.",
+    "desc": "Trở thành giảng viên trên {{appName}} ngay hôm nay để chia sẻ kiến thức, xây dựng thương hiệu cá nhân rực rỡ và tự chủ nguồn thu nhập không giới hạn.",
     "registerBtn": "Đăng ký giảng dạy ngay"
   },
   "auth": {
@@ -151,7 +151,8 @@
     "discussions": "Thảo luận",
     "settings": "Cài đặt",
     "proStudentBadge": "Học viên Pro",
-    "proStudentDesc": "Bạn đã hoàn thành 85% lộ trình tháng này.",
+    "proStudentDesc": "Hoàn thành lộ trình của bạn ngay hôm nay.",
+    "proStudentProgressDesc": "Bạn đã hoàn thành {{progress}}% lộ trình học tập.",
     "viewDetailsBtn": "Xem chi tiết",
     "searchPlaceholder": "Tìm kiếm bài học, tài liệu...",
     "activeStudent": "Học viên tích cực",
@@ -372,7 +373,7 @@
   "affiliate": {
     "badge": "Partner Program",
     "headline": "Kiếm Thu Nhập Không Giới Hạn",
-    "headlineHighlight": "Cùng CoachAI",
+    "headlineHighlight": "Cùng {{appName}}",
     "subHeadline": "Trở thành đối tác phân phối khóa học. Chia sẻ giá trị - Nhận hoa hồng trọn đời lên đến 50%.",
     "stat1Value": "Lên đến 50%",
     "stat1Label": "Hoa hồng mỗi đơn",
@@ -392,10 +393,10 @@
     "formSocialLabel": "Link Kênh MXH của bạn (Tùy chọn)",
     "formSocialPlaceholder": "Facebook, TikTok, Website...",
     "btnSubmit": "Nhận Link Affiliate của tôi",
-    "footerDesc": "Hệ sinh thái Tự học AI No-Code hàng đầu của Victor Chuyen. Giúp bạn chinh phục công nghệ mới không cần code.",
+    "footerDesc": "Hệ sinh thái Tự học AI No-Code hàng đầu của {{companyName}}. Giúp bạn chinh phục công nghệ mới không cần code.",
     "footerCol1": "CHƯƠNG TRÌNH",
     "footerCol2": "Kết nối",
-    "footerCopyright": "© 2026 CoachAI. Bản quyền thuộc về Victor Chuyen.",
+    "footerCopyright": "© 2026 {{appName}}. Bản quyền thuộc về {{companyName}}.",
     "footerSSL": "Bảo mật SSL",
     "footerLang": "Tiếng Việt"
   },
@@ -455,7 +456,7 @@
     "btnSubmit": "Nhận lộ trình cá nhân miễn phí",
     "privacy": "Cam kết bảo mật thông tin 100%. Chúng tôi sẽ liên hệ lại trong vòng 24h.",
     "successTitle": "Gửi thành công!",
-    "successDesc": "Cảm ơn bạn đã quan tâm. Đội ngũ Edu Victor Chuyen sẽ liên hệ với bạn sớm nhất."
+    "successDesc": "Cảm ơn bạn đã quan tâm. Đội ngũ {{companyName}} sẽ liên hệ với bạn sớm nhất."
   },
   "courseCard": {
     "bestseller": "Bán chạy",

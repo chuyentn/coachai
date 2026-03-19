@@ -5,9 +5,18 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { googleSheetsService } from '../services/googleSheetsService';
 import { crmService } from '../services/crmService';
+import { useSaaSConfig } from '../hooks/useSaaSConfig';
 
 export const Contact = () => {
   const { t } = useTranslation();
+  const config = useSaaSConfig();
+  
+  const appName = config.appName;
+  const companyName = config.companyName;
+  const supportEmail = config.supportEmail;
+  const adminZalo = config.adminZalo;
+  const adminTelegram = config.adminTelegram;
+  
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,15 +47,14 @@ export const Contact = () => {
       // 2. Send Notification Email via Smart Email Hub
       await crmService.sendTransactionalEmail(
         formData.email,
-        `[Edu-Vibe] Xác nhận yêu cầu: ${formData.topic}`,
+        `[${appName}] Xác nhận yêu cầu: ${formData.topic}`,
         `
           <p>Chào <strong>${formData.name}</strong>,</p>
-          <p>Cảm ơn bạn đã liên hệ với Edu-Vibe. Chúng mình đã nhận được yêu cầu về chủ đề <strong>${formData.topic}</strong>.</p>
+          <p>Cảm ơn bạn đã liên hệ với ${appName}. Chúng mình đã nhận được yêu cầu về chủ đề <strong>${formData.topic}</strong>.</p>
           <p>Đội ngũ hỗ trợ sẽ phản hồi bạn trong vòng 24h làm việc.</p>
           <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 10px;">
             <p style="margin: 0; color: #1e40af; font-weight: bold;">💡 Bạn muốn trao đổi trực tiếp ngay?</p>
             <p style="margin: 5px 0 15px 0;">Hãy đặt lịch Coaching 1:1 miễn phí 30 phút để được giải đáp thắc mắc nhanh nhất.</p>
-            <a href="https://cal.com/victorchuyen/coachai" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Đặt lịch 30p Miễn Phí</a>
           </div>
         `
       );
@@ -95,7 +103,7 @@ export const Contact = () => {
                 </div>
                 <div>
                   <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-1">{t('contact.supportEmail')}</div>
-                  <div className="text-xl font-medium">support@coachai.vn</div>
+                  <div className="text-xl font-medium">{supportEmail}</div>
                 </div>
               </div>
 
@@ -104,9 +112,15 @@ export const Contact = () => {
                   <Phone size={24} />
                 </div>
                 <div>
-                  <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-1">{t('contact.hotline')}</div>
-                  <div className="text-xl font-medium hover:text-indigo-200 transition-colors"><a href="https://zalo.me/0989890022" target="_blank" rel="noreferrer">0989.890.022 (Zalo Admin)</a></div>
-                  <div className="text-xl font-medium mt-1 hover:text-indigo-200 transition-colors"><a href="https://t.me/victorchuyen" target="_blank" rel="noreferrer">@victorchuyen (Telegram Admin)</a></div>
+                  <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">{t('contact.hotline')}</div>
+                  <div className="flex flex-col gap-3">
+                    <div className="text-lg font-bold">{adminZalo}</div>
+                    <div className="flex gap-3">
+                      <a href={config.adminWhatsappLink || `https://zalo.me/${adminZalo.replace(/\./g, '').replace(/\s/g, '')}`} target="_blank" rel="noreferrer" title="Zalo Admin" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><MessageCircle size={20} /></a>
+                      <a href={config.adminWhatsappLink || `https://wa.me/${adminZalo.replace(/\./g, '').replace(/\s/g, '')}`} target="_blank" rel="noreferrer" title="Whatsapp Admin" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Users size={20} /></a>
+                      <a href={adminTelegram.startsWith('http') ? adminTelegram : `https://t.me/${adminTelegram.replace('@', '')}`} target="_blank" rel="noreferrer" title="Telegram Admin" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Send size={20} /></a>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -116,10 +130,12 @@ export const Contact = () => {
                 </div>
                 <div>
                   <div className="text-indigo-200 text-sm font-bold uppercase tracking-widest mb-2">Cộng Đồng & Support</div>
-                  <div className="flex gap-4">
-                    <a href="https://www.facebook.com/groups/vibecodecoaching" target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Facebook size={20} /></a>
-                    <a href="https://zalo.me/g/tdhmtu261" target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><MessageCircle size={20} /></a>
-                    <a href="https://t.me/vibecodocoaching" target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Send size={20} /></a>
+                  <div className="flex flex-wrap gap-3">
+                    <a href={config.fbGroupUrl || "#"} target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Facebook size={20} /></a>
+                    <a href={config.zaloGroupUrl || "#"} target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><MessageCircle size={20} /></a>
+                    <a href={config.telegramGroupUrl || "#"} target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Send size={20} /></a>
+                    <a href={config.whatsappGroupUrl || "#"} target="_blank" rel="noreferrer" title="Whatsapp Group" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Users size={20} /></a>
+                    <a href={config.whatsappChannelUrl || "#"} target="_blank" rel="noreferrer" title="Whatsapp Channel" className="w-10 h-10 bg-white/10 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"><Globe size={20} /></a>
                   </div>
                 </div>
               </div>
@@ -299,7 +315,7 @@ export const Contact = () => {
       <footer className="py-20 bg-white dark:bg-[#0B0E17] border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4">
           <div className="pt-8 flex justify-between items-center gap-4 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-slate-400 text-sm font-medium">{t('common.footerCopyright')}</p>
+            <p className="text-slate-400 text-sm font-medium">{t('common.footerCopyright', { appName: appName })}</p>
             <div className="flex items-center gap-6 text-slate-400 text-sm font-medium">
               <Link to="/"><Zap className="text-indigo-600 inline" size={18} /> {t('contact.backHome')}</Link>
             </div>

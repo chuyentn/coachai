@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { 
-  CheckCircle2, 
+  Check, 
   Zap, 
-  Globe, 
+  Rocket, 
+  Crown, 
+  ArrowRight, 
   ShieldCheck, 
+  Globe, 
+  Users, 
   Facebook, 
-  Youtube, 
-  Video, 
   MessageCircle,
-  Send
+  Send,
+  Star,
+  HelpCircle
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useSaaSConfig } from '../hooks/useSaaSConfig';
 
 export const Pricing = () => {
   const { t } = useTranslation();
+  const config = useSaaSConfig();
   const { profile, loading: authLoading } = useAuth();
   const [isYearly, setIsYearly] = useState(true);
 
@@ -23,7 +30,7 @@ export const Pricing = () => {
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans relative overflow-hidden pt-10 transition-colors duration-300">
       {/* Background Glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[800px] h-[400px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Header */}
       <div className="pt-28 pb-8 text-center relative z-20">
@@ -77,16 +84,16 @@ export const Pricing = () => {
             
             <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-400 flex-1">
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature1')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature1')}
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature2')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature2')}
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature3')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature3')}
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature4')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.freeFeature4')}
               </li>
             </ul>
           </div>
@@ -133,21 +140,21 @@ export const Pricing = () => {
               
               <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-300 flex-1 relative z-10">
                 <li className="flex items-center gap-3 text-slate-900 dark:text-white">
-                  <CheckCircle2 size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> 
+                  <Check size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> 
                   <span>{t('pricing.vipFeature1')} <span className="ml-2 px-2 py-0.5 bg-rose-500 text-white text-[9px] font-black tracking-wider rounded-md">+100%</span></span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.vipFeature2')}
+                  <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.vipFeature2')}
                 </li>
                 <li className="flex items-center gap-3">
-                  <CheckCircle2 size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> {t('pricing.vipFeature3')}
+                  <Check size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> {t('pricing.vipFeature3')}
                 </li>
                 <li className="flex items-center gap-3 text-slate-900 dark:text-white">
-                  <CheckCircle2 size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> 
+                  <Check size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> 
                   <span>{t('pricing.vipFeature4')} <span className="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-[9px] font-black tracking-wider rounded-md">NEW</span></span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <CheckCircle2 size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> {t('pricing.vipFeature5')}
+                  <Check size={18} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" /> {t('pricing.vipFeature5')}
                 </li>
               </ul>
             </div>
@@ -172,17 +179,17 @@ export const Pricing = () => {
             
             <ul className="space-y-5 text-sm font-medium text-slate-600 dark:text-slate-300 flex-1">
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.coachFeature1')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.coachFeature1')}
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.coachFeature2')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.coachFeature2')}
               </li>
               <li className="flex items-center gap-3 text-slate-900 dark:text-white">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> 
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> 
                 <span>{t('pricing.coachFeature3')} <span className="ml-2 px-2 py-0.5 bg-rose-500 text-white text-[9px] font-black tracking-wider rounded-md">HOT</span></span>
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.coachFeature4')}
+                <Check size={18} className="text-emerald-500 flex-shrink-0" /> {t('pricing.coachFeature4')}
               </li>
             </ul>
           </div>
@@ -199,10 +206,10 @@ export const Pricing = () => {
                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                   <Zap size={24} />
                 </div>
-                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">CoachAI</span>
+                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{config.appName}</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6">
-                {t('common.footerDesc')}
+                {t('common.footerDesc', { companyName: config.companyName })}
               </p>
             </div>
             <div>
@@ -225,21 +232,24 @@ export const Pricing = () => {
             </div>
             <div>
               <h4 className="font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerConnect')}</h4>
-              <div className="flex gap-4">
-                <a href="https://www.facebook.com/groups/vibecodecoaching" target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
-                  <Facebook size={18} />
+              <div className="flex flex-wrap gap-4">
+                <a href={config.fbGroupUrl || "#"} target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
+                  <Facebook size={20} />
                 </a>
-                <a href="https://zalo.me/g/tdhmtu261" target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-[#0068FF] hover:text-white transition-all shadow-sm">
-                  <MessageCircle size={18} />
+                <a href={config.zaloGroupUrl || "#"} target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                  <MessageCircle size={20} />
                 </a>
-                <a href="https://t.me/vibecodocoaching" target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
-                  <Send size={18} />
+                <a href={config.telegramGroupUrl || "#"} target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                  <Send size={20} />
+                </a>
+                <a href={config.whatsappGroupUrl || "#"} target="_blank" rel="noreferrer" title="Whatsapp Community" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                  <Users size={20} />
                 </a>
               </div>
             </div>
           </div>
           <div className="pt-8 border-t border-slate-200 dark:border-slate-800/60 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm font-medium">{t('common.footerCopyright')}</p>
+            <p className="text-slate-500 text-sm font-medium">{t('common.footerCopyright', { appName: config.appName })}</p>
             <div className="flex items-center gap-6 text-slate-500 text-sm font-medium">
               <span className="flex items-center gap-1.5"><ShieldCheck size={16} /> {t('common.footerSSL')}</span>
               <span className="flex items-center gap-1.5"><Globe size={16} /> {t('common.footerLang')}</span>

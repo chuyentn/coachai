@@ -52,9 +52,9 @@ export const SignUp: React.FC = () => {
       try {
         await crmService.sendTransactionalEmail(
           email,
-          `🏮 Chào mừng ${fullName} đến với CoachAI!`,
+          `🏮 Chào mừng ${fullName} đến với ${import.meta.env.VITE_APP_NAME || 'CoachAI'}!`,
           `
-            <h2 style="color: #4f46e5; margin-top: 0;">Chúc mừng bạn đã gia nhập CoachAI!</h2>
+            <h2 style="color: #4f46e5; margin-top: 0;">Chúc mừng bạn đã gia nhập ${import.meta.env.VITE_APP_NAME || 'CoachAI'}!</h2>
             <p>Chào <strong>${fullName}</strong>,</p>
             <p>Tài khoản học tập của bạn đã được khởi tạo thành công. Từ nay, bạn có thể truy cập vào kho tàng kiến thức về AI & Code thực chiến bất cứ lúc nào.</p>
             <div style="background: #eef2ff; padding: 20px; border-radius: 12px; margin: 25px 0;">

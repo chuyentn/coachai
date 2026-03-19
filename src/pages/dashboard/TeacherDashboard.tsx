@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { googleSheetsService } from '../../services/googleSheetsService';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -34,54 +35,30 @@ export const TeacherDashboard: React.FC = () => {
   const [payoutBalance, setPayoutBalance] = useState(0);
   const [myCourses, setMyCourses] = useState<any[]>([]);
 
+  const [instructorStats, setInstructorStats] = useState<any>(null);
+
   useEffect(() => {
     if (!profile?.id) return;
 
     const fetchTeacherData = async () => {
       setLoadingStats(true);
       try {
-        // 1. Fetch this teacher's courses from Firestore
+        // 1. Fetch teacher stats from V7 Backend (Apps Script)
+        const stats = await googleSheetsService.fetchInstructorStats(profile.id);
+        if (stats) {
+          setInstructorStats(stats);
+          setTotalStudents(stats.total_students || 0);
+          setPublishedCourses(stats.course_count || 0);
+          setPayoutBalance(stats.total_revenue_vnd || 0);
+        }
+
+        // 2. Fetch courses from Firestore for Builder
         const coursesSnap = await getDocs(
           query(collection(db, 'courses'), where('teacherId', '==', profile.id))
         );
-        const courses = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-        setMyCourses(courses);
-        setPublishedCourses(courses.filter((c: any) => c.status === 'published').length);
-
-        // 2. Fetch enrollments for these courses
-        if (courses.length > 0) {
-          const courseIds = courses.map((c: any) => c.id);
-          // Firestore 'in' query supports up to 30 items
-          const enrollSnap = await getDocs(
-            query(collection(db, 'enrollments'), where('courseId', 'in', courseIds.slice(0, 30)))
-          );
-          setTotalStudents(enrollSnap.size);
-        } else {
-          setTotalStudents(0);
-        }
-
-        // 3. Fetch completed payments to calculate revenue (30% teacher share)
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const paymentsSnap = await getDocs(
-          query(
-            collection(db, 'payments'),
-            where('teacher_id', '==', profile.id),
-            where('status', '==', 'completed')
-          )
-        );
-        let totalRev = 0;
-        let monthRev = 0;
-        paymentsSnap.docs.forEach(d => {
-          const p = d.data() as any;
-          const amount = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount) || 0;
-          totalRev += amount;
-          if (p.created_at?.toDate() >= startOfMonth) monthRev += amount;
-        });
-        setPayoutBalance(Math.round(totalRev * 0.7)); // 70% payout after platform cut
-        setMonthlyRevenue(Math.round(monthRev * 0.7));
+        setMyCourses(coursesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (err) {
-        console.warn('TeacherDashboard: Firestore fetch error', err);
+        console.warn('TeacherDashboard: Fetch error', err);
       } finally {
         setLoadingStats(false);
       }
@@ -107,8 +84,20 @@ export const TeacherDashboard: React.FC = () => {
     { id: 'settings', label: 'Cài đặt', icon: Settings },
   ] as const;
 
-  const handleRequestPayout = () => {
-    alert('Yêu cầu rút tiền Doanh Thu Chia Sẻ đã gửi tới Admin!');
+  const handleRequestPayout = async () => {
+    if (payoutBalance < 1000000) {
+      alert('Số dư tối thiểu để rút là 1.000.000₫');
+      return;
+    }
+    const paymentInfo = prompt('Nhập thông tin nhận tiền (STK, Ngân hàng, Chủ TK):');
+    if (!paymentInfo) return;
+
+    const success = await googleSheetsService.submitWithdrawal(profile?.id || '', payoutBalance, paymentInfo);
+    if (success) {
+      alert('Yêu cầu rút tiền thành công! Admin sẽ xử lý trong 24h.');
+    } else {
+      alert('Có lỗi xảy ra, vui lòng thử lại sau.');
+    }
   };
 
 
@@ -123,7 +112,7 @@ export const TeacherDashboard: React.FC = () => {
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white block">Teacher Portal</span>
-              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Edu-Vibe Creator</span>
+              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">{import.meta.env.VITE_APP_NAME || 'CoachAI'} Creator</span>
             </div>
           </div>
 

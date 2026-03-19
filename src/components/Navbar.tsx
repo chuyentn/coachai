@@ -105,7 +105,9 @@ export const Navbar: React.FC = () => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                   <Zap className="text-white w-5 h-5" fill="currentColor" />
                 </div>
-                <span className="font-black text-2xl tracking-tighter text-slate-900 dark:text-white hidden sm:block bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 transition-all duration-300">CoachAI</span>
+                <span className="font-black text-2xl tracking-tighter text-slate-900 dark:text-white hidden sm:block bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 transition-all duration-300">
+                  {import.meta.env.VITE_APP_NAME || 'CoachAI'}
+                </span>
               </Link>
             </div>
 
@@ -205,8 +207,7 @@ export const Navbar: React.FC = () => {
                               onClick={handleSignOut}
                               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-rose-50 dark:bg-rose-900/20 rounded-2xl text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all"
                             >
-                              <LogOut size={16} strokeWidth={2.5}/>
-                              {t('common.signOut')}
+                              <LogOut size={16} strokeWidth={2.5}/>                               {t('common.signOut')}
                             </button>
                           </div>
                         </motion.div>
@@ -229,7 +230,7 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden flex items-center gap-2">
+            <div className="lg:hidden flex items-center gap-2">
               {profile && (
                  <button className="p-2.5 text-slate-500 relative hidden sm:block">
                   <Bell size={20} />
@@ -252,8 +253,9 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
         </div>
+      </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Drawer (Moved outside <nav> for z-index reliability) */}
       <AnimatePresence>
         {isOpen && (
             <motion.div
@@ -261,7 +263,7 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed inset-0 top-[72px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[90] md:hidden overflow-y-auto"
+            className="fixed inset-0 top-0 pt-[80px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[105] lg:hidden overflow-y-auto"
           >
             {/* Gradient accent strip */}
             <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500" />
@@ -307,7 +309,8 @@ export const Navbar: React.FC = () => {
                       <LayoutDashboard size={20} className="text-indigo-600" />
                       {t('common.dashboard')}
                     </Link>
-                    <Link to="/profile" className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-900 dark:text-white font-bold">
+                    {/* Fixed Profile/Settings to point to Dashboard */}
+                    <Link to={getDashboardLink()} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-900 dark:text-white font-bold">
                       <User size={20} className="text-indigo-600" />
                       {t('common.profile')}
                     </Link>
@@ -330,6 +333,7 @@ export const Navbar: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
     </nav>
     </>
   );

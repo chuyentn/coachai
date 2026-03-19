@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 
 export const LeadPopup: React.FC = () => {
   const { t } = useTranslation();
+  const appName = import.meta.env.VITE_APP_NAME || 'CoachAI';
+  
   const [isOpen, setIsOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,10 +74,10 @@ export const LeadPopup: React.FC = () => {
         try {
           await crmService.sendTransactionalEmail(
             formData.email,
-            `🎁 Quà tặng từ CoachAI: Hệ sinh thái AI & Coaching`,
+            `🎁 Quà tặng từ ${appName}: Hệ sinh thái AI & Coaching`,
             `
               <h2 style="color: #4f46e5; margin-top: 0;">Chào ${formData.name}!</h2>
-              <p>Cảm ơn bạn đã quan tâm đến <strong>CoachAI</strong>. Chúng tôi đã nhận được thông tin đăng ký nhận quà của bạn.</p>
+              <p>Cảm ơn bạn đã quan tâm đến <strong>${appName}</strong>. Chúng tôi đã nhận được thông tin đăng ký nhận quà của bạn.</p>
               <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; margin: 20px 0;">
                 <p style="margin: 0;"><strong>Trạng thái:</strong> Đã tiếp nhận & Đang xử lý</p>
                 <p style="margin: 5px 0 0 0;"><strong>Gói quà:</strong> Bộ tài liệu hướng dẫn AI & Coaching thực chiến</p>

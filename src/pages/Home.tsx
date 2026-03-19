@@ -37,12 +37,13 @@ import { crmService } from '../services/crmService';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useSaaSConfig } from '../hooks/useSaaSConfig';
 
 export const Home: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const config = useSaaSConfig();
   const { profile } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [heroConfig, setHeroConfig] = useState<{ title1?: string; title2?: string; description?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -63,19 +64,6 @@ export const Home: React.FC = () => {
       // Fetch courses
       const coursesData = await googleSheetsService.fetchCourses();
       setCourses(coursesData.filter(c => c.published));
-
-      // Fetch Hero Config from Sheet
-      const config = await googleSheetsService.fetchConfig(lang);
-      if (config && config.hero) {
-        // Split title into 2 parts if it contains '|' or just use as is
-        const fullTitle = config.hero.title || '';
-        const [t1, t2] = fullTitle.includes('|') ? fullTitle.split('|') : [fullTitle, ''];
-        setHeroConfig({
-          title1: t1 || undefined,
-          title2: t2 || undefined,
-          description: config.hero.subtitle || undefined
-        });
-      }
     } catch (err: any) {
       console.error('Error fetching data:', err);
       setError('Không thể tải dữ liệu từ Google Sheets.');
@@ -122,13 +110,12 @@ export const Home: React.FC = () => {
       // Gửi Email tự động tặng quà từ Hệ sinh thái
       await crmService.sendTransactionalEmail(
         leadEmail,
-        '🎁 [CoachAI] Xác nhận Đăng ký Newsletter & Nhận Quà',
+        `🎁 [${import.meta.env.VITE_APP_NAME || 'CoachAI'}] Xác nhận Đăng ký Newsletter & Nhận Quà`,
         `
-          <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với Cộng đồng CoachAI!</h2>
+          <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với Cộng đồng ${import.meta.env.VITE_APP_NAME || 'CoachAI'}!</h2>
           <p style="font-size: 16px;">Cảm ơn bạn đã đăng ký theo dõi Newsletter. Tại đây, chúng tôi chia sẻ đều đặn các Kiến thức Lập trình thực chiến, xu hướng AI và tư duy vận hành sản phẩm công nghệ.</p>
-          <div style="background-color: #f0fdf4; padding: 15px; border-left: 4px solid #22c55e; margin: 20px 0; border-radius: 4px;">
-            <strong style="color: #166534; display: block; margin-bottom: 5px;">Món quà đầu tiên dành cho bạn:</strong>
-            <p style="margin: 0; color: #15803d;">Sách điện tử: "Hành Trang Trở Thành Lập Trình Viên Độc Lập" - Đính kèm bên dưới bài viết VIP của CoachAI.</p>
+          <div style="background: #f0f7ff; padding: 15px; border-radius: 10px; margin: 20px 0;">
+            <p style="margin: 0; color: #15803d;">Sách điện tử: "Hành Trang Trở Thành Lập Trình Viên Độc Lập" - Đính kèm bên dưới bài viết VIP của ${import.meta.env.VITE_APP_NAME || 'CoachAI'}.</p>
           </div>
           <p style="font-size: 16px;">Hãy kiểm tra Hộp thư Thường xuyên nhé. Nếu bạn muốn bứt tốc sớm hơn, đừng ngần ngại truy cập trực tiếp các lộ trình tại Coaching Hub.</p>
         `
@@ -208,10 +195,10 @@ export const Home: React.FC = () => {
                 className="text-4xl lg:text-6xl font-black tracking-tighter mb-6 leading-[1.1] md:leading-[1.1] break-words"
               >
                 <span className="text-slate-900 dark:text-white block mb-2">
-                  {heroConfig?.title1 || t('home.heroTitle1')}
+                  {config.heroTitle1 || t('home.heroTitle1')}
                 </span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-400 block pb-2 drop-shadow-sm">
-                  {heroConfig?.title2 || t('home.heroTitle2')}
+                  {config.heroTitle2 || t('home.heroTitle2')}
                 </span>
               </motion.h1>
               
@@ -221,7 +208,7 @@ export const Home: React.FC = () => {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="text-base md:text-xl text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed max-w-xl break-words"
               >
-                {heroConfig?.description || t('home.heroDesc')}
+                {config.heroSubtitle || t('home.heroDesc')}
               </motion.p>
 
               <motion.div 
@@ -231,10 +218,10 @@ export const Home: React.FC = () => {
                 className="flex flex-col sm:flex-row items-center gap-4 mb-8"
               >
                 <Link to="/auth/signup" className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center whitespace-nowrap">
-                  {t('home.heroBtnStart')}
+                  {config.ctaPrimary || t('home.heroBtnStart')}
                 </Link>
                 <Link to="/projects" className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-2xl font-black text-lg hover:shadow-xl hover:shadow-slate-200 dark:hover:shadow-none hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-indigo-100 dark:hover:border-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
-                   {t('home.heroBtnDemo')}
+                   {config.ctaSecondary || t('home.heroBtnDemo')}
                    <ArrowRight size={20} className="hidden sm:block" />
                 </Link>
               </motion.div>
@@ -733,10 +720,10 @@ export const Home: React.FC = () => {
                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                   <Zap size={24} />
                 </div>
-                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">CoachAI</span>
+                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{config.appName}</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6">
-                {t('common.footerDesc')}
+                {t('common.footerDesc', { companyName: config.companyName })}
               </p>
             </div>
             <div>
@@ -758,21 +745,27 @@ export const Home: React.FC = () => {
             </div>
             <div>
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('common.footerConnect')}</h4>
-              <div className="flex gap-4">
-                <a href="https://www.facebook.com/groups/vibecodecoaching" target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
+              <div className="flex flex-wrap gap-4">
+                <a href={config.fbGroupUrl || "#"} target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
                   <Facebook size={20} />
                 </a>
-                <a href="https://zalo.me/g/tdhmtu261" target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                <a href={config.zaloGroupUrl || "#"} target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
                   <MessageCircle size={20} />
                 </a>
-                <a href="https://t.me/vibecodocoaching" target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                <a href={config.telegramGroupUrl || "#"} target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
                   <Send size={20} />
+                </a>
+                <a href={config.whatsappGroupUrl || "#"} target="_blank" rel="noreferrer" title="Whatsapp Community" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                  <Users size={20} />
+                </a>
+                <a href={config.whatsappChannelUrl || "#"} target="_blank" rel="noreferrer" title="Whatsapp Channel" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                  <Globe size={20} />
                 </a>
               </div>
             </div>
           </div>
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm font-medium">{t('common.footerCopyright')}</p>
+            <p className="text-slate-500 text-sm font-medium">{t('common.footerCopyright', { appName: config.appName })}</p>
             <div className="flex items-center gap-6 text-slate-500 text-sm font-medium">
               <span className="flex items-center gap-1.5"><ShieldCheck size={16} /> {t('common.footerSSL')}</span>
               <span className="flex items-center gap-1.5"><Globe size={16} /> {t('common.footerLang')}</span>

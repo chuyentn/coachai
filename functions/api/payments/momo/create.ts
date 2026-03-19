@@ -20,8 +20,12 @@ export const onRequestPost = async (context: any) => {
     const accessKey = env.MOMO_ACCESS_KEY;
     const secretKey = env.MOMO_SECRET_KEY;
     const endpoint = env.MOMO_ENDPOINT || 'https://test-payment.momo.vn/v2/gateway/api/create';
-    const ipnUrl = env.MOMO_IPN_URL || `${env.APP_URL}/api/payments/momo/ipn`;
-    const finalRedirectUrl = redirectUrl || env.MOMO_REDIRECT_URL || `${env.APP_URL}/api/payments/momo/return`;
+    
+    // Multi-tenant URLs: Use VITE_APP_DOMAIN if available, fallback to env.APP_URL
+    const baseUrl = env.VITE_APP_DOMAIN || env.APP_URL;
+    const ipnUrl = env.MOMO_IPN_URL || `${baseUrl}/api/payments/momo/ipn`;
+    const finalRedirectUrl = redirectUrl || env.MOMO_REDIRECT_URL || `${baseUrl}/api/payments/momo/return`;
+    const appName = env.VITE_APP_NAME || "CoachAI";
 
     if (!accessKey || !secretKey) {
       return new Response(JSON.stringify({ error: "MoMo API keys are not configured in environment variables." }), {
@@ -59,8 +63,8 @@ export const onRequestPost = async (context: any) => {
 
     const requestBody = {
       partnerCode,
-      partnerName: "CoachAI",
-      storeId: "CoachAI",
+      partnerName: appName,
+      storeId: appName,
       requestId,
       amount: Number(amount),
       orderId: finalOrderId,

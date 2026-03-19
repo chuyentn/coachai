@@ -26,13 +26,16 @@ export const onRequestPost = async (context: any) => {
     }
 
     const resend = new Resend(env.RESEND_API_KEY);
-    const senderEmail = "no-reply@edu.victorchuyen.net"; // Đã chuyển sang Custom Domain
+    const appName = env.VITE_APP_NAME || "CoachAI";
+    const supportEmail = env.VITE_SUPPORT_EMAIL || "no-reply@edu.victorchuyen.net";
+    const senderEmail = supportEmail; 
+    const appDomain = env.VITE_APP_DOMAIN || "https://edu.victorchuyen.net";
 
     // -- 1. CHUẨN HOÁ DỮ LIỆU ĐẦU VÀO --
     // Hỗ trợ cả chuẩn mới (body.to, body.subject, body.html) do crmService gọi
     // Lẫn chuẩn cũ (body.email, body.name, body.project) do Projects.tsx gọi cũ
     const targetEmail = body.to || body.email;
-    const emailSubject = body.subject || `🎉 [CoachAI] Yêu cầu Mã Nguồn: ${body.project || 'Thành công'}`;
+    const emailSubject = body.subject || `🎉 [${appName}] Yêu cầu Mã Nguồn: ${body.project || 'Thành công'}`;
     
     if (!targetEmail) {
       return new Response(JSON.stringify({ error: 'Missing destination email (body.to or body.email)' }), { status: 400 });
@@ -55,7 +58,7 @@ export const onRequestPost = async (context: any) => {
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%); padding: 30px 20px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">CoachAI System</h1>
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">${appName} System</h1>
           <p style="color: #e0e7ff; margin: 8px 0 0 0; font-size: 14px;">Hệ sinh thái Học Lập Trình & Triển Khai Thực Chiến</p>
         </div>
         
@@ -66,30 +69,27 @@ export const onRequestPost = async (context: any) => {
         
         <!-- UP-SELL Footer Box -->
         <div style="background-color: #f8fafc; padding: 25px 20px; text-align: center; border-top: 2px dashed #e2e8f0;">
-          <h3 style="color: #0f172a; margin-top: 0; font-size: 18px;">Tiến Xa Hơn Cùng CoachAI</h3>
+          <h3 style="color: #0f172a; margin-top: 0; font-size: 18px;">Tiến Xa Hơn Cùng ${appName}</h3>
           <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Bạn muốn truy cập thẳng vào kho mã nguồn khổng lồ hoặc cần người kèm cặp 1:1?</p>
-          <a href="https://edu.victorchuyen.net/pricing" style="background-color: #f43f5e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(244,63,94,0.4);">
+          <a href="${appDomain}/pricing" style="background-color: #f43f5e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(244,63,94,0.4);">
             Nâng cấp VIP Member
           </a>
         </div>
         
         <!-- Bottom Info -->
         <div style="background-color: #0f172a; padding: 25px 20px; text-align: left; border-top: 4px solid #3b82f6;">
-          <h4 style="color: #ffffff; margin-top: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;">☎️ Trung tâm Hỗ trợ CoachAI</h4>
+          <h4 style="color: #ffffff; margin-top: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;">☎️ Trung tâm Hỗ trợ ${appName}</h4>
           <p style="font-size: 13px; color: #94a3b8; margin-top: 5px; margin-bottom: 20px; line-height: 1.5;">Lưu ý: Đây là email tự động, vui lòng không phản hồi trực tiếp. Hãy liên hệ qua các kênh Support chính thức sau nếu bạn cần giúp đỡ:</p>
           
           <div style="background-color: #1e293b; padding: 15px; border-radius: 8px;">
             <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 13px; color: #cbd5e1; line-height: 2;">
-              <li>🌐 <strong>Group Facebook:</strong> <a href="https://www.facebook.com/groups/vibecodecoaching" style="color: #38bdf8; text-decoration: none;">Cộng đồng Vibe Code</a></li>
-              <li>💬 <strong>Support Zalo:</strong> <a href="https://zalo.me/g/tdhmtu261" style="color: #38bdf8; text-decoration: none;">Nhóm Hỗ trợ Zalo</a></li>
-              <li>✈️ <strong>Support Telegram:</strong> <a href="https://t.me/vibecodocoaching" style="color: #38bdf8; text-decoration: none;">Nhóm Hỗ trợ Telegram</a></li>
-              <li>👤 <strong>Zalo Admin:</strong> <a href="https://zalo.me/0989890022" style="color: #38bdf8; text-decoration: none;">Mr. Victor (0989.890.022)</a></li>
-              <li>🛸 <strong>Telegram Admin:</strong> <a href="https://t.me/victorchuyen" style="color: #38bdf8; text-decoration: none;">@victorchuyen</a></li>
+              <li>🌐 <strong>Website:</strong> <a href="${appDomain}" style="color: #38bdf8; text-decoration: none;">${appDomain.replace('https://', '')}</a></li>
+              <li>👤 <strong>Hỗ trợ:</strong> <a href="mailto:${supportEmail}" style="color: #38bdf8; text-decoration: none;">${supportEmail}</a></li>
             </ul>
           </div>
           
           <div style="margin-top: 20px; text-align: center;">
-            <p style="font-size: 11px; color: #64748b; margin: 0;">© 2026 CoachAI. Mọi quyền được bảo lưu.</p>
+            <p style="font-size: 11px; color: #64748b; margin: 0;">© 2026 ${appName}. Mọi quyền được bảo lưu.</p>
           </div>
         </div>
       </div>
@@ -97,7 +97,7 @@ export const onRequestPost = async (context: any) => {
 
     // Gửi Email
     const { data, error } = await resend.emails.send({
-      from: `CoachAI Support <${senderEmail}>`,
+      from: `${appName} Support <${senderEmail}>`,
       to: [targetEmail],
       subject: emailSubject,
       html: masterTemplate,

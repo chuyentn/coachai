@@ -21,6 +21,20 @@ export interface CourseModule {
   order: number;
 }
 
+export interface Lesson {
+  id: string;
+  course_id: string;
+  chapter: string;
+  title: string;
+  title_en?: string;
+  content?: string;
+  video_url?: string;
+  doc_url?: string;
+  order: number;
+  is_free: boolean;
+  created_at?: string;
+}
+
 export interface Course {
   id: string;
   instructor_id: string;
@@ -39,7 +53,13 @@ export interface Course {
   total_students: number;
   total_reviews: number;
   avg_rating: number;
+  rating_avg?: number; 
+  rating_count?: number;
+  level?: string;
+  duration_text?: string;
   created_at: string;
+  status: string;
+  instructor_name?: string;
   instructor?: Profile;
 }
 

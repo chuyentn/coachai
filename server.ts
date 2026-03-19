@@ -15,6 +15,74 @@ const __dirname = path.dirname(__filename);
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
+// --- AI Rotation Manager (High Availability) ---
+class AIRotator {
+  private geminiKeys: string[] = [];
+  private openaiKeys: string[] = [];
+  private geminiIndex: number = 0;
+  private openaiIndex: number = 0;
+
+  constructor() {
+    this.geminiKeys = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "").split(",").map(k => k.trim()).filter(k => k);
+    this.openaiKeys = (process.env.OPENAI_API_KEYS || process.env.OPENAI_API_KEY || "").split(",").map(k => k.trim()).filter(k => k);
+    console.log(`AIRotator initialized: ${this.geminiKeys.length} Gemini keys, ${this.openaiKeys.length} OpenAI keys.`);
+  }
+
+  async callGemini(courseTitle: string, lessonTitle: string, message: string): Promise<string> {
+    if (this.geminiKeys.length === 0) throw new Error("No Gemini keys configured");
+    
+    // Try each key in a round-robin fashion
+    let lastError: any = null;
+    for (let i = 0; i < this.geminiKeys.length; i++) {
+        const currentKey = this.geminiKeys[this.geminiIndex];
+        try {
+            const { GoogleGenAI } = await import("@google/genai");
+            const ai = new GoogleGenAI({ apiKey: currentKey });
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: [{
+                    role: "user",
+                    parts: [{ text: `Bạn là một chuyên gia AI Coach hỗ trợ học viên trong khóa học "${courseTitle}". Bài học: "${lessonTitle}". Trả lời ngắn gọn, chuyên nghiệp. Câu hỏi: ${message}` }]
+                }],
+                config: { systemInstruction: "AI Coach chuyên nghiệp." }
+            });
+            return response.text || "Xin lỗi, tôi gặp chút trục trặc.";
+        } catch (error: any) {
+            console.warn(`Gemini Key [${this.geminiIndex}] failed:`, error.message);
+            lastError = error;
+            this.geminiIndex = (this.geminiIndex + 1) % this.geminiKeys.length; // Rotate to next key
+            if (error.status === 429 || error.status === 403) continue; // Rate limit or auth error -> try next
+            else throw error; // Other critical error -> fail
+        }
+    }
+    throw lastError;
+  }
+
+  async callOpenAI(courseTitle: string, lessonTitle: string, message: string): Promise<string> {
+    if (this.openaiKeys.length === 0) throw new Error("No OpenAI keys configured");
+    
+    const currentKey = this.openaiKeys[this.openaiIndex];
+    try {
+        const response = await axios.post("https://api.openai.com/v1/chat/completions", {
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: "AI Coach chuyên nghiệp." },
+                { role: "user", content: `Khóa học: ${courseTitle}. Bài học: ${lessonTitle}. Câu hỏi: ${message}` }
+            ]
+        }, {
+            headers: { "Authorization": `Bearer ${currentKey}`, "Content-Type": "application/json" }
+        });
+        return response.data.choices[0].message.content;
+    } catch (error: any) {
+        console.warn(`OpenAI Key [${this.openaiIndex}] failed:`, error.message);
+        this.openaiIndex = (this.openaiIndex + 1) % this.openaiKeys.length;
+        throw error;
+    }
+  }
+}
+
+const aiRotator = new AIRotator();
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -240,41 +308,25 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  // --- P1.6 Fix: Gemini AI Chat (server-side, key never sent to client) ---
+  // --- AI Chat with Rotation & Fallback ---
   app.post("/api/ai/chat", async (req, res) => {
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    if (!geminiApiKey) {
-      return res.status(500).json({ error: "AI service not configured" });
-    }
-
     const { message, courseTitle, lessonTitle } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "message is required" });
-    }
+    if (!message) return res.status(400).json({ error: "message is required" });
 
     try {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-      const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `Bạn là một chuyên gia AI Coach hỗ trợ học viên trong khóa học "${courseTitle}". 
-            Học viên đang xem bài học: "${lessonTitle}". 
-            Hãy trả lời ngắn gọn, chuyên nghiệp và tập trung vào kiến thức chuyên môn.
-            
-            Câu hỏi của học viên: ${message}` }]
-          }
-        ],
-        config: {
-          systemInstruction: "Bạn là một AI Coach chuyên nghiệp, nhiệt tình và có kiến thức sâu rộng về công nghệ và kinh doanh.",
-        }
-      });
-      res.json({ text: response.text || "Xin lỗi, tôi gặp chút trục trặc. Bạn có thể thử lại không?" });
-    } catch (error) {
-      console.error("Gemini AI error:", error);
-      res.status(500).json({ error: "AI service error" });
+      // 1. Try Gemini first (as requested)
+      const aiText = await aiRotator.callGemini(courseTitle, lessonTitle, message);
+      res.json({ text: aiText });
+    } catch (geminiError) {
+      console.error("Gemini failed after all keys, trying OpenAI fallback...");
+      try {
+        // 2. Fallback to OpenAI if Gemini fails or is not configured
+        const aiText = await aiRotator.callOpenAI(courseTitle, lessonTitle, message);
+        res.json({ text: aiText });
+      } catch (openaiError) {
+        console.error("All AI providers failed.");
+        res.status(500).json({ error: "Hệ thống AI đang bảo trì, vui lòng thử lại sau." });
+      }
     }
   });
 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { TrendingUp, Users, DollarSign, ArrowRight, CheckCircle2, ShieldCheck, Globe, Zap, Facebook, Youtube, Video, MessageCircle, ChevronRight, Send } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, ArrowRight, CheckCircle2, ShieldCheck, Globe, Zap, Facebook, MessageCircle, Send, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useSaaSConfig } from '../hooks/useSaaSConfig';
 
 export const Affiliate = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
+  const config = useSaaSConfig();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -122,10 +124,10 @@ export const Affiliate = () => {
                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                   <Zap size={24} />
                 </div>
-                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">CoachAI</span>
+                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{config.appName}</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6">
-                {t('common.footerDesc')}
+                {t('common.footerDesc', { companyName: config.companyName })}
               </p>
             </div>
             <div>
@@ -138,15 +140,18 @@ export const Affiliate = () => {
             </div>
             <div>
               <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest text-xs">{t('affiliate.footerCol2')}</h4>
-              <div className="flex gap-4">
-                <a href="https://www.facebook.com/groups/vibecodecoaching" target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
+              <div className="flex flex-wrap gap-4">
+                <a href={config.fbGroupUrl || "#"} target="_blank" rel="noreferrer" title="Group Facebook" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
                   <Facebook size={20} />
                 </a>
-                <a href="https://zalo.me/g/tdhmtu261" target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                <a href={config.zaloGroupUrl || "#"} target="_blank" rel="noreferrer" title="Zalo Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
                   <MessageCircle size={20} />
                 </a>
-                <a href="https://t.me/vibecodocoaching" target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                <a href={config.telegramGroupUrl || "#"} target="_blank" rel="noreferrer" title="Telegram Support Group" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
                   <Send size={20} />
+                </a>
+                <a href={config.whatsappGroupUrl || "#"} target="_blank" rel="noreferrer" title="Whatsapp Community" className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                  <Users size={20} />
                 </a>
               </div>
             </div>

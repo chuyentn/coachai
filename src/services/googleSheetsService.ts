@@ -34,7 +34,12 @@ export const googleSheetsService = {
         // P2.3 Fix: total_reviews was missing — added it alongside avg_rating
         total_reviews: Number(row.total_reviews || row.TotalReviews || 0),
         avg_rating: Number(row.avg_rating || 0),
+        rating_avg: Number(row.rating_avg || row.RatingAvg || 0),
+        rating_count: Number(row.rating_count || row.RatingCount || 0),
+        level: String(row.level || row.Level || ''),
+        duration_text: String(row.duration_text || row.DurationText || ''),
         created_at: String(row.created_at || new Date().toISOString()),
+        status: String(row.status || 'published'),
         modules: (() => {
           const m = row.modules;
           if (!m) return [];
@@ -54,6 +59,30 @@ export const googleSheetsService = {
       })) as Course[];
     } catch (error) {
       console.error('Error fetching courses from Google Sheets:', error);
+      return [];
+    }
+  },
+
+  async fetchLessons(courseId: string): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getLessons&courseId=${courseId}`);
+      if (!response.ok) throw new Error('Failed to fetch lessons');
+      const data = await response.json();
+      return data.map((row: any) => ({
+        id: String(row.id || row.ID),
+        course_id: String(row.course_id || row.CourseID),
+        chapter: String(row.chapter || 'Chương 1'),
+        title: String(row.title || row.Title),
+        title_en: String(row.title_en || row.TitleEN || ''),
+        video_url: String(row.video_url || row.VideoURL || ''),
+        doc_url: String(row.doc_url || row.DocURL || ''),
+        content: String(row.content || ''),
+        order: Number(row.order || 0),
+        is_free: String(row.is_free).toLowerCase() === 'true'
+      }));
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
       return [];
     }
   },
@@ -97,6 +126,10 @@ export const googleSheetsService = {
   async fetchConfig(lang: string = 'vi'): Promise<any> {
     if (!WEBHOOK_URL) return null;
     try {
+      // action=getConfig in Apps Script returns { hero: {title, subtitle}, bots: [...] }
+      // But we want to also fetch the raw page_content if we want more keys.
+      // However, looking at Apps Script V5, it already has logic for page_content.
+      // Let's create a more general fetchPageContent to get all keys.
       const response = await fetch(`${WEBHOOK_URL}?action=getConfig&lang=${lang}`);
       if (!response.ok) throw new Error('Failed to fetch config');
       return await response.json();
@@ -106,12 +139,28 @@ export const googleSheetsService = {
     }
   },
 
+  async fetchPageContent(lang: string = 'vi'): Promise<Record<string, string>> {
+     if (!WEBHOOK_URL) return {};
+     try {
+       const data = await this.fetchConfig(lang);
+       if (!data || !data.content) return {};
+       return data.content as Record<string, string>;
+     } catch (error) {
+       console.error('Error fetching page content:', error);
+       return {};
+     }
+  },
+
   async fetchComments(courseId: string): Promise<any[]> {
     if (!WEBHOOK_URL) return [];
     try {
-      const response = await fetch(`${WEBHOOK_URL}?action=getComments&courseId=${courseId}`);
+      // Fetch all comments from the 'comments' sheet
+      const response = await fetch(`${WEBHOOK_URL}?action=getComments`);
       if (!response.ok) throw new Error('Failed to fetch comments');
-      return await response.json();
+      const allComments = await response.json();
+      
+      // Filter by courseId
+      return allComments.filter((c: any) => String(c.courseId || c.CourseID) === courseId);
     } catch (error) {
       console.error('Error fetching comments:', error);
       return [];
@@ -157,6 +206,114 @@ export const googleSheetsService = {
     return this.submitToWebhook({
       type: 'course',
       ...courseData
+    });
+  },
+
+  async updateRecord(sheet: string, id: string, updates: any): Promise<boolean> {
+    return this.submitToWebhook({
+      type: 'update',
+      sheet,
+      id,
+      updates
+    });
+  },
+
+  async fetchLessonProgress(userId: string, courseId: string): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getLessonProgress&userId=${userId}&courseId=${courseId}`);
+      if (!response.ok) throw new Error('Failed to fetch lesson progress');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching lesson progress:', error);
+      return [];
+    }
+  },
+
+  async updateLessonProgress(userId: string, courseId: string, lessonId: string, status: 'completed' | 'in_progress'): Promise<boolean> {
+    return this.submitToWebhook({
+      type: 'updateLessonProgress',
+      user_id: userId,
+      course_id: courseId,
+      lesson_id: lessonId,
+      status: status
+    });
+  },
+
+  async fetchNotes(userId: string, lessonId: string): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getNotes&userId=${userId}&lessonId=${lessonId}`);
+      if (!response.ok) throw new Error('Failed to fetch notes');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      return [];
+    }
+  },
+
+  async saveNote(userId: string, courseId: string, lessonId: string, content: string): Promise<boolean> {
+    return this.submitToWebhook({
+      type: 'saveNote',
+      user_id: userId,
+      course_id: courseId,
+      lesson_id: lessonId,
+      content: content
+    });
+  },
+
+  async fetchQuizzes(lessonId: string): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getQuizzes&lessonId=${lessonId}`);
+      if (!response.ok) throw new Error('Failed to fetch quizzes');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching quizzes:', error);
+      return [];
+    }
+  },
+
+  async submitQuizAttempt(userId: string, lessonId: string, score: number, total: number): Promise<boolean> {
+    return this.submitToWebhook({
+      type: 'submitQuiz',
+      user_id: userId,
+      lesson_id: lessonId,
+      score,
+      total_questions: total
+    });
+  },
+
+  async fetchCertificates(userId: string): Promise<any[]> {
+    if (!WEBHOOK_URL) return [];
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getCertificates&userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch certificates');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching certificates:', error);
+      return [];
+    }
+  },
+
+  async fetchInstructorStats(instructorId: string): Promise<any> {
+    if (!WEBHOOK_URL) return null;
+    try {
+      const response = await fetch(`${WEBHOOK_URL}?action=getInstructorStats&instructorId=${instructorId}`);
+      if (!response.ok) throw new Error('Failed to fetch instructor stats');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching instructor stats:', error);
+      return null;
+    }
+  },
+
+  async submitWithdrawal(userId: string, amount: number, paymentInfo: string): Promise<boolean> {
+    return this.submitToWebhook({
+      type: 'withdrawal',
+      user_id: userId,
+      amount,
+      payment_info: paymentInfo
     });
   },
 

@@ -85,7 +85,7 @@ export const TeacherRegistration: React.FC = () => {
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-black text-slate-900">Tại sao nên giảng dạy cùng CoachAI?</h2>
+            <h2 className="text-3xl font-black text-slate-900">Tại sao nên giảng dạy cùng {import.meta.env.VITE_APP_NAME || 'CoachAI'}?</h2>
             <p className="text-slate-500 mt-4 max-w-2xl mx-auto">Chúng tôi cung cấp mọi công cụ cần thiết để bạn tập trung vào việc tạo ra những bài giảng chất lượng nhất.</p>
           </div>
 
@@ -150,7 +150,7 @@ export const TeacherRegistration: React.FC = () => {
                   {
                     step: '03',
                     title: 'Quay & Đăng tải khóa học',
-                    desc: 'Sử dụng các công cụ độc quyền của CoachAI để xây dựng bài giảng, upload video và tài liệu.'
+                    desc: `Sử dụng các công cụ độc quyền của ${import.meta.env.VITE_APP_NAME || 'CoachAI'} để xây dựng bài giảng, upload video và tài liệu.`
                   },
                   {
                     step: '04',
@@ -178,7 +178,7 @@ export const TeacherRegistration: React.FC = () => {
                 <h3 className="text-2xl font-bold mb-6 relative z-10">Yêu cầu tối thiểu</h3>
                 <ul className="space-y-4 relative z-10">
                   {[
-                    'Đã có tài khoản Học viên trên mạng lưới CoachAI.',
+                    `Đã có tài khoản Học viên trên mạng lưới ${import.meta.env.VITE_APP_NAME || 'CoachAI'}.`,
                     'Có kinh nghiệm hoặc kiến thức chuyên sâu về 1 lĩnh vực.',
                     'Đam mê chia sẻ kiến thức, kỹ năng sư phạm tốt.',
                     'Cam kết bảo mật chất lượng nội dung.',

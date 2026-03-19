@@ -1,10 +1,11 @@
 # Team Task Board: Edu-Vibe Project Upgrade
 
 ## 🏁 Milestones
-- [ ] Phase 1: Architecture Audit & Environment Setup (Victor)
-- [ ] Phase 2: Database Schema & API Foundation (Money)
-- [ ] Phase 3: Premium UI Overhaul & Integration (Lucky)
-- [ ] Phase 4: Full System Verification & Launch (Team)
+- [x] Phase 1: Architecture Audit & Environment Setup (Victor)
+- [x] Phase 2: Database Schema & API Foundation (Money)
+- [x] Phase 3: Premium UI Overhaul & Integration (Lucky)
+- [x] Phase 4: SaaS & Multi-tenant Transition (Victor)
+- [ ] Phase 5: Full System Verification & Launch (Team)
 
 ## 📋 High-Priority Expert Assignments
 
@@ -26,7 +27,11 @@
 - [x] **Full Flow Verification:** Test write operations (Leads, Comments, Teachers) <!-- id: exp_v14 -->
 - [x] **Cloneable Service:** Expand Apps Script seed data with high-conversion demo content <!-- id: exp_v15 -->
 - [x] **Projects Sync:** Connect Projects page to Google Sheets dynamic data <!-- id: exp_v17 -->
-- [ ] **Data Verification:** Complete collaborative check with User (Hero, Bots, Forms, Projects) <!-- id: exp_v16 -->
+- [x] **SaaS Branding:** Implement dynamic VITE_APP_NAME in HTML, Hooks, and UI <!-- id: exp_s1 -->
+- [x] **Multi-tenant Backend:** Dynamic email templates and payment return URLs <!-- id: exp_s2 -->
+- [x] **Broad CMS:** Update Apps Script to serve unlimited page_content keys <!-- id: exp_s3 -->
+- [x] **Dynamic i18n:** Refactor translations to use {{appName}} and {{companyName}} variables <!-- id: exp_s4 -->
+- [ ] **Data Verification:** Complete collaborative check with User (Hero, Bots, Forms, Projects) <!-- id: exp: 16 -->
 
 ### 👤 Lucky (Frontend Maven)
 - [x] **Premium Facelift:** Refactor `src/components` with advanced Tailwind & Framer Motion <!-- id: exp_l1 -->

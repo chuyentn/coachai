@@ -60,10 +60,16 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
       </div>
 
       <div className="p-5 sm:p-8 flex flex-col flex-grow">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex items-center gap-1 text-amber-500">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex items-center gap-1 text-amber-500 bg-amber-500/5 px-2 py-1 rounded-lg border border-amber-500/10">
             <Star size={14} fill="currentColor" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{course.avg_rating || 4.8}</span>
+            <span className="text-xs font-black text-slate-700 dark:text-slate-200">{course.rating_avg || course.avg_rating || 4.8}</span>
+            <span className="text-[10px] text-slate-400 font-medium">({course.rating_count || 128})</span>
+          </div>
+          <span className="text-slate-300 dark:text-slate-600 text-xs">•</span>
+          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+            <Clock size={12} />
+            <span>{course.duration_text || '12h 30m'}</span>
           </div>
           <span className="text-slate-300 dark:text-slate-600 text-xs">•</span>
           <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
@@ -81,8 +87,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </p>
 
         <div className="flex items-center gap-2 mb-6">
-          <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-900/50">
-            <Zap size={14} className="text-indigo-500" /> {t('courseCard.suitability')}
+          <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-900/50">
+            <Zap size={14} className="text-indigo-500" /> {course.level || t('courseCard.suitability')}
           </span>
         </div>
 

@@ -74,7 +74,7 @@ const FALLBACK_DATA: CoachAIConfig = {
       button_primary_text: "Mở NotebookLM",
       button_primary_url: "https://notebooklm.google.com/...",
       button_secondary_text: "Tham gia nhóm",
-      button_secondary_url: "https://facebook.com/groups/...",
+      button_secondary_url: import.meta.env.VITE_FB_GROUP_URL || "https://facebook.com/groups/vibecodecoaching",
       thumbnail_url: "https://upload.wikimedia.org/wikipedia/commons/7/77/NotebookLM.svg",
       status: "active",
       featured: true,
@@ -289,7 +289,7 @@ export const CoachAI: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-gray-900 dark:text-slate-200 mb-2">Gemini Gems là gì?</h4>
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                  Là các trợ lý AI chuyên biệt được lập trình sẵn mục tiêu và ngữ cảnh. Khác với ChatGPT chung chung, Gem của CoachAI giống như một người cố vấn đã học qua toàn bộ phương pháp giảng dạy của Edu Vibe.
+                  Là các trợ lý AI chuyên biệt được lập trình sẵn mục tiêu và ngữ cảnh. Khác với ChatGPT chung chung, Gem của {import.meta.env.VITE_APP_NAME || 'CoachAI'} giống như một người cố vấn đã học qua toàn bộ phương pháp giảng dạy của chúng tôi.
                 </p>
               </div>
               <div>
@@ -321,17 +321,17 @@ export const CoachAI: React.FC = () => {
                   if (!email || isSubmitting) return;
                   setIsSubmitting(true);
                   try {
-                    await googleSheetsService.submitLead(email, '', '', '[CoachAI Newsletter] Nhận Roadmap AI mỗi tuần');
+                    await googleSheetsService.submitLead(email, '', '', `[${import.meta.env.VITE_APP_NAME || 'CoachAI'} Newsletter] Nhận Roadmap AI mỗi tuần`);
                     await crmService.sendTransactionalEmail(
                       email,
-                      '🎁 [CoachAI] Roadmap AI & Roadmap MMO dành cho bạn',
+                      `🎁 [${import.meta.env.VITE_APP_NAME || 'CoachAI'}] Roadmap AI & Roadmap MMO dành cho bạn`,
                       `
-                        <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với CoachAI Roadmap!</h2>
+                        <h2 style="color: #4f46e5; margin-top: 0;">Chào mừng bạn đến với {import.meta.env.VITE_APP_NAME || 'CoachAI'} Roadmap!</h2>
                         <p style="font-size: 16px;">Cảm ơn bạn đã đăng ký nhận lộ trình phát triển AI & MMO. Bạn đã thực hiện bước đi đúng đắn để làm chủ công nghệ và tạo ra thu nhập thụ động.</p>
                         <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #4f46e5; margin: 20px 0;">
                           <p style="margin: 0;"><strong>🎁 Quà tặng kèm theo:</strong> Danh sách 50+ công cụ AI giúp X3 tốc độ làm việc (vừa cập nhật).</p>
                         </div>
-                        <p style="font-size: 16px;">Hãy thường xuyên kiểm tra hòm thư để không bỏ lỡ các dự án thực chiến mới nhất từ CoachAI.</p>
+                        <p style="font-size: 16px;">Hãy thường xuyên kiểm tra hòm thư để không bỏ lỡ các dự án thực chiến mới nhất từ {import.meta.env.VITE_APP_NAME || 'CoachAI'}.</p>
                       `
                     );
                     setIsSuccess(true);

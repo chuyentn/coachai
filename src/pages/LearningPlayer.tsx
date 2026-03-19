@@ -1,10 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { googleSheetsService } from '../services/googleSheetsService';
-import { Play, FileText, CheckCircle2, Lock, ChevronLeft, ChevronRight, MessageSquare, Download, PlayCircle, Bot, Sparkles, Send, MoveLeft, Loader2, Zap, X, ArrowRight, BookOpen, Menu, Award, ShoppingCart } from 'lucide-react';
+import { Lesson, Course } from '../types';
+import { 
+  CheckCircle2, 
+  Lock, 
+  ChevronLeft, 
+  ChevronRight, 
+  MessageSquare, 
+  Download, 
+  PlayCircle, 
+  Bot, 
+  Send, 
+  Loader2, 
+  X, 
+  Check, 
+  Save, 
+  ThumbsUp, 
+  Share2,
+  FileText,
+  Award,
+  ArrowRight,
+  BookOpen,
+  Menu,
+  ShoppingCart,
+  Zap
+} from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { motion, AnimatePresence } from 'motion/react';
 import { AICoach } from '../components/AICoach';
@@ -12,16 +36,22 @@ import { AICoach } from '../components/AICoach';
 const Player = ReactPlayer as any;
 
 export const LearningPlayer: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: courseId } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [course, setCourse] = useState<any>(null);
+  const [course, setCourse] = useState<Course | null>(null);
   const [enrollment, setEnrollment] = useState<any>(null);
-  const [currentLesson, setCurrentLesson] = useState<any>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ai-coach' | 'discussion' | 'resources'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai-coach' | 'discussion' | 'resources' | 'notes' | 'quizzes' | 'role-play'>('overview');
+  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [lessonNote, setLessonNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [markingDone, setMarkingDone] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
   
   // Comment state
   const [comment, setComment] = useState('');
@@ -29,19 +59,57 @@ export const LearningPlayer: React.FC = () => {
   const [showUpsell, setShowUpsell] = useState(false);
 
   useEffect(() => {
-    if (id && profile) fetchLearningData();
-  }, [id, profile]);
+    if (courseId && profile) fetchLearningData();
+  }, [courseId, profile]);
+
+  // Fetch granular lesson progress and notes (V6)
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!courseId || !profile) return;
+      try {
+        if (lessons.length === 0) {
+          const fetchedLessons = await googleSheetsService.fetchLessons(courseId);
+          setLessons(fetchedLessons);
+          if (fetchedLessons.length > 0 && !currentLesson) {
+            setCurrentLesson(fetchedLessons[0]);
+          }
+        }
+
+        const progress = await googleSheetsService.fetchLessonProgress(profile.id, courseId);
+        setCompletedLessons(progress.filter((p: any) => p.status === 'completed').map((p: any) => p.lesson_id));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [courseId, profile, lessons.length, currentLesson]);
+
+  // Fetch note for current lesson (V6)
+  useEffect(() => {
+    if (activeTab === 'notes' && profile && currentLesson) {
+      const fetchNote = async () => {
+        try {
+          const notes = await googleSheetsService.fetchNotes(profile.id, currentLesson.id);
+          if (notes.length > 0) setLessonNote(notes[0].content);
+          else setLessonNote('');
+        } catch (error) {
+          console.error('Error fetching note:', error);
+        }
+      };
+      fetchNote();
+    }
+  }, [activeTab, currentLesson, profile]);
 
   const fetchLearningData = async () => {
     try {
-      // 1. Fetch Course from Google Sheets
       const allCourses = await googleSheetsService.fetchCourses();
-      const courseData = allCourses.find(c => c.id === id);
+      const courseData = allCourses.find(c => String(c.id) === String(courseId));
 
-      // 2. Fetch Enrollment for this user from Firestore
       const q = query(
         collection(db, 'enrollments'), 
-        where('course_id', '==', id), 
+        where('course_id', '==', courseId), 
         where('user_id', '==', profile?.id)
       );
       const querySnapshot = await getDocs(q);
@@ -49,42 +117,49 @@ export const LearningPlayer: React.FC = () => {
 
       if (courseData) {
         setCourse(courseData);
-
-        // Guard: no enrollment → show PaywallGate in-place instead of redirecting
         if (!enrollData) {
           setAccessDenied(true);
           return;
         }
-
         setEnrollment(enrollData);
 
-        // 3. Resume Logic: Find current lesson or start from first
+        const lessonsData = await googleSheetsService.fetchLessons(courseId);
+        const activeLessons = (lessonsData && lessonsData.length > 0) ? lessonsData : (courseData.modules?.map((m: any) => ({
+          id: m.id,
+          course_id: courseId,
+          chapter: 'Tổng quan',
+          title: m.title,
+          video_url: m.video_url,
+          order: m.order,
+          is_free: false
+        })) as Lesson[]);
+        
+        setLessons(activeLessons);
+
         const currentLessonId = enrollData?.current_lesson_id || enrollData?.progress?.last_lesson_id;
-        const savedLesson = courseData.modules?.find((m: any) => m.id === currentLessonId);
+        const savedLesson = activeLessons.find(l => String(l.id) === String(currentLessonId));
         
         if (savedLesson) {
           setCurrentLesson(savedLesson);
-        } else if (courseData.modules?.length > 0) {
-          setCurrentLesson(courseData.modules[0]);
+        } else if (activeLessons.length > 0) {
+          setCurrentLesson(activeLessons[0]);
         }
       }
     } catch (error) {
       console.error('Error fetching learning data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim() || !profile || !id) return;
+    if (!comment.trim() || !profile || !courseId) return;
 
     setCommentLoading(true);
     try {
       await googleSheetsService.submitComment(
-        id,
+        courseId,
         profile.id,
-        profile.full_name || 'Học viên', // P2 null-safe fix
+        profile.full_name || 'Học viên',
         comment,
         profile.email,
         profile.avatar_url || ''
@@ -98,68 +173,51 @@ export const LearningPlayer: React.FC = () => {
     }
   };
 
-  const handleLessonChange = async (lesson: any) => {
+  const handleLessonClick = (lesson: Lesson) => {
     setCurrentLesson(lesson);
-    
-    // Save progress to Firestore
-    if (enrollment) {
-      try {
-        const newProgress = {
-          ...(enrollment.progress || {}),
-          last_lesson_id: lesson.id
-        };
+    setLessonNote('');
+  };
 
-        const enrollDocRef = doc(db, 'enrollments', enrollment.id);
-        await updateDoc(enrollDocRef, { 
-          progress: newProgress,
-          current_lesson_id: lesson.id
-        });
-        
-        setEnrollment({ ...enrollment, progress: newProgress, current_lesson_id: lesson.id });
-      } catch (error) {
-        console.error('Error updating progress:', error);
-      }
+  const handleNextLesson = () => {
+    if (!currentLesson) return;
+    const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+    if (currentIndex !== -1 && currentIndex < lessons.length - 1) {
+      handleLessonClick(lessons[currentIndex + 1]);
     }
   };
 
-  const markAsComplete = async () => {
-    if (!enrollment || !currentLesson) return;
-
+  const toggleLessonCompletion = async () => {
+    if (!profile || !currentLesson || !courseId) return;
+    setMarkingDone(true);
     try {
-      const completedLessons = enrollment.progress?.completed_lessons || [];
-      if (!completedLessons.includes(currentLesson.id)) {
-        const newCompleted = [...completedLessons, currentLesson.id];
-        const totalModules = course.modules?.length || 1;
-        const newPercentage = Math.round((newCompleted.length / totalModules) * 100);
-
-        const newProgress = {
-          ...enrollment.progress,
-          completed_lessons: newCompleted
-        };
-
-        const enrollDocRef = doc(db, 'enrollments', enrollment.id);
-        await updateDoc(enrollDocRef, { 
-          progress: newProgress,
-          completion_percentage: newPercentage,
-          status: newPercentage === 100 ? 'completed' : 'pending'
-        });
-
-        setEnrollment({ 
-          ...enrollment, 
-          progress: newProgress, 
-          completion_percentage: newPercentage 
-        });
-
-        // MVP Phase 1: Show upsell modal if progress hits >= 30% and not VIP
-        const previousPercentage = enrollment?.completion_percentage || 0;
-        if (newPercentage >= 30 && previousPercentage < 30 && profile?.role !== 'vip') {
-          setShowUpsell(true);
-        } else {
-          alert('Chúc mừng! Bạn đã hoàn thành bài học này.');
-        }
+      const isCompleted = completedLessons.includes(currentLesson.id);
+      const newStatus = isCompleted ? 'in_progress' : 'completed';
+      
+      await googleSheetsService.updateLessonProgress(profile.id, courseId, currentLesson.id, newStatus);
+      
+      if (newStatus === 'completed') {
+        setCompletedLessons([...completedLessons, currentLesson.id]);
+        setTimeout(() => handleNextLesson(), 500);
+      } else {
+        setCompletedLessons(completedLessons.filter(id => id !== currentLesson.id));
       }
     } catch (error) {
-      console.error('Error marking lesson as complete:', error);
+      console.error('Error updating progress:', error);
+    } finally {
+      setMarkingDone(false);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!profile || !currentLesson || !courseId) return;
+    setSavingNote(true);
+    try {
+      await googleSheetsService.saveNote(profile.id, courseId, currentLesson.id, lessonNote);
+      alert('Đã lưu ghi chú bài học!');
+    } catch (error) {
+      console.error('Error saving note:', error);
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -172,7 +230,6 @@ export const LearningPlayer: React.FC = () => {
     </div>
   );
 
-  // PaywallGate: user is not enrolled
   if (accessDenied) return (
     <div className="h-screen flex items-center justify-center bg-[#0A0A0B] text-white p-6">
       <motion.div
@@ -180,23 +237,18 @@ export const LearningPlayer: React.FC = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md w-full text-center"
       >
-        {/* Icon */}
         <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
           <Lock size={36} className="text-indigo-400" />
         </div>
-
-        {/* Course title if available */}
         {course?.title && (
           <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
             <BookOpen size={10} /> {course.title}
           </p>
         )}
-
         <h1 className="text-2xl font-bold text-white mb-3">Bạn chưa sở hữu khóa học này</h1>
         <p className="text-slate-400 text-sm mb-8 leading-relaxed">
           Để truy cập nội dung, bạn cần mua khóa học này trước. Nhấn "Mua ngay" để xem các gói học phù hợp.
         </p>
-
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -211,9 +263,6 @@ export const LearningPlayer: React.FC = () => {
             <ShoppingCart size={18} /> Mua ngay
           </a>
         </div>
-
-        {/* Optional: social proof */}
-        <p className="text-xs text-slate-600 mt-6">🔒 Thanh toán an toàn · Hỗ trợ 24/7 · Hoàn tiền 7 ngày</p>
       </motion.div>
     </div>
   );
@@ -232,7 +281,6 @@ export const LearningPlayer: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-[#0A0A0B] text-white overflow-hidden font-sans">
-      {/* Top Header */}
       <header className="h-20 border-b border-white/5 flex items-center justify-between px-6 bg-[#111113] relative z-50">
         <div className="flex items-center gap-6">
           <button 
@@ -279,9 +327,7 @@ export const LearningPlayer: React.FC = () => {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-y-auto custom-scrollbar bg-[#0A0A0B]">
-          {/* Video Section */}
           <div className="w-full bg-black aspect-video relative group shadow-2xl">
             {currentLesson?.video_url ? (
               <div className="w-full h-full">
@@ -292,12 +338,29 @@ export const LearningPlayer: React.FC = () => {
                   height="100%"
                   controls={true}
                   playing={true}
+                  playbackRate={playbackRate}
                   config={{
                     youtube: {
                       playerVars: { showinfo: 0, autoplay: 1, rel: 0, modestbranding: 1 }
                     }
                   }}
                 />
+                {/* Video Speed Selector (V7 Elite) */}
+                <div className="absolute bottom-16 right-4 z-10 flex flex-col gap-1">
+                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                    <button
+                      key={speed}
+                      onClick={() => setPlaybackRate(speed)}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-black transition-all border ${
+                        playbackRate === speed 
+                          ? 'bg-indigo-600 border-indigo-500 text-white' 
+                          : 'bg-black/60 border-white/10 text-slate-400 hover:bg-black/80'
+                      }`}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 gap-6">
@@ -309,7 +372,6 @@ export const LearningPlayer: React.FC = () => {
             )}
           </div>
 
-          {/* Lesson Info & Tabs */}
           <div className="p-8 lg:p-12 max-w-6xl mx-auto w-full">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
               <div>
@@ -317,53 +379,79 @@ export const LearningPlayer: React.FC = () => {
                   <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
                   Bài học hiện tại
                 </div>
-                <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight">
-                  {currentLesson?.title || 'Chào mừng bạn quay trở lại'}
-                </h2>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <h1 className="text-2xl font-bold text-white tracking-tight">
+                    {currentLesson?.title || 'Chào mừng bạn quay trở lại'}
+                  </h1>
+                  <button 
+                    onClick={toggleLessonCompletion}
+                    disabled={markingDone || !currentLesson}
+                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                      currentLesson && completedLessons.includes(currentLesson.id)
+                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20'
+                    }`}
+                  >
+                    {markingDone ? <Loader2 className="animate-spin" size={18} /> : (currentLesson && completedLessons.includes(currentLesson.id) ? <><CheckCircle2 size={18} /> Hoàn thành</> : 'Đánh dấu hoàn thành')}
+                  </button>
+                </div>
               </div>
               
-              <button 
-                onClick={markAsComplete}
-                className={`px-8 py-4 rounded-2xl font-black text-sm transition-all flex items-center gap-3 shadow-xl ${
-                  enrollment?.progress?.completed_lessons?.includes(currentLesson?.id)
-                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20'
-                }`}
-              >
-                {enrollment?.progress?.completed_lessons?.includes(currentLesson?.id) ? (
-                  <><CheckCircle2 size={20} /> Bài học đã hoàn thành</>
-                ) : (
-                  <>Hoàn thành bài học</>
-                )}
-              </button>
+              <div className="flex items-center gap-4">
+                {(() => {
+                  const currentIndex = lessons.findIndex(l => l.id === currentLesson?.id);
+                  return (
+                    <>
+                      <button 
+                        disabled={currentIndex <= 0}
+                        onClick={() => handleLessonClick(lessons[currentIndex - 1])}
+                        className="p-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-20"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button 
+                        disabled={currentIndex === -1 || currentIndex >= lessons.length - 1}
+                        onClick={() => handleLessonClick(lessons[currentIndex + 1])}
+                        className="p-4 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 hover:text-white hover:bg-indigo-600 transition-all disabled:opacity-20"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
             
-            {/* Tabs Navigation */}
-            <div className="flex px-6 pb-0 overflow-x-auto hide-scrollbar mb-6">
-              <div className="inline-flex p-1.5 bg-slate-100/80 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl gap-1">
+            <div className="flex pb-0 overflow-x-auto hide-scrollbar mb-8 border-b border-white/5">
+              <div className="flex gap-8">
                 {[
-                  { id: 'overview', label: 'Tổng quan', icon: FileText },
+                  { id: 'overview', label: 'Tổng quan', icon: ThumbsUp },
                   { id: 'ai-coach', label: 'Hỏi AI Coach', icon: Bot },
+                  { id: 'quizzes', label: 'Kiểm tra', icon: Award },
+                  { id: 'role-play', label: 'Thực chiến AI', icon: Zap },
+                  { id: 'notes', label: 'Ghi chú', icon: Save },
                   { id: 'resources', label: 'Tài liệu', icon: Download },
                   { id: 'discussion', label: 'Thảo luận', icon: MessageSquare }
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex-shrink-0 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
+                    className={`pb-4 text-sm font-bold transition-all flex items-center gap-2 relative ${
                       activeTab === tab.id 
-                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transform scale-100' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 scale-95'
+                        ? 'text-white' 
+                        : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
                     <tab.icon size={16} />
                     {tab.label}
+                    {activeTab === tab.id && (
+                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    )}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Tab Content */}
             <div className="min-h-[400px]">
               <AnimatePresence mode="wait">
                 {activeTab === 'overview' && (
@@ -372,14 +460,12 @@ export const LearningPlayer: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="prose prose-invert max-w-none"
                   >
                     <div className="bg-white/5 rounded-[2.5rem] border border-white/5 p-10">
                       <h3 className="text-xl font-bold text-white mb-6">Nội dung bài học</h3>
-                      <p className="text-slate-400 text-lg leading-relaxed mb-8">
-                        Trong bài học này, chúng ta sẽ đi sâu vào các kỹ thuật tối ưu hóa quy trình làm việc bằng AI. 
-                        Bạn sẽ được hướng dẫn từng bước để thiết lập hệ thống tự động hóa đầu tiên của mình.
-                      </p>
+                      <div className="text-slate-400 text-lg leading-relaxed mb-8 whitespace-pre-wrap">
+                        {currentLesson?.content || 'Đang cập nhật nội dung văn bản cho bài học này...'}
+                      </div>
                       <div className="grid sm:grid-cols-2 gap-6">
                         <div className="p-6 bg-black/20 rounded-3xl border border-white/5">
                           <h4 className="text-sm font-bold text-indigo-400 mb-4 uppercase tracking-widest">Mục tiêu đạt được</h4>
@@ -412,9 +498,41 @@ export const LearningPlayer: React.FC = () => {
                     className="h-[600px]"
                   >
                     <AICoach 
-                      courseTitle={course.title} 
+                      courseTitle={course?.title || ''} 
                       lessonTitle={currentLesson?.title || 'Tổng quan'} 
                     />
+                  </motion.div>
+                )}
+
+                {activeTab === 'notes' && (
+                  <motion.div
+                    key="notes"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                  >
+                    <div className="bg-white/5 p-10 rounded-[2.5rem] border border-white/5">
+                      <h3 className="font-bold text-white mb-6 flex items-center gap-2">
+                        <Save size={18} className="text-indigo-400" />
+                        Ghi chú bài học
+                      </h3>
+                      <textarea 
+                        value={lessonNote}
+                        onChange={(e) => setLessonNote(e.target.value)}
+                        placeholder="Ghi lại kiến thức quan trọng tại đây..."
+                        className="w-full h-48 p-6 bg-black/40 border border-white/10 rounded-3xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-lg transition-all font-medium resize-none"
+                      />
+                      <div className="mt-6 flex justify-end">
+                        <button 
+                          onClick={handleSaveNote}
+                          disabled={savingNote || !currentLesson}
+                          className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 disabled:opacity-50"
+                        >
+                          {savingNote ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                          Lưu Ghi Chú
+                        </button>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 
@@ -426,23 +544,25 @@ export const LearningPlayer: React.FC = () => {
                     exit={{ opacity: 0, y: -10 }}
                     className="grid sm:grid-cols-2 gap-4"
                   >
-                    {[
-                      { name: 'Tài liệu bài giảng (PDF)', size: '2.4 MB' },
-                      { name: 'Source code mẫu', size: '156 KB' },
-                      { name: 'Cheat sheet phím tắt', size: '890 KB' }
-                    ].map((res, i) => (
-                      <div key={i} className="p-6 bg-white/5 rounded-3xl border border-white/5 flex items-center justify-between group hover:bg-white/10 transition-all cursor-pointer">
+                    {lessons.filter(l => l.doc_url).map((res, i) => (
+                      <a 
+                        key={i} 
+                        href={res.doc_url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-6 bg-white/5 rounded-3xl border border-white/5 flex items-center justify-between group hover:bg-white/10 transition-all cursor-pointer"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 flex items-center justify-center text-indigo-400">
-                            <FileText size={24} />
+                            <FileText size={20} />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-200">{res.name}</p>
-                            <p className="text-xs text-slate-500 font-medium">{res.size}</p>
+                            <p className="font-bold text-slate-200">{res.title}</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Tài liệu học tập</p>
                           </div>
                         </div>
                         <Download size={20} className="text-slate-500 group-hover:text-white transition-colors" />
-                      </div>
+                      </a>
                     ))}
                   </motion.div>
                 )}
@@ -469,7 +589,7 @@ export const LearningPlayer: React.FC = () => {
                         <textarea
                           required
                           placeholder="Bạn có thắc mắc gì về bài học này không?"
-                          className="w-full px-8 py-6 rounded-[2rem] bg-black/40 border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all min-h-[150px] resize-none mb-4 text-lg"
+                          className="w-full px-8 py-6 rounded-[2rem] bg-black/40 border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all min-h-[150px] resize-none mb-4 text-lg"
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
                         />
@@ -479,7 +599,7 @@ export const LearningPlayer: React.FC = () => {
                             disabled={commentLoading}
                             className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all flex items-center gap-3 disabled:opacity-50 shadow-xl shadow-indigo-500/20"
                           >
-                            {commentLoading ? <Loader2 className="animate-spin" /> : <Send size={18} />}
+                            {commentLoading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
                             Gửi thảo luận
                           </button>
                         </div>
@@ -492,7 +612,6 @@ export const LearningPlayer: React.FC = () => {
           </div>
         </main>
 
-        {/* Sidebar Curriculum */}
         <AnimatePresence>
           {sidebarOpen && (
             <motion.aside 
@@ -503,67 +622,81 @@ export const LearningPlayer: React.FC = () => {
               className="w-[400px] border-l border-white/5 bg-[#111113] flex flex-col relative z-40"
             >
               <div className="p-8 border-b border-white/5">
-                <h3 className="font-black text-lg text-white mb-1">Nội dung khóa học</h3>
+                <h3 className="font-black text-lg text-white mb-1">Cấu trúc khóa học</h3>
                 <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  <span>{course.modules?.length || 0} Bài học</span>
+                  <span>{lessons.length} Bài học</span>
                   <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
-                  <span>12 Giờ học</span>
+                  <span>Full Course</span>
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {course.modules?.map((module: any, idx: number) => {
-                  const isCompleted = enrollment?.progress?.completed_lessons?.includes(module.id);
-                  const isActive = currentLesson?.id === module.id;
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+                {(() => {
+                  const chapters: Record<string, Lesson[]> = {};
+                  lessons.forEach(l => {
+                    const ch = l.chapter || 'Tổng quan';
+                    if (!chapters[ch]) chapters[ch] = [];
+                    chapters[ch].push(l);
+                  });
 
-                  return (
-                    <button
-                      key={module.id}
-                      onClick={() => handleLessonChange(module)}
-                      className={`w-full flex items-start gap-4 p-5 rounded-[1.5rem] transition-all text-left group relative ${
-                        isActive 
-                          ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20' 
-                          : 'hover:bg-white/5 text-slate-400'
-                      }`}
-                    >
-                      <div className="mt-1 flex-shrink-0">
-                        {isCompleted ? (
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                            <CheckCircle2 size={14} />
-                          </div>
-                        ) : (
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center border font-black text-[10px] ${
-                            isActive ? 'bg-white/20 border-white/30 text-white' : 'bg-white/5 border-white/10 text-slate-500'
-                          }`}>
-                            {idx + 1}
-                          </div>
-                        )}
+                  return Object.entries(chapters).map(([chapterName, chapterLessons]) => (
+                    <div key={chapterName} className="space-y-2">
+                      <div className="px-2">
+                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{chapterName}</h4>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold truncate ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
-                          {module.title}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1.5 text-[10px] font-bold uppercase tracking-widest opacity-50">
-                          <span className="flex items-center gap-1"><PlayCircle size={10} /> 15:30</span>
-                          {isCompleted && !isActive && <span className="text-emerald-500">Hoàn thành</span>}
-                        </div>
+                      <div className="space-y-1">
+                        {chapterLessons.sort((a, b) => a.order - b.order).map((lesson, idx) => {
+                          const isCompleted = completedLessons.includes(lesson.id);
+                          const isActive = currentLesson?.id === lesson.id;
+
+                          return (
+                            <button
+                              key={lesson.id}
+                              onClick={() => handleLessonClick(lesson)}
+                              className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all group relative ${
+                                isActive 
+                                  ? 'bg-indigo-600/10 text-white border border-indigo-500/20' 
+                                  : 'hover:bg-white/5 text-slate-400 border border-transparent'
+                              }`}
+                            >
+                              <div className="flex-shrink-0">
+                                {isCompleted ? (
+                                  <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                    <CheckCircle2 size={14} />
+                                  </div>
+                                ) : (
+                                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center border font-black text-[10px] ${
+                                    isActive ? 'border-indigo-500/30 text-indigo-400' : 'border-white/10 text-slate-600'
+                                  }`}>
+                                    {idx + 1}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className={`text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                  {lesson.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {lesson.video_url ? (
+                                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase opacity-40"><PlayCircle size={10} /> Video</span>
+                                  ) : (
+                                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase opacity-40"><FileText size={10} /> Reading</span>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
-                      {isActive && (
-                        <motion.div 
-                          layoutId="active-indicator"
-                          className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-full"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
+                    </div>
+                  ));
+                })()}
               </div>
             </motion.aside>
           )}
         </AnimatePresence>
       </div>
 
-      {/* 30% Upsell Modal */}
       <AnimatePresence>
         {showUpsell && (
           <motion.div 
