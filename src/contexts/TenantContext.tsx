@@ -52,6 +52,14 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } catch (err) {
         console.error('Failed to fetch tenant config', err);
         setError('Failed to load tenant configuration');
+        // On error, set a basic fallback so the App can still decide what to show
+        setTenant({ 
+          domain: tenantDomain, 
+          app_name: 'Coach.io.vn', 
+          primary_color: '#4f46e5', 
+          status: 'error', 
+          fallback: true 
+        });
       } finally {
         setLoading(false);
       }

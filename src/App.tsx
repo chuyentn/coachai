@@ -108,9 +108,20 @@ export default function App() {
   return (
     <Router>
       <GoogleAnalytics />
-      {tenant?.fallback && window.location.hostname !== 'coach.io.vn' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? (
-        <DomainNotFound />
-      ) : (
+      {(() => {
+        const isMainDomain = window.location.hostname === 'coach.io.vn' || 
+                           window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+        const hasTestDomainOverride = new URLSearchParams(window.location.search).has('test_domain');
+        
+        // Show DomainNotFound if:
+        // 1. Tenant is marked as fallback (not specifically found in DB)
+        // 2. AND (We are not on the main domain OR we are testing with a custom domain param)
+        if (tenant?.fallback && (!isMainDomain || hasTestDomainOverride)) {
+          return <DomainNotFound />;
+        }
+        return null;
+      })() || (
       <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans text-gray-900 dark:text-slate-300 transition-colors duration-300">
       <RoleToast />
         <Navbar />
