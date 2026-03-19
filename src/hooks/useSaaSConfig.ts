@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { googleSheetsService } from '../services/googleSheetsService';
+import { useTenantContext } from '../contexts/TenantContext';
 
 export interface SaaSConfig {
   appName: string;
@@ -27,6 +28,7 @@ export interface SaaSConfig {
 export const useSaaSConfig = () => {
   const { i18n } = useTranslation();
   const lang = i18n.language === 'en' ? 'en' : 'vi';
+  const { tenant, loading: tenantLoading } = useTenantContext();
   
   const [config, setConfig] = useState<SaaSConfig>({
     appName: import.meta.env.VITE_APP_NAME || 'CoachAI',
@@ -45,27 +47,43 @@ export const useSaaSConfig = () => {
     loading: true
   });
 
+  // Sync basic tenant config immediately from Context
   useEffect(() => {
+    if (tenant) {
+      setConfig(prev => ({
+        ...prev,
+        appName: tenant.app_name || prev.appName,
+        companyName: tenant.app_name || prev.companyName,
+        logoUrl: tenant.logo_url || prev.logoUrl,
+        supportEmail: tenant.contact_email || prev.supportEmail,
+        fbGroupUrl: tenant.facebook_url || prev.fbGroupUrl,
+        zaloGroupUrl: tenant.zalo_url || prev.zaloGroupUrl,
+      }));
+    }
+  }, [tenant]);
+
+  useEffect(() => {
+    if (tenantLoading) return; // Wait until tenant context is ready
+
     const fetchRemoteConfig = async () => {
       try {
         const remoteData = await googleSheetsService.fetchPageContent(lang);
         if (remoteData && Object.keys(remoteData).length > 0) {
           setConfig(prev => ({
             ...prev,
-            appName: remoteData.app_name || prev.appName,
-            companyName: remoteData.company_name || prev.companyName,
-            logoUrl: remoteData.logo_url || prev.logoUrl,
+            appName: tenant?.app_name || remoteData.app_name || prev.appName,
+            companyName: tenant?.app_name || remoteData.company_name || prev.companyName,
+            logoUrl: tenant?.logo_url || remoteData.logo_url || prev.logoUrl,
             seoDescription: remoteData.seo_description || prev.seoDescription,
-            supportEmail: remoteData.support_email || prev.supportEmail,
+            supportEmail: tenant?.contact_email || remoteData.support_email || prev.supportEmail,
             adminZalo: remoteData.admin_zalo_phone || prev.adminZalo,
             adminTelegram: remoteData.admin_telegram_user || prev.adminTelegram,
-            fbGroupUrl: remoteData.fb_group_url || prev.fbGroupUrl,
-            zaloGroupUrl: remoteData.zalo_group_url || prev.zaloGroupUrl,
+            fbGroupUrl: tenant?.facebook_url || remoteData.fb_group_url || prev.fbGroupUrl,
+            zaloGroupUrl: tenant?.zalo_url || remoteData.zalo_group_url || prev.zaloGroupUrl,
             telegramGroupUrl: remoteData.telegram_group_url || prev.telegramGroupUrl,
             whatsappGroupUrl: remoteData.whatsapp_group_url || prev.whatsappGroupUrl,
             whatsappChannelUrl: remoteData.whatsapp_channel_url || prev.whatsappChannelUrl,
             adminWhatsappLink: remoteData.admin_whatsapp_link || prev.adminWhatsappLink,
-            // Hero config
             heroTitle1: remoteData.hero_title?.includes('|') ? remoteData.hero_title.split('|')[0] : remoteData.hero_title,
             heroTitle2: remoteData.hero_title?.includes('|') ? remoteData.hero_title.split('|')[1] : '',
             heroSubtitle: remoteData.hero_subtitle,
@@ -83,7 +101,7 @@ export const useSaaSConfig = () => {
     };
 
     fetchRemoteConfig();
-  }, [lang]);
+  }, [lang, tenantLoading, tenant]);
 
   useEffect(() => {
     // Update SEO Meta Description
@@ -96,7 +114,6 @@ export const useSaaSConfig = () => {
       }
       metaDesc.setAttribute('content', config.seoDescription);
 
-      // Update Open Graph Description
       let ogDesc = document.querySelector('meta[property="og:description"]');
       if (ogDesc) ogDesc.setAttribute('content', config.seoDescription);
     }
@@ -111,7 +128,6 @@ export const useSaaSConfig = () => {
       }
       link.href = config.logoUrl;
 
-      // Update OG Image
       let ogImage = document.querySelector('meta[property="og:image"]');
       if (ogImage) ogImage.setAttribute('content', config.logoUrl);
     }
@@ -119,3 +135,4 @@ export const useSaaSConfig = () => {
 
   return config;
 };
+
