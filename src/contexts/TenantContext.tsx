@@ -14,7 +14,9 @@ export interface TenantConfig {
   bank_account?: string;
   bank_owner?: string;
   status: string;
-  fallback?: boolean;
+  // FIX: Distinguish 'not-found' (domain not registered) vs 'error' (API failure)
+  // App.tsx should only show DomainNotFound for 'not-found', not for API errors
+  fallback?: 'not-found' | 'error' | false;
 }
 
 interface TenantContextType {
@@ -45,7 +47,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } catch(e) {}
         
         const config = await googleSheetsService.fetchTenantConfig(tenantDomain);
-        setTenant(config);
+        // FIX: If config has fallback=true from GAS (domain not found), mark as 'not-found'
+        // If config is null (API error/timeout), it will go to catch block below
+        setTenant({ ...config, fallback: config?.fallback ? 'not-found' : false });
         
         if (config?.primary_color) {
           document.documentElement.style.setProperty('--color-primary', config.primary_color);
@@ -53,7 +57,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } catch (err) {
         console.error('Failed to fetch tenant config', err);
         setError('Failed to load tenant configuration');
-        // On error, set a basic fallback so the App can still decide what to show
+        // FIX: Mark as 'error' (API failure) — App.tsx should NOT show DomainNotFound for this case
         setTenant({ 
           domain: tenantDomain, 
           app_name: 'Coach.io.vn', 
@@ -64,7 +68,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           facebook_url: '',
           sepay_md5: '',
           status: 'error', 
-          fallback: true 
+          fallback: 'error'  // API failure — show app normally, not DomainNotFound
         });
       } finally {
         setLoading(false);

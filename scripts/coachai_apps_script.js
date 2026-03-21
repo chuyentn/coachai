@@ -31,22 +31,31 @@ function doGet(e) {
 
     if (action === 'tenant-config') {
       responseData = getTenantConfig(tenantId);
-    } else if (action === 'config') {
+    } else if (action === 'config' || action === 'getConfig') {
       responseData = getCoachAIConfig(lang, tenantId);
-    } else if (action === 'bots') {
+    } else if (action === 'bots' || action === 'getBots') {
       responseData = getCoachAIBots(role, lang, tenantId);
+    } else if (action === 'getCourses') {
+      responseData = getCoursesFiltered(tenantId);
+    } else if (action === 'getLessons') {
+      const courseId = e.parameter.courseId || '';
+      responseData = getLessonsFiltered(courseId, tenantId);
+    } else if (action === 'getLeads') {
+      responseData = getLeadsFiltered(tenantId);
+    } else if (action === 'getProjects') {
+      responseData = getProjectsFiltered(tenantId);
     } else if (action === 'teacher-scope') {
       const email = e.parameter.email;
       responseData = getTeacherScope(email, tenantId);
     } else {
-      responseData = { error: 'Invalid action parameter' };
+      responseData = { error: 'Invalid action parameter', received: action };
     }
 
     // CORS & JSON Return
     return ContentService.createTextOutput(JSON.stringify(responseData))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
+    // FIX: Removed duplicate return statement (audit finding: CRITICAL)
     return ContentService.createTextOutput(JSON.stringify({
       error: error.message,
       stack: error.stack
@@ -69,6 +78,10 @@ function doPost(e) {
     const action = postData.action;
 
     if (action === 'register-tenant') {
+      // FIX: Guard for placeholder SPREADSHEET_ID (audit finding: HIGH)
+      if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') {
+        return ContentService.createTextOutput(JSON.stringify({ error: 'SPREADSHEET_ID not configured. Please update it in the Apps Script.' })).setMimeType(ContentService.MimeType.JSON);
+      }
       const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
       const sheet = ss.getSheetByName('Tenants');
       
@@ -197,6 +210,62 @@ function getTeacherScope(email, tenantId) {
   if (!email) return { hasAccess: false };
   // Implement cross-tenant permission if needed here
   return { hasAccess: true, role: 'teacher', tenant_id: tenantId };
+}
+
+/**
+ * [NEW] Get Courses filtered by tenant_id
+ */
+function getCoursesFiltered(tenantId) {
+  if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') return getFallbackSeedData().bots.map(b => ({ id: b.id, title: b.title, status: 'published', tenant_id: b.tenant_id }));
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Courses');
+  if (!sheet) return [];
+  const headers = sheet.getDataRange().getValues()[0].map(h => h.toString().toLowerCase().trim());
+  const data = sheetToObjects(sheet, headers);
+  return data.filter(r => (r.tenant_id === tenantId || r.tenant_id === 'all' || !r.tenant_id) && (r.status === 'published' || r.published === true || r.published === 'true'));
+}
+
+/**
+ * [NEW] Get Lessons filtered by courseId and tenant_id
+ */
+function getLessonsFiltered(courseId, tenantId) {
+  if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') return [];
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Lessons');
+  if (!sheet) return [];
+  const headers = sheet.getDataRange().getValues()[0].map(h => h.toString().toLowerCase().trim());
+  const data = sheetToObjects(sheet, headers);
+  return data.filter(r => {
+    const isTenantMatch = r.tenant_id === tenantId || r.tenant_id === 'all' || !r.tenant_id;
+    const isCourseMatch = !courseId || String(r.course_id) === String(courseId);
+    return isTenantMatch && isCourseMatch;
+  });
+}
+
+/**
+ * [NEW] Get Leads filtered by tenant_id
+ */
+function getLeadsFiltered(tenantId) {
+  if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') return [];
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Leads');
+  if (!sheet) return [];
+  const headers = sheet.getDataRange().getValues()[0].map(h => h.toString().toLowerCase().trim());
+  const data = sheetToObjects(sheet, headers);
+  return data.filter(r => r.tenant_id === tenantId || !r.tenant_id);
+}
+
+/**
+ * [NEW] Get Projects filtered by tenant_id
+ */
+function getProjectsFiltered(tenantId) {
+  if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') return [];
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Projects');
+  if (!sheet) return [];
+  const headers = sheet.getDataRange().getValues()[0].map(h => h.toString().toLowerCase().trim());
+  const data = sheetToObjects(sheet, headers);
+  return data.filter(r => (r.tenant_id === tenantId || r.tenant_id === 'all' || !r.tenant_id) && r.status === 'active');
 }
 
 /**

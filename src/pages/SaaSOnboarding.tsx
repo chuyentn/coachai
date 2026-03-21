@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { googleSheetsService } from '../services/googleSheetsService';
 
+// FIX (audit): Added isValidEmail helper for real validation (not just truthy check)
+const isValidEmail = (email: string) => /.+@.+\..+/.test(email);
+
 export const SaaSOnboarding: React.FC = () => {
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     domain: '',
     appName: '',
@@ -12,12 +17,22 @@ export const SaaSOnboarding: React.FC = () => {
     email: ''
   });
 
+  // FIX (audit): Check return value from submitTenantRegistration
+  // Show error if submission fails instead of silently advancing to step 4
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) return;
-    setStep(4);
+    setIsSubmitting(true);
+    setSubmitError(null);
     
-    await googleSheetsService.submitTenantRegistration(formData);
+    const success = await googleSheetsService.submitTenantRegistration(formData);
+    setIsSubmitting(false);
+    
+    if (success) {
+      setStep(4);
+    } else {
+      setSubmitError('Không thể gửi yêu cầu. Vui lòng kiểm tra kết nối và thử lại.');
+    }
   };
 
   return (
@@ -186,12 +201,20 @@ export const SaaSOnboarding: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-4 mt-10">
-                    <button onClick={() => setStep(2)} className="px-6 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Quay lại</button>
-                    <button onClick={handleSubmit} disabled={!formData.email} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 flex justify-center items-center gap-2">
-                      <span>Bắt đầu Khởi chạy AI</span>
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    <button onClick={() => setStep(2)} disabled={isSubmitting} className="px-6 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50">Quay lại</button>
+                    {/* FIX (audit): Use isValidEmail instead of truthy check; show loading state */}
+                    <button onClick={handleSubmit} disabled={!isValidEmail(formData.email) || isSubmitting} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 flex justify-center items-center gap-2">
+                      {isSubmitting ? (
+                        <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Đang gửi...</span></>
+                      ) : (
+                        <><span>Bắt đầu Khởi chạy AI</span><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg></>
+                      )}
                     </button>
                   </div>
+                  {/* FIX (audit): Show error message if submission failed */}
+                  {submitError && (
+                    <p className="mt-4 text-sm text-rose-600 dark:text-rose-400 text-center font-medium">{submitError}</p>
+                  )}
                 </motion.div>
               )}
 

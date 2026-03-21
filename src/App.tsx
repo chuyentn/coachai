@@ -30,6 +30,8 @@ const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.P
 const Payment = lazy(() => import('./pages/Payment').then(m => ({ default: m.default })));
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 const CoachAI = lazy(() => import('./pages/CoachAI').then(m => ({ default: m.CoachAI })));
+// FIX: Moved SaaSOnboarding to consistent lazy-load pattern at top of file
+const SaaSOnboarding = lazy(() => import('./pages/SaaSOnboarding').then(m => ({ default: m.SaaSOnboarding })));
 
 // Premium Page loading fallback
 const PageLoader = () => (
@@ -113,19 +115,12 @@ export default function App() {
                            window.location.hostname === 'localhost' || 
                            window.location.hostname === '127.0.0.1';
         const hasTestDomainOverride = new URLSearchParams(window.location.search).has('test_domain');
-        
-        console.log('[QA DEBUG] Domain Check:', { 
-          hostname: window.location.hostname, 
-          isMainDomain, 
-          hasTestDomainOverride, 
-          tenantFallback: tenant?.fallback 
-        });
+        // FIX: Removed QA DEBUG console.log from production code (audit finding: LOW)
 
-        // Show DomainNotFound if:
-        // 1. Tenant is marked as fallback (not specifically found in DB)
+        // Show DomainNotFound ONLY when:
+        // 1. Tenant is specifically 'not-found' (domain not registered in DB, not API error)
         // 2. AND (We are not on the main domain OR we are testing with a custom domain param)
-        if (tenant?.fallback && (!isMainDomain || hasTestDomainOverride)) {
-          console.log('[QA DEBUG] Rendering DomainNotFound');
+        if (tenant?.fallback === 'not-found' && (!isMainDomain || hasTestDomainOverride)) {
           return <DomainNotFound />;
         }
         return null;
@@ -140,11 +135,11 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/coachai" element={<CoachAI />} />
             
-            {/* SaaS Onboarding Route */}
+            {/* SaaS Onboarding Route — FIX: Using consistent lazy-load pattern */}
             <Route path="/start" element={
-              <React.Suspense fallback={<PageLoader />}>
-                 {React.createElement(lazy(() => import('./pages/SaaSOnboarding').then(m => ({ default: m.SaaSOnboarding }))))}
-              </React.Suspense>
+              <Suspense fallback={<PageLoader />}>
+                <SaaSOnboarding />
+              </Suspense>
             } />
             <Route path="/auth/signin" element={<SignIn />} />
             <Route path="/auth/signup" element={<SignUp />} />
