@@ -6,7 +6,7 @@
  * Access: "Anyone"
  */
 
-const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE'; // Replace with actual ID
+const SPREADSHEET_ID = '1mq9Ri-oqvqMPBYLMnBxixD57hmmwkuASFL-m2CsIC0k'; // Coach.io.vn Control Panel
 
 const HEADERS = {
   // [NEW] SaaS Tenant Configurations (Added Bank info for Dynamic Checkout)
@@ -319,3 +319,284 @@ function getFallbackSeedData() {
     ]
   };
 }
+
+/**
+ * ============================================================
+ * 🚀 HÀM SETUP TỰ ĐỘNG - CHẠY 1 LẦN DUY NHẤT
+ * ============================================================
+ * Cách dùng:
+ * 1. Mở Apps Script Editor, chọn hàm này trong dropdown
+ * 2. Nhấn nút ▶ Run (Chạy)
+ * 3. Cấp quyền truy cập Google Sheets khi được hỏi
+ * 4. Chờ ~10 giây, kiểm tra Google Sheet của bạn
+ * ============================================================
+ */
+function setupSpreadsheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // ============================================================
+  // BƯỚC 1: TẠO SHEET HƯỚNG DẪN (đặt đầu tiên cho dễ nhìn)
+  // ============================================================
+  _createOrUpdateSheet(ss, '📖 HƯỚNG DẪN', [], [
+    ['🎉 CHÀO MỪNG BẠN ĐẾN VỚI COACH.IO.VN CONTROL PANEL!', '', '', ''],
+    ['', '', '', ''],
+    ['📋 DANH SÁCH CÁC SHEET VÀ CÔNG DỤNG', '', '', ''],
+    ['Tên Sheet', 'Công dụng', 'Ai chỉnh sửa', 'Ghi chú'],
+    ['Tenants', 'Danh sách khách hàng (Coach/Diễn giả) đã đăng ký nền tảng', 'Admin hệ thống', 'Mỗi dòng = 1 khách hàng'],
+    ['Courses', 'Danh sách khóa học hiển thị trên website', 'Coach tự cập nhật', 'Cột published=true mới hiện lên web'],
+    ['Lessons', 'Danh sách bài học trong từng khóa học', 'Coach tự cập nhật', 'Liên kết với Courses qua course_id'],
+    ['Leads', 'Danh sách người đã để lại email/SĐT quan tâm', 'Tự động (hệ thống ghi)', 'KHÔNG xóa dòng, chỉ xem'],
+    ['Bots', 'Cấu hình AI Bot hiển thị trên trang CoachAI', 'Admin hoặc Coach', 'status=active mới hiện lên'],
+    ['Projects', 'Danh sách dự án thực hành / portfolio', 'Coach tự cập nhật', 'status=active mới hiện lên'],
+    ['page_content', 'Nội dung văn bản động trên website (tiêu đề, mô tả...)', 'Admin hoặc Coach', 'key là tên biến, value_vi là nội dung'],
+    ['', '', '', ''],
+    ['⚠️ LƯU Ý QUAN TRỌNG', '', '', ''],
+    ['1. Cột tenant_id', '→ Nhập ĐÚNG tên miền của bạn (VD: ngoc.coach.io.vn)', 'BẮT BUỘC', 'Sai tên miền sẽ không hiển thị data'],
+    ['2. Cột status', '→ Chỉ dùng: active / inactive / pending / published', 'BẮT BUỘC', 'Viết thường, không dấu'],
+    ['3. Không xóa dòng tiêu đề', '→ Dòng 1 của mỗi sheet là tiêu đề cột', 'BẮT BUỘC', 'Xóa sẽ gây lỗi API'],
+    ['4. Để lấy Spreadsheet ID', '→ Nhìn URL: docs.google.com/spreadsheets/d/[ĐÂY LÀ ID]/edit', 'Cần thiết', 'Dán vào Apps Script dòng SPREADSHEET_ID'],
+    ['', '', '', ''],
+    ['🆘 CẦN HỖ TRỢ? Liên hệ: support@coach.io.vn | Zalo: 0989 890 022', '', '', ''],
+  ]);
+
+  // ============================================================
+  // BƯỚC 2: TẠO SHEET TENANTS - Danh sách Coach đăng ký nền tảng
+  // ============================================================
+  _createOrUpdateSheet(ss, 'Tenants',
+    ['domain', 'app_name', 'logo_url', 'primary_color', 'contact_email', 'zalo_url', 'facebook_url', 'sepay_md5', 'bank_id', 'bank_account', 'bank_owner', 'status'],
+    [
+      // ✅ TENANT 1: Tài khoản gốc của hệ thống (Admin)
+      ['coach.io.vn', 'Coach.io.vn', 'https://coach.io.vn/logo.png', '#4f46e5', 'support@coach.io.vn', 'https://zalo.me/0989890022', 'https://facebook.com/vibecodecoaching', '', 'techcombank', '8486568666', 'TRAN NGOC CHUYEN', 'active'],
+      // ✅ TENANT 2: Mẫu sub-domain Coach (thay tên miền + thông tin thực của bạn)
+      ['victor.coach.io.vn', 'Victor – AI Coach', 'https://coach.io.vn/logo-victor.png', '#10b981', 'victorchuyen@gmail.com', 'https://zalo.me/0989890022', 'https://facebook.com/victorchuyen', '', 'techcombank', '8486568666', 'TRAN NGOC CHUYEN', 'active'],
+      // 📝 HÀNG MẪU CHO KHÁCH MỚI: Xóa dấu // và điền thông tin thực
+      // ['ten-mien-cua-ban.coach.io.vn', 'Học viện XYZ', 'https://link-logo.com/logo.png', '#f59e0b', 'email@cua-ban.com', 'https://zalo.me/SoDienThoai', '', '', 'vietcombank', 'SO_TK_NGAN_HANG', 'TEN_CHU_TK', 'pending'],
+    ]
+  );
+
+  // ============================================================
+  // BƯỚC 3: TẠO SHEET COURSES - Khóa học Vibe Code AI 2026
+  // (Tham khảo: Cursor.com, Buildspace.so, freeCodeCamp, Udemy bestsellers)
+  // ============================================================
+  _createOrUpdateSheet(ss, 'Courses',
+    ['tenant_id', 'id', 'title', 'title_en', 'description', 'short_description', 'thumbnail_url', 'price_vnd', 'price_usd', 'instructor_id', 'level', 'duration_text', 'total_students', 'avg_rating', 'rating_count', 'featured', 'published', 'status', 'created_at'],
+    [
+      // ===== KHÓA 1: VIBE CODING (HOT NHẤT 2026) =====
+      [
+        'coach.io.vn',
+        'course_vibe_001',
+        'Vibe Coding Masterclass: Build App Thật với AI trong 30 Ngày',
+        'Vibe Coding Masterclass: Build Real Apps with AI in 30 Days',
+        'Khoá học thực chiến #1 về Vibe Coding tại Việt Nam. Học cách làm việc với Cursor AI, Claude, Gemini để tạo ra sản phẩm thật (không phải đồ chơi) từ ý tưởng đến deployment. Bạn sẽ build Landing Page, SaaS MVP, Telegram Bot và Chrome Extension – tất cả bằng AI, không cần background coding. Phương pháp được chứng minh bởi 500+ học viên đã ra sản phẩm thật.',
+        'Build sản phẩm thật với Cursor AI, Claude & Gemini. Từ 0 đến deployed trong 30 ngày.',
+        'https://i.imgur.com/vibecoding-masterclass.jpg',
+        1990000, 79, 'teacher_victor_001', 'beginner', '30 ngày · 60 bài học · 18 giờ video', 847, 4.9, 312, true, true, 'published',
+        '2025-09-01T00:00:00.000Z'
+      ],
+      // ===== KHÓA 2: NO-CODE SAAS =====
+      [
+        'coach.io.vn',
+        'course_saas_002',
+        'No-Code SaaS Builder: Ra Sản Phẩm $50/tháng Học Phí, 0 Đồng Dev',
+        'No-Code SaaS Builder: Launch a $50/month Product with Zero Dev Cost',
+        'Khoá học duy nhất dạy bạn xây dựng SaaS (Software as a Service) hoàn chỉnh chỉ bằng Google Sheets + Apps Script + Cloudflare Pages – không tốn 1 đồng server, không cần thuê dev. Bạn sẽ có hệ thống thu tiền tự động, quản lý học viên, gửi email marketing và phân tích doanh thu ngay sau khoá học. Phù hợp với Coaches, Freelancers, Educators muốn ra sản phẩm số nhanh.',
+        'Xây SaaS thu tiền tự động bằng Google Sheets. Không server, không dev, ra tiền ngay.',
+        'https://i.imgur.com/nocode-saas-builder.jpg',
+        2490000, 99, 'teacher_victor_001', 'intermediate', '6 tuần · 42 bài học · 14 giờ video', 423, 4.8, 198, true, true, 'published',
+        '2025-10-15T00:00:00.000Z'
+      ],
+      // ===== KHÓA 3: AI AGENT & PROMPT ENGINEERING =====
+      [
+        'coach.io.vn',
+        'course_agent_003',
+        'AI Agent Pro: Xây Đội Quân AI Làm Việc 24/7 Thay Bạn',
+        'AI Agent Pro: Build Your AI Workforce That Works 24/7',
+        'Khoá học chuyên sâu về AI Agents – xu hướng nóng nhất 2026. Học cách xây dựng Multi-Agent System với Google Gemini, n8n, và Make.com để tự động hóa toàn bộ quy trình kinh doanh: từ lead gen, content marketing, chăm sóc khách hàng đến báo cáo tài chính. Tham khảo framework của Anthropic, OpenAI và Google DeepMind. Học viên sẽ ra về với ít nhất 3 Agent đang chạy production.',
+        'Build Multi-Agent AI tự động hóa kinh doanh. n8n + Gemini + Make.com thực chiến.',
+        'https://i.imgur.com/ai-agent-pro.jpg',
+        2990000, 119, 'teacher_victor_001', 'intermediate', '8 tuần · 56 bài học · 22 giờ video', 256, 4.9, 143, false, true, 'published',
+        '2025-11-01T00:00:00.000Z'
+      ],
+      // ===== KHÓA 4: RAPID PROTOTYPE (coming soon) =====
+      [
+        'coach.io.vn',
+        'course_rapid_004',
+        'Rapid Prototype: Từ Ý Tưởng → Demo → Khách Hàng Trả Tiền trong 72 Giờ',
+        'Rapid Prototype: Idea to Paying Customer in 72 Hours',
+        'Sprint 72h build sản phẩm theo phương pháp Lean Startup kết hợp Vibe Coding. Học cách validate ý tưởng, build MVP tối giản, đưa lên production và có khách trả tiền – tất cả trong 1 cuối tuần. Khoá học phù hợp với ai muốn thử nghiệm ý tưởng kinh doanh mà không mất tháng trời code.',
+        'Từ ý tưởng → khách trả tiền trong 72 giờ. Lean Startup + Vibe Coding method.',
+        'https://i.imgur.com/rapid-prototype.jpg',
+        990000, 39, 'teacher_victor_001', 'beginner', '3 ngày · 18 bài học · 6 giờ video', 0, 0, 0, false, false, 'coming_soon',
+        '2026-01-15T00:00:00.000Z'
+      ],
+    ]
+  );
+
+  // ============================================================
+  // BƯỚC 4: TẠO SHEET LESSONS - Bài học chi tiết
+  // ============================================================
+  _createOrUpdateSheet(ss, 'Lessons',
+    ['tenant_id', 'id', 'course_id', 'chapter', 'title', 'title_en', 'video_url', 'doc_url', 'content', 'order', 'is_free'],
+    [
+      // ===== KHÓA 1: VIBE CODING - Chương 1 (Free Preview) =====
+      ['coach.io.vn', 'les_v001_01', 'course_vibe_001', 'Chương 1: Tư duy Vibe Coder', 'Bài 1 [FREE]: Vibe Coding là gì? Tại sao 2026 là năm của bạn?', 'What is Vibe Coding?', 'https://youtube.com/watch?v=vibe-intro', 'https://docs.google.com/...', 'Vibe Coding là phương pháp lập trình AI-first: bạn mô tả ý tưởng bằng ngôn ngữ tự nhiên, AI viết code, bạn review và iterate. Không cần nhớ syntax, không cần debug mù quáng.', 1, true],
+      ['coach.io.vn', 'les_v001_02', 'course_vibe_001', 'Chương 1: Tư duy Vibe Coder', 'Bài 2 [FREE]: So sánh Stack: Cursor vs Windsurf vs GitHub Copilot vs Gemini', 'AI Tools Comparison 2026', 'https://youtube.com/watch?v=tools-compare', '', 'Bảng so sánh chi tiết 6 công cụ Vibe Coding phổ biến nhất 2026. Khi nào dùng Cursor, khi nào dùng Claude API trực tiếp, khi nào dùng Gemini 2.0 Flash.', 2, true],
+      ['coach.io.vn', 'les_v001_03', 'course_vibe_001', 'Chương 1: Tư duy Vibe Coder', 'Bài 3: Setup "Vibe Stack" hoàn hảo trong 15 phút', 'Setup Your Vibe Stack', 'https://youtube.com/watch?v=setup-stack', 'https://notion.so/setup-guide', 'Cài đặt Cursor AI + Extension pack + cấu hình MCP Servers. Template .cursorrules tối ưu cho dự án tiếng Việt.', 3, false],
+      // ===== KHÓA 1 - Chương 2 =====
+      ['coach.io.vn', 'les_v001_04', 'course_vibe_001', 'Chương 2: Build Landing Page trong 2 Giờ', 'Bài 4: Prompt Engineering cho UI/UX – Kỹ thuật "Describe & Iterate"', 'UI Prompt Engineering', 'https://youtube.com/watch?v=ui-prompt', '', 'Framework 5 bước để prompt AI tạo UI đẹp: Context → Style → Components → Interactions → Polish. Thực hành live với Cursor + Tailwind.', 4, false],
+      ['coach.io.vn', 'les_v001_05', 'course_vibe_001', 'Chương 2: Build Landing Page trong 2 Giờ', 'Bài 5: Deploy lên Cloudflare Pages – Free, Fast, Global', 'Deploy to Cloudflare Pages', 'https://youtube.com/watch?v=cf-deploy', 'https://docs.google.com/deploy-guide', 'Deploy site tĩnh lên Cloudflare Pages miễn phí, tự động CI/CD từ GitHub. Custom domain, SSL, Edge Network toàn cầu.', 5, false],
+      // ===== KHÓA 2: NO-CODE SAAS - Chương 1 =====
+      ['coach.io.vn', 'les_s002_01', 'course_saas_002', 'Chương 1: Kiến trúc SaaS No-Code', 'Bài 1 [FREE]: Google Sheet làm Database – Tại sao lại hoạt động?', 'Google Sheet as Database', 'https://youtube.com/watch?v=sheet-db', '', 'Giải thích tại sao Google Sheet + Apps Script có thể thay thế hoàn toàn backend truyền thống cho MVP $0. Giới hạn và khi nào cần migrate lên Supabase/Firebase.', 1, true],
+      ['coach.io.vn', 'les_s002_02', 'course_saas_002', 'Chương 1: Kiến trúc SaaS No-Code', 'Bài 2 [FREE]: Architecture Overview – Frontend + GAS API + Payment', 'SaaS Architecture Overview', 'https://youtube.com/watch?v=saas-arch', 'https://figma.com/architecture-diagram', 'Sơ đồ kiến trúc hoàn chỉnh: React SPA hosted trên Cloudflare → Google Apps Script Web API → Google Sheet DB → SEPAY Payment Gateway → Email via Resend.', 2, true],
+      ['coach.io.vn', 'les_s002_03', 'course_saas_002', 'Chương 2: Build Multi-tenant Backend', 'Bài 3: Xây API doGet/doPost với Google Apps Script', 'Building GAS API', 'https://youtube.com/watch?v=gas-api', '', 'Code live viết hàm doGet xử lý multi-action (getCourses, getConfig, getBots...), doPost nhận Webhook từ Frontend. Deploy và test với Postman.', 3, false],
+      // ===== KHÓA 3: AI AGENT - Chương 1 (Free Preview) =====
+      ['coach.io.vn', 'les_a003_01', 'course_agent_003', 'Chương 1: AI Agent Fundamentals', 'Bài 1 [FREE]: Agent vs Chatbot – Sự khác biệt thay đổi tất cả', 'Agent vs Chatbot', 'https://youtube.com/watch?v=agent-vs-bot', '', 'Tại sao Chatbot chỉ trả lời còn Agent hành động. Kiến trúc ReAct (Reason + Act), Tool Calling, Memory Systems. Demo live Google Gemini Function Calling.', 1, true],
+      ['coach.io.vn', 'les_a003_02', 'course_agent_003', 'Chương 1: AI Agent Fundamentals', 'Bài 2 [FREE]: n8n Cloud – Nền tảng Agent Automation miễn phí tốt nhất', 'n8n Cloud for Agents', 'https://youtube.com/watch?v=n8n-intro', 'https://n8n.io/docs', 'Setup n8n Cloud miễn phí, kết nối Gmail, Google Sheets, Telegram, Zalo. Build Agent đầu tiên nhận email → phân loại → reply tự động trong 20 phút.', 2, true],
+      // ===== KHÓA 3: AI AGENT - Chương 2 =====
+      ['coach.io.vn', 'les_a003_03', 'course_agent_003', 'Chương 2: Build Production Agents', 'Bài 3: Gemini Function Calling – Cho AI biết cách dùng Tools thật', 'Gemini Function Calling', 'https://youtube.com/watch?v=gemini-tools', 'https://ai.google.dev/docs/function_calling', 'Implement Tool Calling với Gemini API: tìm kiếm web thật, đọc Google Sheet thật, gửi email thật. Xây dựng Agent có thể hành động thay bạn.', 3, false],
+      ['coach.io.vn', 'les_a003_04', 'course_agent_003', 'Chương 2: Build Production Agents', 'Bài 4: Multi-Agent System – Phân vai cho từng AI chuyên biệt', 'Multi-Agent Architecture', 'https://youtube.com/watch?v=multi-agent', '', 'Thiết kế hệ thống nhiều Agent phối hợp: Researcher Agent → Writer Agent → Publisher Agent. Framework Orchestrator-Worker. Demo với CrewAI + Gemini.', 4, false],
+      ['coach.io.vn', 'les_a003_05', 'course_agent_003', 'Chương 2: Build Production Agents', 'Bài 5: Deploy Agent 24/7 + Monitoring – Không bao giờ offline', 'Deploy & Monitor Agents', 'https://youtube.com/watch?v=deploy-agent', 'https://notion.so/agent-deploy-guide', 'Deploy Agent lên Cloudflare Workers (serverless, free tier rất lớn). Thiết lập health check, alert Telegram khi Agent lỗi. Logging với Loki/Grafana free tier.', 5, false],
+      // ===== KHÓA 4: RAPID PROTOTYPE =====
+      ['coach.io.vn', 'les_r004_01', 'course_rapid_004', 'Ngày 1 (Sáng): Validate Ý Tưởng', 'Bài 1 [FREE]: The 10-Minute Idea Test – Tốt hay vứt trong 10 phút', 'The 10-Minute Idea Test', 'https://youtube.com/watch?v=idea-test', '', 'Framework đánh giá ý tưởng nhanh: Problem/Solution Fit, Market Size estimate, Competitor scan bằng Gemini AI. Quyết định build hay pivot chỉ trong 10 phút.', 1, true],
+      ['coach.io.vn', 'les_r004_02', 'course_rapid_004', 'Ngày 1 (Chiều): Build MVP', 'Bài 2 [FREE]: MVP Blueprint – Cắt bỏ tất cả, giữ lại 1 tính năng cốt lõi', 'MVP Blueprint', 'https://youtube.com/watch?v=mvp-blueprint', 'https://docs.google.com/mvp-template', 'Kỹ thuật MoSCoW để xác định Must-have vs Nice-to-have. Template MVP blueprint 1 trang. Cách dùng Cursor để vibe-code chỉ phần cốt lõi trong 4 giờ.', 2, true],
+      ['coach.io.vn', 'les_r004_03', 'course_rapid_004', 'Ngày 2: Deploy & Get Feedback', 'Bài 3: Zero to Live in 2 Hours – Deploy, Domain, Analytics', 'Deploy to Production', 'https://youtube.com/watch?v=rapid-deploy', '', 'Checklist deploy nhanh: Cloudflare Pages setup (10 phút), custom domain (15 phút), Google Analytics 4 (5 phút), Hotjar heatmap (5 phút). Tổng: dưới 2 giờ.', 3, false],
+    ]
+  );
+
+  // ============================================================
+  // BƯỚC 5: TẠO SHEET LEADS - Mẫu data (thực tế sẽ auto-fill)
+  // ============================================================
+  _createOrUpdateSheet(ss, 'Leads',
+    ['tenant_id', 'name', 'email', 'phone', 'note', 'source', 'created_at'],
+    [
+      // Dữ liệu mẫu minh họa định dạng (hệ thống tự ghi khi có lead thật)
+      ['coach.io.vn', 'Nguyễn Văn An', 'an.nguyen@gmail.com', '0901234567', 'Quan tâm khóa Vibe Coding, hỏi về học phí trả góp', 'lead_popup', '2026-03-01T08:30:00.000Z'],
+      ['coach.io.vn', 'Trần Thị Bình', 'binh.tran@outlook.com', '0912345678', 'Muốn build app cho quán cà phê của mình, không biết code', 'contact_form', '2026-03-05T14:22:00.000Z'],
+      ['coach.io.vn', 'Lê Minh Cường', 'cuong.dev@gmail.com', '', 'Đã là developer, muốn học AI Agent để tự build SaaS', 'coachai_chat', '2026-03-10T09:15:00.000Z'],
+      ['coach.io.vn', 'Phạm Thu Hương', 'phamthuhuong@yahoo.com', '0933445566', 'Giáo viên tiếng Anh, muốn ra khóa học online nhưng chưa biết bắt đầu từ đâu', 'facebook_ad', '2026-03-12T11:00:00.000Z'],
+      ['coach.io.vn', 'Hoàng Đức Mạnh', 'manh.hoang.dev@gmail.com', '0978901234', 'Freelancer web dev, muốn dùng AI để nhận thêm dự án, tăng giờ bill', 'zalo_group', '2026-03-15T16:45:00.000Z'],
+      ['coach.io.vn', 'Võ Thị Nga', 'vonga.coach@gmail.com', '0945678901', 'Đang có 200 học viên offline, muốn chuyển lên online với thương hiệu riêng', 'referral', '2026-03-18T09:00:00.000Z'],
+      // ⬇ Từ đây trở xuống là dữ liệu THẬT do hệ thống tự ghi - KHÔNG XÓA
+    ]
+  );
+
+  // ============================================================
+  // BƯỚC 6: TẠO SHEET BOTS - AI Hub cấu hình
+  // ============================================================
+  _createOrUpdateSheet(ss, 'Bots',
+    ['tenant_id', 'id', 'title', 'slug', 'role_target', 'category', 'short_desc', 'long_desc', 'button_primary_text', 'button_primary_url', 'button_secondary_text', 'button_secondary_url', 'thumbnail_url', 'status', 'featured', 'sort_order', 'language'],
+    [
+      // BOT 1: Trợ lý học viên
+      ['coach.io.vn', 'bot_student_001', '🎓 Trợ lý Học Viên AI', 'student-ai-assistant', 'student', 'gem', 'Hỏi bất kỳ điều gì về lộ trình học, bài tập, hay khái niệm khó hiểu trong khóa học', 'Trợ lý AI cá nhân 24/7 cho học viên. Giải thích code, gợi ý lộ trình học phù hợp với mục tiêu của bạn, review bài tập và trả lời mọi câu hỏi về Vibe Coding & AI. Powered by Google Gemini 2.0 Flash.', 'Chat ngay', 'https://gemini.google.com/gem/student-vibe-coach', 'Xem lộ trình', 'https://coach.io.vn/courses', '', 'active', true, 1, 'vi'],
+      // BOT 2: Coach chiến lược kinh doanh
+      ['coach.io.vn', 'bot_teacher_001', '💼 AI Coach Kinh Doanh', 'business-strategy-coach', 'teacher', 'gem', 'Lên kế hoạch kinh doanh, định giá khóa học, thiết kế phễu bán hàng và marketing tự động', 'AI Coach chuyên về chiến lược kinh doanh cho Coaches & Educators. Phân tích thị trường, gợi ý mức giá tối ưu, thiết kế sales funnel, lên kế hoạch content 30 ngày và tự động hóa marketing. Dựa trên dữ liệu thực tế từ 1000+ Coaches Việt Nam.', 'Tư vấn ngay', 'https://gemini.google.com/gem/business-coach', 'Xem case study', '', '', 'active', true, 2, 'vi'],
+      // BOT 3: Code Review AI
+      ['coach.io.vn', 'bot_dev_001', '🔍 AI Code Reviewer', 'ai-code-reviewer', 'all', 'gem', 'Paste code vào đây để được review, tìm bug, đề xuất tối ưu và giải thích từng dòng', 'Senior AI Engineer review code của bạn theo chuẩn production. Phát hiện bug, security vulnerabilities, performance issues và đề xuất refactor. Hỗ trợ React/TypeScript, Python, Google Apps Script, SQL. Giải thích bằng tiếng Việt dễ hiểu.', 'Review Code', 'https://gemini.google.com/gem/code-reviewer-vi', '', '', '', 'active', false, 3, 'vi'],
+      // BOT 4: NotebookLM Research
+      ['coach.io.vn', 'bot_research_001', '📚 AI Research Assistant', 'research-notebooklm', 'all', 'notebooklm', 'Upload tài liệu, PDF, video YouTube để hỏi đáp, tóm tắt và tạo quiz tự động', 'Powered by Google NotebookLM. Upload bất kỳ tài liệu nào (PDF, URL, YouTube, Google Docs) và đặt câu hỏi theo ngữ cảnh. Tạo podcast từ tài liệu, flashcard ôn thi, và mindmap tự động. Hoàn hảo cho nghiên cứu và học tập sâu.', 'Mở NotebookLM', 'https://notebooklm.google.com', 'Hướng dẫn sử dụng', '', '', 'active', false, 4, 'vi'],
+      // BOT 5: Prompt Engineer
+      ['coach.io.vn', 'bot_prompt_001', '✨ Prompt Engineer Pro', 'prompt-engineer', 'all', 'gem', 'Tối ưu prompt của bạn để AI cho ra kết quả chính xác hơn 10 lần', 'AI Coach chuyên về Prompt Engineering. Nhập prompt thô của bạn, AI sẽ phân tích và viết lại theo framework CLEAR (Context, Language, Examples, Audience, Result). Hỗ trợ prompt cho Cursor, ChatGPT, Claude, Gemini và Midjourney.', 'Tối ưu Prompt', 'https://gemini.google.com/gem/prompt-engineer', '', '', '', 'coming_soon', false, 5, 'vi'],
+    ]
+  );
+
+  // ============================================================
+  // BƯỚC 7: TẠO SHEET PROJECTS - Portfolio thực chiến
+  // ============================================================
+  _createOrUpdateSheet(ss, 'Projects',
+    ['tenant_id', 'id', 'title', 'description', 'thumbnail_url', 'demo_url', 'github_url', 'tags', 'author', 'status', 'sort_order'],
+    [
+      ['coach.io.vn', 'proj_001', '🚀 Coach.io.vn – SaaS Giáo Dục Multi-tenant', 'Nền tảng SaaS giáo dục cho phép bất kỳ Coach/Diễn giả nào tạo website khoá học thương hiệu riêng trong 30 phút. Tech stack: React + Vite + Cloudflare Pages + Google Apps Script + Firebase Auth. 0 đồng server cost. Đang phục vụ 50+ Coaches.', 'https://i.imgur.com/coach-saas.jpg', 'https://coach.io.vn', 'https://github.com/chuyentn/coachai', 'React,TypeScript,Cloudflare,GAS,Firebase,SaaS', 'Victor Chuyen', 'active', 1],
+      ['coach.io.vn', 'proj_002', '🤖 AI Email Marketing Bot – n8n + Gmail + Gemini', 'Agent tự động phân loại email lead, phân tích nhu cầu bằng Gemini AI, và gửi email marketing cá nhân hóa theo từng segment. Tăng open rate 340% so với email blast thông thường. Build trong 48 giờ bởi học viên khoá AI Agent.', 'https://i.imgur.com/email-bot.jpg', 'https://demo.coach.io.vn/email-bot', '', 'n8n,Gemini,Gmail,Automation,Python', 'Nguyễn Hoàng Nam (học viên)', 'active', 2],
+      ['coach.io.vn', 'proj_003', '📊 Dashboard Doanh Thu Thời Gian Thực – Google Sheets + React', 'Dashboard quản lý doanh thu cho một chuỗi cửa hàng 5 chi nhánh. Data từ Google Sheets, hiển thị real-time qua React + Recharts. Tự động gửi báo cáo Zalo mỗi sáng lúc 8h. Build bằng Vibe Coding trong 3 ngày.', 'https://i.imgur.com/revenue-dashboard.jpg', 'https://demo.coach.io.vn/dashboard', '', 'React,GoogleSheets,GAS,Recharts,Zalo', 'Trần Minh Khoa (học viên)', 'active', 3],
+      ['coach.io.vn', 'proj_004', '🎯 Landing Page Generator – Mô tả → Website trong 5 Phút', 'Tool AI cho phép nhập mô tả kinh doanh → tự động generate toàn bộ landing page (copy, design, sections) bằng Gemini. Export HTML hoặc deploy thẳng lên Cloudflare. Build bằng Cursor AI trong weekend hackathon.', 'https://i.imgur.com/landing-gen.jpg', 'https://landing-gen.coach.io.vn', 'https://github.com/vibecode/landing-gen', 'React,Gemini,Cloudflare,AI-Generation', 'Victor Chuyen + Học viên', 'active', 4],
+    ]
+  );
+
+  // ============================================================
+  // BƯỚC 8: TẠO SHEET PAGE_CONTENT - Nội dung văn bản website
+  // ============================================================
+  _createOrUpdateSheet(ss, 'page_content',
+    ['tenant_id', 'key', 'value_vi', 'value_en', 'status', 'updated_at'],
+    [
+      // --- Hero Section ---
+      ['coach.io.vn', 'hero_title', 'Vibe Code AI|Biến Ý Tưởng Thành Sản Phẩm', 'Vibe Code AI|Turn Ideas Into Products', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'hero_subtitle', 'Học cách làm việc với Cursor, Claude & Gemini để build app thật – không cần background coding. 500+ học viên đã ra sản phẩm.', 'Learn to work with Cursor, Claude & Gemini to build real apps – no coding background needed. 500+ students shipped products.', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'cta_primary', '🚀 Bắt đầu miễn phí', 'Start for free 🚀', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'cta_secondary', 'Xem Demo 60 giây', 'Watch 60s Demo', 'active', new Date().toISOString()],
+      // --- Social Proof ---
+      ['coach.io.vn', 'social_proof_1', '500+ học viên đã ra sản phẩm thật', '500+ students shipped real products', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'social_proof_2', '4.9/5 ⭐ đánh giá trung bình', '4.9/5 ⭐ average rating', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'social_proof_3', '30 phút setup · 0 đồng server', '30-min setup · $0 server cost', 'active', new Date().toISOString()],
+      // --- SEO ---
+      ['coach.io.vn', 'seo_description', 'Coach.io.vn – Nền tảng học Vibe Coding & AI thực chiến #1 Việt Nam. Học Cursor AI, Claude, Gemini để build SaaS, Landing Page, AI Agent. Không cần biết code. Cam kết ra sản phẩm sau 30 ngày.', 'Coach.io.vn – Vietnam #1 Vibe Coding & AI learning platform. Learn Cursor AI, Claude, Gemini to build SaaS, Landing Pages, AI Agents. No coding background needed.', 'active', new Date().toISOString()],
+      // --- Contact ---
+      ['coach.io.vn', 'support_email', 'support@coach.io.vn', 'support@coach.io.vn', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'admin_zalo_phone', '0989890022', '0989890022', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'admin_telegram_user', '@victorchuyen', '@victorchuyen', 'active', new Date().toISOString()],
+      // --- Courses Section ---
+      ['coach.io.vn', 'courses_section_title', 'Khóa Học Thực Chiến AI 2026', 'AI Practical Courses 2026', 'active', new Date().toISOString()],
+      ['coach.io.vn', 'courses_section_subtitle', 'Từ zero đến có sản phẩm chạy thật – không lý thuyết suông', 'From zero to shipped product – no fluffy theory', 'active', new Date().toISOString()],
+    ]
+  );
+
+  // ============================================================
+  // DONE: Hiển thị thông báo thành công
+  // ============================================================
+  SpreadsheetApp.getUi().alert(
+    '✅ Setup hoàn tất!',
+    'Đã tạo đầy đủ:\n' +
+    '• 📖 Sheet HƯỚNG DẪN (đọc trước)\n' +
+    '• Tenants, Courses, Lessons, Leads, Bots, Projects, page_content\n\n' +
+    '🔑 Bước tiếp theo:\n' +
+    '1. Copy Spreadsheet ID từ URL\n' +
+    '2. Dán vào dòng SPREADSHEET_ID trong Apps Script\n' +
+    '3. Deploy lại Web App (New Deployment)\n\n' +
+    '📋 Đọc sheet [📖 HƯỚNG DẪN] để biết cách điền data!',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+
+  Logger.log('✅ setupSpreadsheet() completed successfully!');
+}
+
+/**
+ * Helper nội bộ: Tạo hoặc cập nhật một sheet với header và seed data
+ * Nếu sheet đã tồn tại → bỏ qua (không overwrite data thực tế của khách hàng)
+ */
+function _createOrUpdateSheet(ss, sheetName, headers, seedRows) {
+  let sheet = ss.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    // Sheet chưa tồn tại → tạo mới
+    sheet = ss.insertSheet(sheetName);
+    Logger.log('✅ Created sheet: ' + sheetName);
+  } else {
+    Logger.log('⏭ Sheet already exists, skipping: ' + sheetName);
+    return; // Sheet đã có data → không ghi đè
+  }
+
+  // Ghi header (dòng 1)
+  if (headers.length > 0) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    // Format header: Bold, màu nền xanh nhạt
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#E8F0FE');
+    headerRange.setFontColor('#1a1a2e');
+    sheet.setFrozenRows(1); // Khóa dòng tiêu đề
+  }
+
+  // Ghi seed data (từ dòng 2)
+  if (seedRows.length > 0) {
+    // Lọc bỏ dòng comment (không phải array)
+    const validRows = seedRows.filter(row => Array.isArray(row));
+    if (validRows.length > 0 && headers.length > 0) {
+      sheet.getRange(2, 1, validRows.length, headers.length).setValues(validRows);
+    }
+  }
+
+  // Auto-resize cột cho dễ đọc
+  if (headers.length > 0) {
+    sheet.autoResizeColumns(1, Math.min(headers.length, 10));
+  }
+}
+
