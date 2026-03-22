@@ -418,6 +418,7 @@
     "formTitleHighlight": "message",
     "fields": {
       "name": "Full Name",
+      "namePlaceholder": "Ex: John Doe",
       "email": "Email",
       "phone": "Phone Number",
       "topic": "Consultation Topic",

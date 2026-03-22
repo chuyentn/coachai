@@ -418,6 +418,7 @@
     "formTitleHighlight": "cho chúng tôi",
     "fields": {
       "name": "Họ và tên",
+      "namePlaceholder": "Ví dụ: Nguyễn Văn A",
       "email": "Email",
       "phone": "Số điện thoại",
       "topic": "Chủ đề cần tư vấn",

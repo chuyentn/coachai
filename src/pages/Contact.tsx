@@ -217,7 +217,7 @@ export const Contact = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder="Ví dụ: Victor Chuyen"
+                          placeholder={t('contact.fields.namePlaceholder')}
                           className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all dark:text-white"
                         />
                       </div>

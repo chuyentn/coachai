@@ -30,7 +30,7 @@ export const Affiliate = () => {
             <TrendingUp size={16} /> {t('affiliate.badge')}
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-slate-900 dark:text-white">
-            {t('affiliate.headline')} <br /><span className="text-indigo-600 dark:text-indigo-400">{t('affiliate.headlineHighlight')}</span>
+            {t('affiliate.headline')} <br /><span className="text-indigo-600 dark:text-indigo-400">{t('affiliate.headlineHighlight', { appName: config.appName })}</span>
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-xl font-medium mb-10 max-w-2xl mx-auto">
             {t('affiliate.subHeadline')}
@@ -45,8 +45,8 @@ export const Affiliate = () => {
               <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('affiliate.stat1Label')}</div>
             </div>
             <div className="bg-white dark:bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none text-center transform hover:-translate-y-1 transition-all duration-300">
-               <Link to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} className="relative z-10 shrink-0 px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 rounded-2xl font-black text-sm hover:scale-105 transition-transform shadow-xl shadow-rose-500/20 flex items-center gap-2">
-                 Nâng Cấp VIP <ChevronRight size={18} />
+             <Link to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} className="relative z-10 shrink-0 px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 rounded-2xl font-black text-sm hover:scale-105 transition-transform shadow-xl shadow-rose-500/20 flex items-center gap-2 text-white">
+                 {t('home.pricingVipBtn')} <ChevronRight size={18} />
                </Link>
               <div className="text-2xl font-black mb-1 text-slate-900 dark:text-white">{t('affiliate.stat2Value')}</div>
               <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('affiliate.stat2Label')}</div>
