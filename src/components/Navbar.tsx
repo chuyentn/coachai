@@ -207,6 +207,13 @@ export const Navbar: React.FC = () => {
                               <DollarSign size={18} />
                               Affiliate Center
                             </Link>
+                            {/* Control Panel — admin & teacher only */}
+                            {(profile.role === 'admin' || profile.role === 'teacher') && (
+                              <Link to="/control-panel" className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all">
+                                <Settings size={18} />
+                                🎛️ Control Panel
+                              </Link>
+                            )}
                           </div>
                           
                           <div className="border-t border-slate-100/50 dark:border-slate-800/50 mt-2 mx-4 pt-2">
@@ -316,7 +323,13 @@ export const Navbar: React.FC = () => {
                       <LayoutDashboard size={20} className="text-indigo-600" />
                       {t('common.dashboard')}
                     </Link>
-                    {/* Fixed Profile/Settings to point to Dashboard */}
+                    {/* Control Panel — admin & teacher only */}
+                    {(profile.role === 'admin' || profile.role === 'teacher') && (
+                      <Link to="/control-panel" className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl text-indigo-700 dark:text-indigo-300 font-bold">
+                        <Settings size={20} className="text-indigo-600" />
+                        🎛️ Control Panel
+                      </Link>
+                    )}
                     <Link to={getDashboardLink()} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-900 dark:text-white font-bold">
                       <User size={20} className="text-indigo-600" />
                       {t('common.profile')}

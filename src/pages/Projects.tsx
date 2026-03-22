@@ -1,286 +1,348 @@
 import React, { useState, useEffect } from 'react';
-import { Code2, Terminal, ArrowUpRight, CheckCircle2, Zap, X, Send, User, Mail, Phone, Loader2 } from 'lucide-react';
+import { Code2, ArrowUpRight, CheckCircle2, Zap, X, Send, User, Mail, Phone, Loader2, Search, Github, Globe, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { googleSheetsService } from '../services/googleSheetsService';
 import { crmService } from '../services/crmService';
 
+const CATEGORIES = ['Tất cả', 'AI Agent', 'SaaS', 'Bot', 'Dashboard', 'App Mobile'];
+
+const FALLBACK_PROJECTS = [
+  {
+    title: 'AI Legal Agent',
+    desc: 'Trợ lý pháp lý AI tự động soạn hợp đồng, phân tích rủi ro và tư vấn điều khoản bằng Claude + RAG vector search.',
+    category: 'AI Agent',
+    badge: 'HOT',
+    tech: ['React', 'Claude AI', 'Supabase', 'Cloudflare'],
+    preview_url: '',
+    status: 'active',
+    color: 'from-violet-600/20 to-purple-600/20',
+    emoji: '⚖️',
+  },
+  {
+    title: 'No-Code SaaS Builder',
+    desc: 'Nền tảng SaaS multi-tenant xây bằng Google Sheets + Apps Script + Cloudflare Pages. 0 đồng server, deploy trong 1 giờ.',
+    category: 'SaaS',
+    badge: 'BÁN CHẠY',
+    tech: ['Google Sheets', 'Apps Script', 'React', 'Cloudflare'],
+    preview_url: '',
+    status: 'active',
+    color: 'from-blue-600/20 to-cyan-600/20',
+    emoji: '🚀',
+  },
+  {
+    title: 'Vibe Code Daily Bot',
+    desc: 'Bot Telegram tự động gửi bài học, nhắc thực hành và tracking streak học viên. Tích hợp AI tạo nội dung mỗi ngày.',
+    category: 'Bot',
+    badge: 'NEW',
+    tech: ['Telegram API', 'Google Sheets', 'Node.js', 'Gemini'],
+    preview_url: '',
+    status: 'active',
+    color: 'from-emerald-600/20 to-teal-600/20',
+    emoji: '🤖',
+  },
+  {
+    title: 'AI Dashboard Analytics',
+    desc: 'Dashboard phân tích dữ liệu real-time với AI insights tự động, kết nối Google Sheets và Gemini API.',
+    category: 'Dashboard',
+    badge: null,
+    tech: ['React', 'Recharts', 'Gemini API', 'Google Sheets'],
+    preview_url: '',
+    status: 'active',
+    color: 'from-orange-600/20 to-amber-600/20',
+    emoji: '📊',
+  },
+  {
+    title: 'Chrome AI Extension',
+    desc: 'Extension trình duyệt dùng AI tóm tắt bài viết, dịch thuật và trả lời câu hỏi ngay trong tab đang mở.',
+    category: 'App Mobile',
+    badge: null,
+    tech: ['Chrome Extension', 'Claude AI', 'TypeScript', 'Vite'],
+    preview_url: '',
+    status: 'active',
+    color: 'from-rose-600/20 to-pink-600/20',
+    emoji: '🧩',
+  },
+  {
+    title: 'Multi-Agent Email CRM',
+    desc: 'Hệ thống CRM email marketing tự động hóa hoàn toàn với AI agents, Resend API và Google Sheets backend.',
+    category: 'SaaS',
+    badge: null,
+    tech: ['GAS', 'Resend API', 'Claude AI', 'React'],
+    preview_url: '',
+    status: 'active',
+    color: 'from-indigo-600/20 to-blue-600/20',
+    emoji: '✉️',
+  },
+];
+
+const BADGE_COLORS: Record<string, string> = {
+  'HOT': 'bg-rose-500/90 text-white',
+  'BÁN CHẠY': 'bg-orange-500/90 text-white',
+  'NEW': 'bg-emerald-500/90 text-white',
+};
+
 export const Projects = () => {
-  const { t } = useTranslation();
   const { profile } = useAuth();
-  
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const isVip = profile?.role === 'vip' || profile?.role === 'admin';
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const data = await googleSheetsService.fetchProjects();
-      // Tech field might be a comma-separated string in Sheet
-      const formatted = data.map(p => ({
-        ...p,
-        tech: typeof p.tech === 'string' ? p.tech.split(',').map((t: string) => t.trim()) : p.tech
-      }));
-      setProjects(formatted);
-    } catch (err) {
-      console.error('Error fetching projects:', err);
-      setError('Unable to load projects.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const [activeCategory, setActiveCategory] = useState('Tất cả');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-
-  // Form states
   const [name, setName] = useState(profile?.full_name || '');
   const [email, setEmail] = useState(profile?.email || '');
   const [phone, setPhone] = useState('');
+  const isVip = profile?.role === 'vip' || profile?.role === 'admin';
 
-  React.useEffect(() => {
-    if (profile) {
-      if (!name) setName(profile.full_name || '');
-      if (!email) setEmail(profile.email || '');
-    }
+  useEffect(() => {
+    if (profile) { if (!name) setName(profile.full_name || ''); if (!email) setEmail(profile.email || ''); }
   }, [profile]);
 
-  const openModal = (title: string) => {
-    if (isVip) {
-      // Nếu là VIP thì mở thẳng mã nguồn Github!
-      window.open('https://github.com/vibe-code-ai?subject=' + encodeURIComponent(title), '_blank');
-      return;
-    }
-    setSelectedProject(title);
-    setIsSuccess(false);
-  };
+  useEffect(() => {
+    googleSheetsService.fetchProjects()
+      .then(data => {
+        const formatted = data.map(p => ({
+          ...p,
+          tech: typeof p.tech === 'string' ? p.tech.split(',').map((t: string) => t.trim()) : (p.tech || [])
+        }));
+        setProjects(formatted.length > 0 ? formatted : FALLBACK_PROJECTS);
+      })
+      .catch(() => setProjects(FALLBACK_PROJECTS))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const closeModal = () => {
-    setSelectedProject(null);
+  const filtered = projects.filter(p => {
+    const matchCat = activeCategory === 'Tất cả' || p.category === activeCategory;
+    const matchSearch = !searchQuery || p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.desc?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const openModal = (title: string) => {
+    if (isVip) { window.open('https://github.com/vibe-code-ai?subject=' + encodeURIComponent(title), '_blank'); return; }
+    setSelectedProject(title); setIsSuccess(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
+    e.preventDefault(); setIsSubmitting(true);
     try {
-      await googleSheetsService.submitLead(
-        email,
-        name,
-        phone,
-        `[Nhận Code Dự Án] ${selectedProject}`
-      );
-      // Trigger the backend Cloudflare function to send a welcome email via Resend
+      await googleSheetsService.submitLead(email, name, phone, `[Nhận Code Dự Án] ${selectedProject}`);
       try {
-        await crmService.sendTransactionalEmail(
-          email,
-          `🎉 [${import.meta.env.VITE_APP_NAME || 'CoachAI'}] Yêu cầu Mã Nguồn: ${selectedProject}`,
-          `
-            <h2 style="color: #4f46e5; margin-top: 0;">Yêu cầu mã nguồn thành công!</h2>
-            <p>Chào <strong>${name || 'bạn'}</strong>,</p>
-            <p>Cảm ơn bạn đã quan tâm và đăng ký nhận bản quyền mã nguồn cho dự án: <br/>
-              <strong style="color: #e11d48; font-size: 18px; display: inline-block; margin-top: 5px;">🏆 ${selectedProject}</strong>
-            </p>
-            <div style="background-color: #f8fafc; padding: 20px; border-left: 5px solid #4f46e5; margin: 25px 0; border-radius: 0 8px 8px 0;">
-               <h3 style="margin-top: 0; color: #0f172a;">🔥 Trạng Thái: Đã Tiếp Nhận</h3>
-               <p style="margin-bottom: 0;">Yêu cầu của bạn đã được ghi nhận vào hệ thống CRM. Mentor sẽ liên hệ nhanh với bạn qua Zalo/SĐT để gửi bộ File Source Code và Hướng dẫn Deploy an toàn trong vòng 24h tới.</p>
-            </div>
-          `
+        await crmService.sendTransactionalEmail(email,
+          `🎉 Yêu cầu Mã Nguồn: ${selectedProject}`,
+          `<h2>Yêu cầu thành công!</h2><p>Chào <strong>${name || 'bạn'}</strong>, mã nguồn <strong>${selectedProject}</strong> sẽ được gửi qua email trong 24h.</p>`
         );
-      } catch (emailErr) {
-        console.error('Lỗi khi gửi email chào mừng (Resend API):', emailErr);
-        // We don't block the UI success state if only the email fails
-      }
-
-      // Because of no-cors for Google Sheets, we assume success if no catch on the first fetch
+      } catch {}
       setIsSuccess(true);
-
-    } catch (error) {
-      console.error('Lỗi khi gửi thông tin lấy mã nguồn:', error);
-      alert('Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại sau.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch { alert('Có lỗi xảy ra. Vui lòng thử lại.'); }
+    finally { setIsSubmitting(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0B0E17] font-sans relative overflow-hidden transition-colors duration-300">
-      {/* Background Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[800px] h-[400px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+    <div className="min-h-screen bg-[#0B0E17]">
 
-      <div className="pt-28 pb-16 text-center relative z-10">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-white dark:bg-slate-900/50 backdrop-blur-md rounded-2xl text-indigo-600 dark:text-indigo-400 mb-6 border border-slate-200 dark:border-slate-800 shadow-xl">
-            <Terminal size={28} className="md:w-8 md:h-8" />
-          </div>
-          <h1 className="text-3xl md:text-5xl font-black mb-4 tracking-tight text-slate-900 dark:text-white">{t('projects.title')} <span className="text-indigo-600 dark:text-indigo-400">{t('projects.titleHighlight')}</span></h1>
-          <p className="text-slate-500 dark:text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto">
-            {t('projects.description')}
-          </p>
+      {/* ── HERO ── */}
+      <div className="bg-gradient-to-br from-[#0d0f1c] via-[#111827] to-[#0d0f1c] border-b border-white/5 pt-28 pb-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6"
+          >
+            <Code2 size={12} /> Mã nguồn thực tế đang chạy
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mb-4"
+          >
+            Dự Án{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Thực Chiến</span>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+            className="text-slate-400 text-lg mb-10 max-w-xl mx-auto"
+          >
+            Clone sản phẩm thật — từ AI Agent đến SaaS multi-tenant. Nhận mã nguồn, deploy và tùy chỉnh ngay.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="relative max-w-xl mx-auto"
+          >
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input type="text" placeholder="Tìm dự án AI, SaaS, Bot..."
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-13 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:outline-none text-white placeholder-slate-500 text-sm font-medium transition-all pl-12"
+            />
+          </motion.div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-24 relative z-20">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-            <p className="text-slate-500 font-bold">Đang tải dự án thực chiến...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center py-20 bg-rose-50 rounded-[3rem] border border-rose-100">
-            <p className="text-rose-600 mb-6 font-bold">{error}</p>
-            <button 
-              onClick={fetchProjects}
-              className="px-10 py-4 bg-rose-600 text-white rounded-2xl hover:bg-rose-700 transition-all font-black"
-            >
-              Thử lại
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {projects.map((p, idx) => (
-            <motion.div 
-              key={idx} 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="bg-white/80 dark:bg-[#111623]/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800/60 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-300 group cursor-pointer"
-            >
-              <div className="flex justify-between items-start mb-6">
-                <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-black uppercase tracking-widest">{p.category}</div>
-                {p.badge && (
-                  <div className="px-2 py-1 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-md text-[10px] font-black uppercase shadow-lg shadow-rose-500/30">
-                    {p.badge}
-                  </div>
-                )}
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 transition-all">
-                {p.title}
-              </h3>
-              <p className="text-slate-500 font-medium leading-relaxed mb-8 h-24">
-                {p.desc}
-              </p>
-              
-              <div className="flex flex-wrap gap-2 mb-8">
-                {p.tech.map((t, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:border-indigo-200 dark:group-hover:border-indigo-800/50 transition-colors">
-                    <Code2 size={12} className="inline mr-1 text-slate-400 group-hover:text-indigo-400" /> {t}
-                  </span>
-                ))}
-              </div>
-
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex justify-between items-center">
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-500 text-sm font-bold">
-                  <CheckCircle2 size={16} /> Tải miễn phí
-                </span>
-                <button onClick={() => openModal(p.title)} className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 group-hover:bg-indigo-600 group-hover:text-white flex items-center gap-2 font-black transition-all text-sm shadow-xl shadow-slate-900/10 dark:shadow-white/10 group-hover:shadow-indigo-600/30">
-                  Nhận Code <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </button>
-              </div>
-            </motion.div>
+      {/* ── CATEGORY CHIPS ── */}
+      <div className="sticky top-16 z-40 bg-[#0d0f1c]/95 backdrop-blur-lg border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto hide-scrollbar">
+          {CATEGORIES.map(cat => (
+            <button key={cat} onClick={() => setActiveCategory(cat)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all border ${
+                activeCategory === cat
+                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                  : 'border-white/10 text-slate-400 hover:border-white/20 hover:text-white bg-white/5'
+              }`}
+            >{cat}</button>
           ))}
         </div>
-        )}
-
-        <div className="mt-20 text-center">
-          <Link to="/" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline">
-            {t('projects.backHome')}
-          </Link>
-        </div>
       </div>
 
-      {/* Lead Magnet Modal */}
+      {/* ── PROJECT GRID ── */}
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        {!loading && (
+          <p className="text-sm text-slate-500 mb-6">
+            <span className="text-white font-bold">{filtered.length}</span> dự án
+          </p>
+        )}
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} className="rounded-2xl bg-white/5 border border-white/5 h-64 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+          >
+            {filtered.map((p, idx) => (
+              <motion.div key={idx}
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                whileHover={{ y: -4 }}
+                className={`group relative bg-gradient-to-br ${p.color || 'from-indigo-600/10 to-purple-600/10'} border border-white/8 rounded-2xl overflow-hidden cursor-pointer hover:border-white/15 transition-all duration-300`}
+                onClick={() => openModal(p.title)}
+              >
+                {/* Top accent bar */}
+                <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-60 group-hover:opacity-100 transition-opacity" />
+
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="text-3xl">{p.emoji || '📦'}</div>
+                    <div className="flex items-center gap-2">
+                      {p.badge && (
+                        <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${BADGE_COLORS[p.badge] || 'bg-white/10 text-white'}`}>
+                          {p.badge}
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 bg-white/10 text-slate-300 text-[10px] font-bold rounded-full">{p.category}</span>
+                    </div>
+                  </div>
+
+                  {/* Title + Desc */}
+                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-emerald-400 transition-colors line-clamp-1">{p.title}</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed mb-5 line-clamp-2">{p.desc}</p>
+
+                  {/* Tech Stack */}
+                  <div className="flex flex-wrap gap-1.5 mb-5">
+                    {(p.tech || []).slice(0, 4).map((t: string, i: number) => (
+                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-white/5 border border-white/8 rounded-lg text-[11px] font-bold text-slate-400">
+                        <Code2 size={9} className="text-slate-500" /> {t}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                      <CheckCircle2 size={13} /> Tải miễn phí
+                    </span>
+                    {isVip ? (
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-indigo-400">
+                        <Github size={13} /> Xem code
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
+                        Nhận Code <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* CTA */}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mt-16 p-8 md:p-12 rounded-3xl bg-gradient-to-r from-emerald-600/10 to-cyan-600/10 border border-emerald-500/15 text-center"
+          >
+            <Lock className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-black text-white mb-2">Truy cập toàn bộ mã nguồn ngay lập tức</h2>
+            <p className="text-slate-400 mb-6">Đăng ký VIP để download code, xem video hướng dẫn và hỏi trực tiếp Coach 24/7.</p>
+            <Link to="/auth/signup?plan=vip"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-xl shadow-emerald-600/25"
+            >
+              <Zap size={18} /> Đăng ký VIP Member
+            </Link>
+          </motion.div>
+        )}
+      </div>
+
+      {/* ── LEAD MODAL ── */}
       <AnimatePresence>
         {selectedProject && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeModal}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setSelectedProject(null)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-[#111623] rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-10"
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-[#111827] rounded-3xl shadow-2xl border border-white/10 overflow-hidden z-10"
             >
-              <button onClick={closeModal} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 p-2 rounded-full transition-colors z-20">
-                <X size={20} />
+              <button onClick={() => setSelectedProject(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 p-2 rounded-full transition-colors z-20">
+                <X size={18} />
               </button>
 
               {isSuccess ? (
-                <div className="p-10 text-center relative">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none" />
-                  <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle2 size={40} />
+                <div className="p-10 text-center">
+                  <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 size={32} />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Thành công!</h3>
-                  <p className="text-slate-500 dark:text-slate-400 font-medium mb-8">
-                    Mã nguồn của <strong>{selectedProject}</strong> đang được đóng gói và gửi đến hộp thư <strong>{email}</strong>. Vui lòng kiểm tra email của bạn sau ít phút.
-                  </p>
-                  <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-4 uppercase tracking-widest">Ưu đãi độc quyền</p>
-                  <div className="bg-slate-50 dark:bg-[#1A1F32] p-6 rounded-2xl mb-2 text-left">
-                    <p className="text-slate-600 dark:text-slate-300 text-sm font-medium mb-4 leading-relaxed">
-                      Nhận ngay <strong className="text-indigo-600 dark:text-indigo-400">toàn bộ mã nguồn thực tế đang chạy</strong>, kèm tài liệu hướng dẫn setup chi tiết A-Z và quyền lợi hỏi đáp trực tiếp cùng Coach. Xây app AI chưa bao giờ dễ đến thế.
-                    </p>
-                    <Link to={profile ? "/payment?plan=vip" : "/auth/signup?plan=vip"} className="flex items-center justify-center w-full py-3.5 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:opacity-90 transition-opacity">
-                      Đăng ký VIP Member ngay
-                    </Link>
-                  </div>
+                  <h3 className="text-xl font-black text-white mb-2">Đã nhận yêu cầu!</h3>
+                  <p className="text-slate-400 text-sm mb-6">Mã nguồn <strong className="text-white">{selectedProject}</strong> sẽ gửi đến <strong className="text-indigo-400">{email}</strong> trong 24h.</p>
+                  <Link to="/auth/signup?plan=vip"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    <Zap size={16} /> Đăng ký VIP — nhận ngay
+                  </Link>
                 </div>
               ) : (
-                <div className="p-8 md:p-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-2xl text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-inner">
-                      <Zap size={24} fill="currentColor" />
-                    </div>
+                <div className="p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="bg-emerald-500/20 p-3 rounded-xl text-emerald-400"><Code2 size={22} /></div>
                     <div>
-                      <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight">Nhận Mã Nguồn Miễn Phí</h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm font-bold mt-1 max-w-[200px] truncate">{selectedProject}</p>
+                      <h3 className="font-black text-white text-lg leading-tight">Nhận Mã Nguồn</h3>
+                      <p className="text-slate-400 text-xs font-medium truncate max-w-[220px]">{selectedProject}</p>
                     </div>
                   </div>
-                  
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Họ và tên</label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input required value={name} onChange={(e)=>setName(e.target.value)} type="text" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-[#151A2D] border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-white font-medium" placeholder="Nguyễn Văn A" />
-                      </div>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                      <input required value={name} onChange={e => setName(e.target.value)} type="text"
+                        placeholder="Họ và tên" className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:outline-none text-white placeholder-slate-500 text-sm font-medium transition-all" />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Email nhận Code <span className="text-rose-500">*</span></label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input required value={email} onChange={(e)=>setEmail(e.target.value)} type="email" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-[#151A2D] border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-white font-medium" placeholder="email@example.com" />
-                      </div>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                      <input required value={email} onChange={e => setEmail(e.target.value)} type="email"
+                        placeholder="Email nhận code *" className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:outline-none text-white placeholder-slate-500 text-sm font-medium transition-all" />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Zalo / SĐT (Tùy chọn)</label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input value={phone} onChange={(e)=>setPhone(e.target.value)} type="tel" className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-[#151A2D] border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-white font-medium" placeholder="09xx.xxx.xxx" />
-                      </div>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                      <input value={phone} onChange={e => setPhone(e.target.value)} type="tel"
+                        placeholder="Zalo / SĐT (tuỳ chọn)" className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:outline-none text-white placeholder-slate-500 text-sm font-medium transition-all" />
                     </div>
-                    
-                    <button disabled={isSubmitting} type="submit" className="w-full mt-4 py-4 bg-indigo-600 disabled:bg-indigo-400 text-white rounded-xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20">
-                      {isSubmitting ? 'Đang đóng gói...' : 'Gửi mã nguồn cho tôi'} <Send size={18} />
+                    <button disabled={isSubmitting} type="submit"
+                      className="w-full py-3.5 bg-emerald-600 disabled:opacity-50 text-white rounded-xl font-black flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all"
+                    >
+                      {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Send size={16} /> Gửi mã nguồn cho tôi</>}
                     </button>
-                    <p className="text-center text-xs font-medium text-slate-400 mt-4 leading-relaxed tracking-wide">🛡️ Cam kết không gửi thư rác. Thông tin bảo mật.</p>
+                    <p className="text-center text-xs text-slate-500">🛡️ Cam kết không spam. Bảo mật thông tin.</p>
                   </form>
                 </div>
               )}

@@ -32,6 +32,7 @@ const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.N
 const CoachAI = lazy(() => import('./pages/CoachAI').then(m => ({ default: m.CoachAI })));
 // FIX: Moved SaaSOnboarding to consistent lazy-load pattern at top of file
 const SaaSOnboarding = lazy(() => import('./pages/SaaSOnboarding').then(m => ({ default: m.SaaSOnboarding })));
+const ControlPanel = lazy(() => import('./pages/ControlPanel').then(m => ({ default: m.ControlPanel })));
 
 // Premium Page loading fallback
 const PageLoader = () => (
@@ -69,16 +70,26 @@ const ROLE_DASHBOARD: Record<string, string> = {
   student: '/dashboard/student',
 };
 
-const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: string }) => {
+const ProtectedRoute = ({ children, role, roles }: { children: React.ReactNode, role?: string, roles?: string[] }) => {
   const { profile, loading } = useAuth();
 
   if (loading) return null;
   if (!profile) return <Navigate to="/auth/signin" />;
 
+  // Check single role
   if (role && profile.role !== role) {
-    // Toast fires after render
     setTimeout(() => {
       _toastFn?.(`Bạn không có quyền truy cập trang này (cần role: ${role})`);
+      setTimeout(() => _toastFn?.(''), 4000);
+    }, 0);
+    const redirectTo = ROLE_DASHBOARD[profile.role] || '/dashboard/student';
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  // Check multi-role (any of)
+  if (roles && !roles.includes(profile.role)) {
+    setTimeout(() => {
+      _toastFn?.(`Bạn không có quyền truy cập (cần: ${roles.join(' hoặc ')})`);
       setTimeout(() => _toastFn?.(''), 4000);
     }, 0);
     const redirectTo = ROLE_DASHBOARD[profile.role] || '/dashboard/student';
@@ -141,6 +152,9 @@ export default function App() {
                 <SaaSOnboarding />
               </Suspense>
             } />
+            {/* Redirect aliases for onboarding so old/shared links don't 404 */}
+            <Route path="/onboarding" element={<Navigate to="/start" replace />} />
+            <Route path="/saas-onboarding" element={<Navigate to="/start" replace />} />
             <Route path="/auth/signin" element={<SignIn />} />
             <Route path="/auth/signup" element={<SignUp />} />
             <Route path="/auth/reset" element={<ResetPassword />} />
@@ -153,6 +167,15 @@ export default function App() {
             <Route path="/coaching" element={<Contact />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/projects" element={<Projects />} />
+            {/* Control Panel — admin & teacher only, no Navbar (full-screen iframe) */}
+            <Route
+              path="/control-panel"
+              element={
+                <ProtectedRoute roles={['admin', 'teacher']}>
+                  <ControlPanel />
+                </ProtectedRoute>
+              }
+            />
             <Route 
               path="/learn/:id" 
               element={

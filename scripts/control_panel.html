@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎛️ Coach.io.vn — Control Panel</title>
+  <style>
+    /* ====== RESET & BASE ====== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #252540;
+      --border: #2d2d50;
+      --text: #e2e8f0;
+      --muted: #8b8fa8;
+      --sidebar-w: 260px;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ====== SIDEBAR ====== */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .nav-section {
+      padding: 8px 0;
+    }
+    .nav-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 8px 16px 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background 0.15s;
+      font-size: 13.5px;
+      color: var(--muted);
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active {
+      background: rgba(79,70,229,0.15);
+      color: #818cf8;
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-item .badge {
+      margin-left: auto;
+      background: var(--primary);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 99px;
+    }
+
+    /* ====== MAIN CONTENT ====== */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      padding: 16px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar h2 { font-size: 16px; font-weight: 700; }
+    .topbar p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .url-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .url-badge span { color: #818cf8; font-family: monospace; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .content { padding: 24px; flex: 1; }
+
+    /* ====== SECTION PAGES ====== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ====== CARDS ====== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover { border-color: var(--primary-light); transform: translateY(-2px); }
+    .card-icon { font-size: 28px; margin-bottom: 12px; }
+    .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: white; }
+    .card p { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ====== BUTTONS ====== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: #1a1a0a; }
+    .btn-danger  { background: var(--danger); color: white; }
+    .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-sm      { padding: 5px 10px; font-size: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ====== STATUS / LOG ====== */
+    .log-panel {
+      background: #0a0a14;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .log-header {
+      background: var(--surface2);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-header span { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .log-body {
+      padding: 14px 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12.5px;
+      line-height: 1.8;
+      min-height: 120px;
+      max-height: 320px;
+      overflow-y: auto;
+      color: #a8b4c8;
+    }
+    .log-body .log-time { color: #555; }
+    .log-body .log-ok   { color: var(--success); }
+    .log-body .log-err  { color: var(--danger); }
+    .log-body .log-warn { color: var(--warning); }
+    .log-body .log-info { color: #60a5fa; }
+
+    /* ====== CONFIG INPUT ====== */
+    .config-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .config-row label { font-size: 12px; font-weight: 600; color: var(--muted); width: 160px; flex-shrink: 0; }
+    .config-row input, .config-row select {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: monospace;
+    }
+    .config-row input:focus, .config-row select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* ====== PROGRESS ====== */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ====== STATUS INDICATOR ====== */
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .status-dot.ok  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .status-dot.err { background: var(--danger); }
+    .status-dot.idle { background: var(--muted); }
+
+    /* ====== ACTION TABLE ====== */
+    .action-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .action-table th, .action-table td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .action-table th { background: var(--surface2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .action-table tr:hover td { background: rgba(255,255,255,0.02); }
+    code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #a78bfa; font-family: monospace; }
+
+    /* ====== DATAGRID ====== */
+    .datagrid-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    .datagrid-toolbar {
+      background: var(--surface2);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .datagrid-toolbar .info { font-size: 12px; color: var(--muted); }
+    .datagrid-toolbar .info b { color: var(--success); }
+    .datagrid-scroll { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+    .datagrid {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      white-space: nowrap;
+    }
+    .datagrid thead th {
+      background: #1e1e38;
+      padding: 8px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #818cf8;
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      cursor: pointer;
+      user-select: none;
+    }
+    .datagrid thead th:hover { background: #252550; }
+    .datagrid thead th .sort-icon { opacity: 0.4; margin-left: 4px; }
+    .datagrid thead th.sorted .sort-icon { opacity: 1; color: var(--primary); }
+    .datagrid tbody tr:nth-child(even) td { background: rgba(255,255,255,0.012); }
+    .datagrid tbody tr:hover td { background: rgba(79,70,229,0.08); }
+    .datagrid tbody td {
+      padding: 7px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text);
+      max-width: 240px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .datagrid tbody td.num { text-align: right; color: #60a5fa; font-family: monospace; }
+    .datagrid tbody td.bool-true  { color: var(--success); font-weight: 600; }
+    .datagrid tbody td.bool-false { color: var(--muted); }
+    .datagrid tbody td.long { white-space: normal; max-width: 300px; font-size: 11.5px; color: var(--muted); }
+    .dg-toggle-row { display: flex; gap: 6px; }
+
+
+    /* ====== LOGIN OVERLAY ====== */
+    .login-overlay {
+      position: fixed; inset: 0;
+      background: #0b0b18;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    .login-card .logo { font-size: 36px; margin-bottom: 8px; }
+    .login-card h2 { font-size: 20px; font-weight: 800; color: white; margin-bottom: 4px; }
+    .login-card p  { font-size: 12.5px; color: var(--muted); margin-bottom: 28px; }
+    .login-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .login-input:focus { outline: none; border-color: var(--primary); }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 99px;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+    .login-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .login-err { color: var(--danger); font-size: 12.5px; margin-top: 10px; }
+    .login-hint { font-size: 11px; color: var(--muted); margin-top: 16px; line-height: 1.8; }
+    /* User badge in sidebar */
+    .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: white;
+    }
+    .user-info { flex: 1; }
+    .user-info .name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .user-info .role { font-size: 10px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- ====== LOGIN OVERLAY ====== -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="logo">🎛️</div>
+    <h2>Coach.io.vn Admin</h2>
+    <p>Đăng nhập để truy cập Control Panel</p>
+    <input class="login-input" type="email" id="login-email" placeholder="Email admin..." />
+    <input class="login-input" type="password" id="login-password" placeholder="Mật khẩu..." onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" id="login-btn" onclick="doLogin()">🔐 Đăng nhập</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-hint">
+      💡 Cần cấu hình Script Properties trong GAS:<br>
+      <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;font-size:11px;">ADMIN_EMAIL</code> &amp;
+      <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;font-size:11px;">ADMIN_PASSWORD</code><br>
+      hoặc thêm dòng vào sheet <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;font-size:11px;">Admins</code>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SIDEBAR ====== -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>🎛️ Control Panel</h1>
+    <p>Coach.io.vn · Apps Script Admin</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Tổng quan</div>
+    <div class="nav-item active" onclick="switchPage('dashboard', this)">
+      <span class="icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="switchPage('setup', this)">
+      <span class="icon">🚀</span> Setup Spreadsheet
+      <span class="badge">1×</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Dữ liệu API</div>
+    <div class="nav-item" onclick="switchPage('tenant', this)">
+      <span class="icon">🏢</span> Tenant Config
+    </div>
+    <div class="nav-item" onclick="switchPage('courses', this)">
+      <span class="icon">📚</span> Courses
+    </div>
+    <div class="nav-item" onclick="switchPage('bots', this)">
+      <span class="icon">🤖</span> Bots / AI Hub
+    </div>
+    <div class="nav-item" onclick="switchPage('leads', this)">
+      <span class="icon">📋</span> Leads
+    </div>
+    <div class="nav-item" onclick="switchPage('projects', this)">
+      <span class="icon">💼</span> Projects
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">CRM & Email</div>
+    <div class="nav-item" onclick="switchPage('crm', this)">
+      <span class="icon">✉️</span> CRM Email
+      <span class="badge">10</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('logs', this)">
+      <span class="icon">📜</span> Email Logs
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Hệ thống</div>
+    <div class="nav-item" onclick="switchPage('config', this)">
+      <span class="icon">⚙️</span> Cấu hình URL
+    </div>
+  </div>
+
+  <div style="margin-top:auto; padding:0; border-top:1px solid var(--border);">
+    <div id="user-badge-area">
+      <!-- filled by authInit() -->
+    </div>
+    <div style="padding:10px 16px;">
+      <div style="font-size:11px; color:var(--muted);">
+        <span id="status-dot" class="status-dot idle"></span>
+        <span id="status-text">Chưa kết nối</span>
+      </div>
+      <div style="font-size:10px; color:#444; margin-top:4px;">v2.5 · 2026</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ====== MAIN ====== -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2 id="page-title">Dashboard</h2>
+      <p id="page-desc">Tổng quan hệ thống Coach.io.vn</p>
+    </div>
+    <div class="url-badge">
+      🔗 GAS URL: <span id="url-preview">Chưa cấu hình</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ====== PAGE: DASHBOARD ====== -->
+    <div class="page active" id="page-dashboard">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🚀</div>
+          <h3>Setup Spreadsheet</h3>
+          <p>Tạo toàn bộ Sheets, Headers & Seed Data mẫu chỉ bằng 1 click. Chạy 1 lần duy nhất khi bắt đầu.</p>
+          <div class="card-actions">
+            <button class="btn btn-primary" onclick="runSetup()">▶ Chạy Setup</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📡</div>
+          <h3>Kiểm tra API</h3>
+          <p>Ping GAS Web App để xác nhận đã deploy đúng và SPREADSHEET_ID đã được cấu hình.</p>
+          <div class="card-actions">
+            <button class="btn btn-ghost" onclick="pingAPI()">🔍 Ping API</button>
+            <button class="btn btn-ghost btn-sm" onclick="switchPage('config', document.querySelector('.nav-item:last-child'))">⚙️ Cấu hình</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📊</div>
+          <h3>Xem Dữ Liệu Live</h3>
+          <p>Fetch data thực tế từ GAS API để xác nhận các Sheets đã có data và trả về đúng JSON.</p>
+          <div class="card-actions">
+            <button class="btn btn-success btn-sm" onclick="fetchData('getConfig')">getConfig</button>
+            <button class="btn btn-success btn-sm" onclick="fetchData('getBots')">getBots</button>
+            <button class="btn btn-success btn-sm" onclick="fetchData('getCourses')">getCourses</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📖</div>
+          <h3>Mở Google Sheet</h3>
+          <p>Mở trực tiếp Control Panel Spreadsheet để xem và chỉnh sửa data thực tế.</p>
+          <div class="card-actions">
+            <a class="btn btn-warning" id="sheet-link" href="#" target="_blank">📂 Mở Sheet</a>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel">
+        <div class="log-header">
+          <span>📟 Activity Log</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearLog()">Xóa log</button>
+        </div>
+        <div class="log-body" id="log">
+          <div><span class="log-time">[--:--:--]</span> Chào mừng bạn đến với Control Panel. Cấu hình GAS URL ở menu Cấu hình URL trước khi bắt đầu.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: SETUP ====== -->
+    <div class="page" id="page-setup">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-icon">⚠️</div>
+        <h3>Lưu ý trước khi chạy Setup</h3>
+        <p style="margin-bottom:0;">
+          • Hàm này sẽ tạo mới các sheet chưa tồn tại trong Google Sheet của bạn.<br>
+          • Nếu sheet đã tồn tại → <strong>bỏ qua</strong>, không ghi đè data thật.<br>
+          • Chỉ chạy <strong>1 lần duy nhất</strong> khi mới setup.<br>
+          • Sau khi chạy → kiểm tra sheet <code>📖 HƯỚNG DẪN</code> để biết cách điền data.
+        </p>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🏗️</div>
+          <h3>Tạo Toàn Bộ Sheets</h3>
+          <p>Tạo: HƯỚNG DẪN, Tenants, Courses, Lessons, Leads, Bots, Projects, page_content — với headers và seed data 5 sao.</p>
+          <div class="card-actions">
+            <button class="btn btn-primary" id="btn-setup" onclick="runSetup()">🚀 Chạy setupSpreadsheet()</button>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel" style="margin-top:16px;">
+        <div class="log-header"><span>📟 Kết quả</span></div>
+        <div class="log-body" id="log-setup"><div style="color:#555;">Nhấn nút để bắt đầu...</div></div>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: TENANT / COURSES / BOTS / LEADS / PROJECTS ====== -->
+    <div class="page" id="page-tenant">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🏢</div>
+          <h3>Xem Tenant Config</h3>
+          <p>Fetch cấu hình tenant từ sheet Tenants theo domain.</p>
+          <div class="config-row" style="margin-top:8px;">
+            <label>Domain:</label>
+            <input type="text" id="input-domain" value="coach.io.vn" placeholder="coach.io.vn" />
+          </div>
+          <div class="card-actions" style="margin-top:4px;">
+            <button class="btn btn-primary" onclick="fetchData('tenant-config', {tenant_id: document.getElementById('input-domain').value})">📡 Fetch</button>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel"><div class="log-header"><span>📟 Response</span></div><div class="log-body" id="log-tenant"><div style="color:#555;">Nhấn Fetch...</div></div></div>
+      <div id="grid-tenant"></div>
+
+    </div>
+
+    <div class="page" id="page-courses">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">📚</div>
+          <h3>Fetch Courses</h3>
+          <p>Lấy danh sách khóa học đang publish từ sheet Courses.</p>
+          <div class="config-row" style="margin-top:8px;">
+            <label>Tenant ID:</label>
+            <input type="text" id="input-tenant-courses" value="coach.io.vn" />
+          </div>
+          <div class="card-actions" style="margin-top:4px;">
+            <button class="btn btn-success" onclick="fetchData('getCourses', {tenant_id: document.getElementById('input-tenant-courses').value})">📡 getCourses</button>
+            <button class="btn btn-ghost" onclick="fetchData('getLessons', {tenant_id: document.getElementById('input-tenant-courses').value})">📡 getLessons</button>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel"><div class="log-header"><span>📟 Response</span></div><div class="log-body" id="log-courses"><div style="color:#555;">Nhấn Fetch...</div></div></div>
+      <div id="grid-courses"></div>
+
+    </div>
+
+    <div class="page" id="page-bots">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🤖</div>
+          <h3>Fetch Bots</h3>
+          <div class="config-row" style="margin-top:8px;">
+            <label>Tenant ID:</label>
+            <input type="text" id="input-tenant-bots" value="coach.io.vn" />
+          </div>
+          <div class="config-row">
+            <label>Role:</label>
+            <select id="input-role">
+              <option value="all">all</option>
+              <option value="student">student</option>
+              <option value="teacher">teacher</option>
+            </select>
+          </div>
+          <div class="card-actions" style="margin-top:4px;">
+            <button class="btn btn-success" onclick="fetchData('getBots', {tenant_id: document.getElementById('input-tenant-bots').value, role: document.getElementById('input-role').value})">📡 getBots</button>
+            <button class="btn btn-ghost" onclick="fetchData('getConfig', {tenant_id: document.getElementById('input-tenant-bots').value})">📡 getConfig</button>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel"><div class="log-header"><span>📟 Response</span></div><div class="log-body" id="log-bots"><div style="color:#555;">Nhấn Fetch...</div></div></div>
+      <div id="grid-bots"></div>
+
+    </div>
+
+    <div class="page" id="page-leads">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">📋</div>
+          <h3>Fetch Leads</h3>
+          <div class="config-row" style="margin-top:8px;">
+            <label>Tenant ID:</label>
+            <input type="text" id="input-tenant-leads" value="coach.io.vn" />
+          </div>
+          <div class="card-actions" style="margin-top:4px;">
+            <button class="btn btn-success" onclick="fetchData('getLeads', {tenant_id: document.getElementById('input-tenant-leads').value})">📡 getLeads</button>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel"><div class="log-header"><span>📟 Response</span></div><div class="log-body" id="log-leads"><div style="color:#555;">Nhấn Fetch...</div></div></div>
+      <div id="grid-leads"></div>
+
+    </div>
+
+    <div class="page" id="page-projects">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">💼</div>
+          <h3>Fetch Projects</h3>
+          <div class="config-row" style="margin-top:8px;">
+            <label>Tenant ID:</label>
+            <input type="text" id="input-tenant-projects" value="coach.io.vn" />
+          </div>
+          <div class="card-actions" style="margin-top:4px;">
+            <button class="btn btn-success" onclick="fetchData('getProjects', {tenant_id: document.getElementById('input-tenant-projects').value})">📡 getProjects</button>
+          </div>
+        </div>
+      </div>
+      <div class="log-panel"><div class="log-header"><span>📟 Response</span></div><div class="log-body" id="log-projects"><div style="color:#555;">Nhấn Fetch...</div></div></div>
+      <div id="grid-projects"></div>
+
+    </div>
+
+    <!-- ====== PAGE: CRM EMAIL ====== -->
+    <div class="page" id="page-crm">
+      <div class="card-grid">
+        <!-- Col 1: Chọn kịch bản + gửi -->
+        <div class="card" style="grid-column: span 2;">
+          <div class="card-icon">✉️</div>
+          <h3>Gửi Email CRM</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+            <div>
+              <div class="config-row">
+                <label>Kịch bản:</label>
+                <select id="crm-template-select" onchange="crmLoadTemplate()"></select>
+              </div>
+              <div class="config-row">
+                <label>Subject:</label>
+                <input type="text" id="crm-subject" placeholder="Subject email..." />
+              </div>
+              <div class="config-row" style="align-items:flex-start">
+                <label style="padding-top:8px">To (email):</label>
+                <textarea id="crm-to" rows="2" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;" placeholder="email1@gmail.com, email2@gmail.com"></textarea>
+              </div>
+              <div class="config-row" style="align-items:flex-start">
+                <label style="padding-top:8px">Placeholder:</label>
+                <input type="text" id="crm-name" placeholder="{{name}} → điền tên người nhận" />
+              </div>
+              <div class="card-actions" style="margin-top:8px;">
+                <button class="btn btn-primary" id="crm-send-btn" onclick="crmSendEmail()">📤 Gửi Email</button>
+                <button class="btn btn-ghost" onclick="crmSetupSheets()">🏗️ Setup CRM Sheets</button>
+                <button class="btn btn-ghost" onclick="crmLoadTemplates()">🔄 Tải templates</button>
+              </div>
+              <div id="crm-msg" style="margin-top:10px;font-size:13px;"></div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Preview nội dung</div>
+              <textarea id="crm-body" rows="14" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid" style="margin-top:8px;">
+        <div class="card">
+          <div class="card-icon">🔔</div>
+          <h3>Gửi Welcome tới Lead mới</h3>
+          <p>Test gửi email chào mừng tới một lead cụ thể. Hệ thống sẽ tự gửi khi lead đăng ký qua form web.</p>
+          <div class="config-row"><label>Tên:</label><input type="text" id="crm-test-name" placeholder="Nguyễn Văn A" /></div>
+          <div class="config-row"><label>Email:</label><input type="text" id="crm-test-email" placeholder="test@gmail.com" /></div>
+          <div class="card-actions" style="margin-top:8px;">
+            <button class="btn btn-success" onclick="crmTestWelcome()">🚀 Gửi Welcome Email</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚙️</div>
+          <h3>Hướng dẫn cấu hình RESEND</h3>
+          <p style="font-size:12px;line-height:1.8;">
+            1. Mở <b>Apps Script Editor</b> → ⚙️ Project Settings<br>
+            2. Chọn tab <b>Script Properties</b><br>
+            3. Add property: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11px;">RESEND_API_KEY</code><br>
+            4. Value: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11px;">re_TfWZtSb8_KW98h...</code><br>
+            5. Chạy <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11px;">setupCRMSheets()</code> trong GAS Editor
+          </p>
+          <a class="btn btn-warning btn-sm" href="https://script.google.com" target="_blank">🔗 Mở GAS Editor</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: EMAIL LOGS ====== -->
+    <div class="page" id="page-logs">
+      <div class="card" style="margin-bottom:16px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;">📜 50 email logs gần nhất</span>
+        <button class="btn btn-ghost btn-sm" onclick="fetchEmailLogs()">🔄 Tải lại</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="action-table" id="logs-table">
+          <thead><tr><th>Thời gian</th><th>Type</th><th>Template</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>
+          <tbody id="logs-tbody"><tr><td colspan="6" style="color:var(--muted);text-align:center;padding:24px;">Nhấn Tải lại để xem logs...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: CONFIG ====== -->
+    <div class="page" id="page-config">
+      <div class="card" style="max-width:600px; margin-bottom:20px;">
+        <div class="card-icon">⚙️</div>
+        <h3>Cấu hình GAS Web App URL</h3>
+        <p style="margin-bottom:16px;">Dán URL deploy của Google Apps Script vào đây. Sẽ được lưu vào localStorage của trình duyệt.</p>
+        <div class="config-row">
+          <label>GAS Webhook URL:</label>
+          <input type="text" id="input-gas-url" placeholder="https://script.google.com/macros/s/..." />
+        </div>
+        <div class="config-row">
+          <label>Google Sheet URL:</label>
+          <input type="text" id="input-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+        </div>
+        <div class="card-actions" style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="saveConfig()">💾 Lưu</button>
+          <button class="btn btn-ghost" onclick="pingAPI()">🔍 Test kết nối</button>
+        </div>
+      </div>
+      <div class="log-panel" style="max-width:600px;">
+        <div class="log-header"><span>📟 Kết quả test</span></div>
+        <div class="log-body" id="log-config"><div style="color:#555;">Nhập URL và nhấn Test kết nối...</div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ====== STATE ======
+let GAS_URL = localStorage.getItem('cp_gas_url') || 'https://script.google.com/macros/s/AKfycbzZH8oB7B6nf1spCyfHFffFSg6aN5GTf1RF88hyy9YGT25kqvwQG0iFatquEEdPlvDd/exec';
+
+let SHEET_URL = localStorage.getItem('cp_sheet_url') || 'https://docs.google.com/spreadsheets/d/1mq9Ri-oqvqMPBYLMnBxixD57hmmwkuASFL-m2CsIC0k/edit';
+
+const pageMeta = {
+  dashboard: { title: 'Dashboard', desc: 'Tổng quan hệ thống Coach.io.vn' },
+  setup:     { title: '🚀 Setup Spreadsheet', desc: 'Tạo Sheets & Seed Data — chạy 1 lần duy nhất' },
+  tenant:    { title: '🏢 Tenant Config', desc: 'Xem cấu hình theo domain' },
+  courses:   { title: '📚 Courses & Lessons', desc: 'Danh sách khóa học và bài giảng' },
+  bots:      { title: '🤖 Bots / AI Hub', desc: 'Cấu hình AI Bots hiển thị trên web' },
+  leads:     { title: '📋 Leads', desc: 'Danh sách người quan tâm từ form web' },
+  projects:  { title: '💼 Projects', desc: 'Portfolio dự án thực chiến' },
+  crm:       { title: '✉️ CRM Email', desc: '10 kịch bản email · Resend API · Auto welcome + follow-up' },
+  logs:      { title: '📜 Email Logs', desc: 'Lịch sử gửi email 50 dòng gần nhất' },
+  config:    { title: '⚙️ Cấu hình URL', desc: 'Kết nối với Google Apps Script Web App' },
+};
+
+// ====== AUTH STATE ======
+let AUTH_TOKEN = localStorage.getItem('cp_auth_token') || '';
+let AUTH_USER  = JSON.parse(localStorage.getItem('cp_auth_user') || 'null');
+
+// ====== INIT ======
+window.onload = () => {
+  updateUrlDisplay();
+  populateConfigInputs();
+  updateSheetLink();
+  authInit();
+};
+
+function authInit() {
+  if (AUTH_TOKEN && AUTH_USER) {
+    // Check expiry
+    if (AUTH_USER.expiresAt && AUTH_USER.expiresAt < Date.now()) {
+      authLogout();
+      return;
+    }
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+function showLogin() {
+  document.getElementById('login-overlay').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('login-overlay').style.display = 'none';
+  renderUserBadge();
+  appendLog('log', 'ok', `✅ Đã đăng nhập: ${AUTH_USER?.email || ''} [${AUTH_USER?.role || 'admin'}]`);
+}
+
+function renderUserBadge() {
+  if (!AUTH_USER) return;
+  const initial = (AUTH_USER.email || 'A').charAt(0).toUpperCase();
+  document.getElementById('user-badge-area').innerHTML = `
+    <div class="user-badge" onclick="if(confirm('Đăng xuất?'))authLogout()" title="Click để đăng xuất">
+      <div class="user-avatar">${initial}</div>
+      <div class="user-info">
+        <div class="name">${AUTH_USER.email}</div>
+        <div class="role">🔐 ${AUTH_USER.role || 'admin'} · Đăng xuất</div>
+      </div>
+    </div>
+  `;
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-err');
+
+  if (!email || !password) { err.textContent = 'Vui lòng nhập đầy đủ email và mật khẩu.'; return; }
+  if (!GAS_URL) { err.textContent = '⚠️ Chưa cấu hình GAS URL. Thêm URL vào dòng GAS_URL trong file này.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
+  err.textContent = '';
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'admin-login', email, password })
+    });
+    const data = await res.json();
+    if (data.success && data.token) {
+      AUTH_TOKEN = data.token;
+      AUTH_USER = { email: data.email, role: data.role, expiresAt: data.expiresAt };
+      localStorage.setItem('cp_auth_token', AUTH_TOKEN);
+      localStorage.setItem('cp_auth_user', JSON.stringify(AUTH_USER));
+      showApp();
+    } else {
+      err.textContent = '❌ ' + (data.error || 'Đăng nhập thất bại.');
+    }
+  } catch(e) {
+    err.textContent = '❌ Lỗi kết nối: ' + e.message + ' — Kiểm tra lại GAS URL.';
+  }
+  btn.disabled = false; btn.textContent = '🔐 Đăng nhập';
+}
+
+async function authLogout() {
+  if (GAS_URL && AUTH_TOKEN) {
+    try {
+      await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'admin-logout', token: AUTH_TOKEN }) });
+    } catch(e) {}
+  }
+  AUTH_TOKEN = ''; AUTH_USER = null;
+  localStorage.removeItem('cp_auth_token');
+  localStorage.removeItem('cp_auth_user');
+  document.getElementById('user-badge-area').innerHTML = '';
+  showLogin();
+}
+
+function updateUrlDisplay() {
+  const el = document.getElementById('url-preview');
+  el.textContent = GAS_URL ? GAS_URL.replace('https://script.google.com/macros/s/', '…/s/').slice(0, 50) + '…/exec' : 'Chưa cấu hình';
+}
+
+function populateConfigInputs() {
+  document.getElementById('input-gas-url').value = GAS_URL;
+  document.getElementById('input-sheet-url').value = SHEET_URL;
+}
+
+function updateSheetLink() {
+  const el = document.getElementById('sheet-link');
+  el.href = SHEET_URL || '#';
+}
+
+// ====== NAVIGATION ======
+function switchPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  const meta = pageMeta[id] || {};
+  document.getElementById('page-title').textContent = meta.title || id;
+  document.getElementById('page-desc').textContent = meta.desc || '';
+}
+
+// ====== CONFIG ======
+function saveConfig() {
+  GAS_URL = document.getElementById('input-gas-url').value.trim();
+  SHEET_URL = document.getElementById('input-sheet-url').value.trim();
+  localStorage.setItem('cp_gas_url', GAS_URL);
+  localStorage.setItem('cp_sheet_url', SHEET_URL);
+  updateUrlDisplay();
+  updateSheetLink();
+  appendLog('log-config', 'ok', '✅ Đã lưu cấu hình thành công!');
+  appendLog('log', 'ok', '⚙️ Đã cập nhật GAS URL mới.');
+}
+
+// ====== API CALLS WITH DATAGRID ======
+let _lastFetchData = null; // cache for toggle JSON/Table
+
+async function fetchData(action, extraParams = {}) {
+  if (!GAS_URL) { alert('Vui lòng cấu hình GAS URL trước!'); switchPage('config'); return; }
+  const logId = getLogIdForAction(action);
+  const containerId = logId.replace('log-', 'grid-');
+  const params = new URLSearchParams({ action, tenant_id: 'coach.io.vn', ...extraParams });
+  const url = `${GAS_URL}?${params}`;
+
+  setStatus('idle');
+  appendLog('log', 'info', `📡 GET → ?action=${action}...`);
+
+  // Show loading in grid container
+  const gridWrap = document.getElementById(containerId);
+  if (gridWrap) gridWrap.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);"><span class="spinner" style="width:20px;height:20px;border-width:3px;"></span></div>';
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    setStatus('ok');
+
+    if (Array.isArray(data) && data.length > 0) {
+      appendLog('log', 'ok', `✅ ${action}: ${data.length} rows`);
+      if (gridWrap) renderDataGrid(gridWrap, data, action);
+      else appendLog(logId, 'ok', JSON.stringify(data, null, 2).slice(0, 800));
+    } else if (data && typeof data === 'object' && !data.error) {
+      appendLog('log', 'ok', `✅ ${action}: object`);
+      // Wrap single object as 1-row table
+      if (gridWrap) renderDataGrid(gridWrap, [data], action);
+    } else {
+      appendLog(logId || 'log', 'err', `❌ ${data?.error || 'No data'}`);
+      if (gridWrap) gridWrap.innerHTML = `<div style="padding:24px;text-align:center;color:var(--danger);">❌ ${escapeHtml(data?.error || 'No data returned')}</div>`;
+    }
+  } catch(e) {
+    setStatus('err');
+    appendLog('log', 'err', `❌ Lỗi: ${e.message}`);
+    if (gridWrap) gridWrap.innerHTML = `<div style="padding:24px;text-align:center;color:var(--danger);">❌ ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderDataGrid(container, data, label) {
+  if (!data || !data.length) { container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);">Không có dữ liệu.</div>'; return; }
+
+  // Collect all keys from all rows
+  const allKeys = [];
+  data.forEach(row => Object.keys(row).forEach(k => { if (!allKeys.includes(k)) allKeys.push(k); }));
+
+  let sortKey = null, sortAsc = true;
+
+  function build(sortedData) {
+    const rowsHtml = sortedData.map((row, ri) => {
+      const cells = allKeys.map(k => {
+        const v = row[k];
+        if (v === null || v === undefined || v === '') return `<td style="color:#444;">—</td>`;
+        if (typeof v === 'boolean') return `<td class="bool-${v}">${v ? '✓ true' : '✗ false'}</td>`;
+        if (typeof v === 'number') return `<td class="num">${v.toLocaleString()}</td>`;
+        const str = String(v);
+        const isLong = str.length > 60;
+        return `<td class="${isLong ? 'long' : ''}" title="${escapeHtml(str)}">${escapeHtml(str.slice(0, isLong ? 120 : str.length))}${str.length > 120 ? '…' : ''}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    const headersHtml = allKeys.map(k => {
+      const isSorted = sortKey === k;
+      return `<th class="${isSorted ? 'sorted' : ''}" onclick="_dgSort('${escapeHtml(k)}')"
+        >${escapeHtml(k)} <span class="sort-icon">${!isSorted ? '↕' : sortAsc ? '↑' : '↓'}</span></th>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="datagrid-wrap">
+        <div class="datagrid-toolbar">
+          <span class="info">📊 <b>${sortedData.length}</b> dòng · ${allKeys.length} cột · ${escapeHtml(String(label))}</span>
+          <div class="dg-toggle-row">
+            <button class="btn btn-ghost btn-sm" onclick="_dgCopy()">📋 Copy JSON</button>
+            <button class="btn btn-ghost btn-sm" onclick="_dgExportCSV()">⬇ CSV</button>
+          </div>
+        </div>
+        <div class="datagrid-scroll">
+          <table class="datagrid">
+            <thead><tr>${headersHtml}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  // Store data reference for sort/export
+  window._dgData = data;
+  window._dgKeys = allKeys;
+  window._dgContainer = container;
+  window._dgLabel = label;
+  window._dgSortState = { key: null, asc: true };
+
+  window._dgSort = function(key) {
+    if (window._dgSortState.key === key) window._dgSortState.asc = !window._dgSortState.asc;
+    else { window._dgSortState.key = key; window._dgSortState.asc = true; }
+    sortKey = key; sortAsc = window._dgSortState.asc;
+    const sorted = [...window._dgData].sort((a, b) => {
+      const va = a[key] ?? ''; const vb = b[key] ?? '';
+      return (va < vb ? -1 : va > vb ? 1 : 0) * (sortAsc ? 1 : -1);
+    });
+    build(sorted);
+  };
+
+  window._dgCopy = function() {
+    navigator.clipboard.writeText(JSON.stringify(window._dgData, null, 2))
+      .then(() => appendLog('log', 'ok', '✅ JSON đã copy vào clipboard!'))
+      .catch(() => appendLog('log', 'warn', '⚠️ Không copy được — trình duyệt file:// hạn chế clipboard.'));
+  };
+
+  window._dgExportCSV = function() {
+    const header = window._dgKeys.join(',');
+    const rows = window._dgData.map(row => window._dgKeys.map(k => JSON.stringify(row[k] ?? '')).join(','));
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `${window._dgLabel || 'data'}_${Date.now()}.csv`; a.click();
+    appendLog('log', 'ok', '✅ CSV đã tải xuống!');
+  };
+
+  build(data);
+}
+
+async function pingAPI() {
+  if (!GAS_URL) { alert('Vui lòng nhập GAS URL trước!'); return; }
+  appendLog('log-config', 'info', '🔍 Đang ping API...');
+  appendLog('log', 'info', '🔍 Ping API...');
+  try {
+    const res = await fetch(GAS_URL + '?action=getConfig&tenant_id=coach.io.vn');
+    const data = await res.json();
+    if (data.error) {
+      setStatus('err');
+      appendLog('log-config', 'err', `❌ GAS trả lỗi: ${data.error}`);
+    } else {
+      setStatus('ok');
+      appendLog('log-config', 'ok', '✅ Kết nối thành công! GAS Web App đang hoạt động.');
+      appendLog('log', 'ok', '✅ API ping OK!');
+    }
+  } catch(e) {
+    setStatus('err');
+    appendLog('log-config', 'err', `❌ Không kết nối được: ${e.message}`);
+    appendLog('log', 'err', `❌ Ping thất bại: ${e.message}`);
+  }
+}
+
+async function runSetup() {
+  if (!GAS_URL) { alert('Vui lòng cấu hình GAS URL!'); switchPage('config'); return; }
+  const btn = document.getElementById('btn-setup');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang chạy...';
+  appendLog('log-setup', 'info', '🚀 Đang gọi setupSpreadsheet() qua GAS...');
+  appendLog('log', 'info', '🚀 setupSpreadsheet() đang chạy...');
+
+  // setupSpreadsheet() is triggered by a special POST action
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'setup-spreadsheet' }),
+    });
+    appendLog('log-setup', 'warn', '⚠️ Lưu ý: setupSpreadsheet() cần được chạy từ Google Apps Script Editor (không qua HTTP) vì nó dùng SpreadsheetApp.getActiveSpreadsheet(). Hãy mở Apps Script Editor → chọn hàm setupSpreadsheet → nhấn ▶ Run.');
+    appendLog('log-setup', 'info', '👉 Bước thay thế: Nhấn nút bên dưới để fetch getConfig và xác nhận Sheet đã có data.');
+    appendLog('log', 'warn', '⚠️ setupSpreadsheet() cần chạy từ GAS Editor.');
+  } catch(e) {
+    appendLog('log-setup', 'warn', '⚠️ Cần chạy setupSpreadsheet() từ GAS Editor trực tiếp.');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶ Chạy setupSpreadsheet()';
+
+  // After setup, verify via API
+  appendLog('log-setup', 'info', '🔍 Đang verify bằng fetch getConfig...');
+  await fetchData('getConfig');
+}
+
+// ====== HELPERS ======
+function getLogIdForAction(action) {
+  const map = {
+    'tenant-config': 'log-tenant',
+    'getCourses': 'log-courses', 'getLessons': 'log-courses',
+    'getBots': 'log-bots', 'getConfig': 'log-bots',
+    'getLeads': 'log-leads',
+    'getProjects': 'log-projects',
+  };
+  return map[action] || 'log';
+}
+
+function appendLog(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+  const cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : type === 'warn' ? 'log-warn' : type === 'info' ? 'log-info' : '';
+  const line = document.createElement('div');
+  line.innerHTML = `<span class="log-time">[${time}]</span> <span class="${cls}">${escapeHtml(msg)}</span>`;
+  if (el.children.length === 1 && el.children[0].style.color === 'rgb(85, 85, 85)') el.innerHTML = '';
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log').innerHTML = '';
+}
+
+function setStatus(state) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = `status-dot ${state}`;
+  txt.textContent = state === 'ok' ? 'Kết nối OK' : state === 'err' ? 'Lỗi kết nối' : 'Đang kiểm tra...';
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ====== CRM EMAIL FUNCTIONS ======
+let crmTemplates = [];
+
+async function crmLoadTemplates() {
+  if (!GAS_URL) { appendLog('log', 'warn', '⚠️ Cấu hình GAS URL trước.'); return; }
+  try {
+    const res = await fetch(GAS_URL + '?action=getEmailTemplates&tenant_id=all');
+    const data = await res.json();
+    crmTemplates = Array.isArray(data) ? data : [];
+    const select = document.getElementById('crm-template-select');
+    select.innerHTML = '<option value="">-- Chọn kịch bản --</option>';
+    crmTemplates.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = `${t.id}. ${t.name}`;
+      select.appendChild(opt);
+    });
+    appendLog('log', 'ok', `✅ Loaded ${crmTemplates.length} email templates.`);
+  } catch(e) {
+    appendLog('log', 'err', '❌ Lỗi load templates: ' + e.message);
+  }
+}
+
+function crmLoadTemplate() {
+  const id = document.getElementById('crm-template-select').value;
+  const tmpl = crmTemplates.find(t => String(t.id) === String(id));
+  if (!tmpl) return;
+  document.getElementById('crm-subject').value = tmpl.subject || '';
+  document.getElementById('crm-body').value = tmpl.body || '';
+}
+
+async function crmSendEmail() {
+  if (!GAS_URL) { alert('Cấu hình GAS URL trước!'); return; }
+  const btn = document.getElementById('crm-send-btn');
+  const msgEl = document.getElementById('crm-msg');
+  const toEmail = document.getElementById('crm-to').value.trim();
+  const subject = document.getElementById('crm-subject').value.trim();
+  let body = document.getElementById('crm-body').value.trim();
+  const name = document.getElementById('crm-name').value.trim();
+  const templateId = document.getElementById('crm-template-select').value;
+
+  if (!toEmail) { msgEl.innerHTML = '<span style="color:var(--danger)">❌ Điền email người nhận.</span>'; return; }
+  if (!subject) { msgEl.innerHTML = '<span style="color:var(--danger)">❌ Điền subject.</span>'; return; }
+
+  // Replace placeholders
+  body = body.replace(/{{name}}/g, name || '').replace(/{{email}}/g, toEmail.split(',')[0].trim());
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
+  msgEl.textContent = '';
+  appendLog('log', 'info', `📤 Gửi template #${templateId || 'manual'} → ${toEmail}`);
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'send-crm-email', templateId, toEmail, customSubject: subject, customBody: body })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msgEl.innerHTML = `<span style="color:var(--success)">✅ ${data.message}</span>`;
+      appendLog('log', 'ok', '✅ CRM email sent: ' + data.message);
+    } else {
+      msgEl.innerHTML = `<span style="color:var(--danger)">❌ ${data.error || 'Gửi thất bại'}</span>`;
+      appendLog('log', 'err', '❌ ' + (data.error || 'Send failed'));
+    }
+    setStatus('ok');
+  } catch(e) {
+    msgEl.innerHTML = `<span style="color:var(--danger)">❌ ${e.message}</span>`;
+    appendLog('log', 'err', '❌ ' + e.message);
+    setStatus('err');
+  }
+  btn.disabled = false; btn.innerHTML = '📤 Gửi Email';
+}
+
+async function crmTestWelcome() {
+  if (!GAS_URL) { alert('Cấu hình GAS URL trước!'); return; }
+  const name = document.getElementById('crm-test-name').value.trim();
+  const email = document.getElementById('crm-test-email').value.trim();
+  if (!email) { alert('Nhập email!'); return; }
+  appendLog('log', 'info', `🚀 Gửi welcome email → ${email}`);
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'submit-lead', name, email, phone: '', note: 'Test từ Control Panel', source: 'control_panel', tenant_id: 'coach.io.vn' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      appendLog('log', 'ok', '✅ ' + data.message);
+      alert('✅ ' + data.message);
+    } else {
+      appendLog('log', 'err', '❌ ' + (data.error || 'Thất bại'));
+    }
+  } catch(e) { appendLog('log', 'err', '❌ ' + e.message); }
+}
+
+async function crmSetupSheets() {
+  if (!GAS_URL) { alert('Cấu hình GAS URL trước!'); return; }
+  appendLog('log', 'info', '🏗️ Setup CRM Sheets...');
+  try {
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'setup-crm' }) });
+    const data = await res.json();
+    appendLog('log', data.success ? 'ok' : 'err', (data.success ? '✅ ' : '❌ ') + (data.message || data.error));
+    if (data.success) crmLoadTemplates();
+  } catch(e) { appendLog('log', 'err', '❌ ' + e.message); }
+}
+
+async function fetchEmailLogs() {
+  if (!GAS_URL) return;
+  appendLog('log', 'info', '📜 Tải email logs...');
+  try {
+    const res = await fetch(GAS_URL + '?action=getEmailLogs&tenant_id=coach.io.vn');
+    const data = await res.json();
+    const tbody = document.getElementById('logs-tbody');
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:24px;">Chưa có logs nào.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(row => `
+      <tr>
+        <td style="font-size:11px;color:var(--muted);">${String(row.timestamp).slice(0,19).replace('T',' ')}</td>
+        <td><span style="background:var(--surface2);padding:2px 8px;border-radius:99px;font-size:11px;">${row.type||''}</span></td>
+        <td style="font-size:12px;color:#a78bfa;">${row.templateId||'-'}</td>
+        <td style="font-size:12px;font-family:monospace;">${escapeHtml(String(row.to||'').slice(0,40))}</td>
+        <td style="font-size:12px;">${escapeHtml(String(row.subject||'').slice(0,50))}</td>
+        <td><span style="color:${row.status==='OK'?'var(--success)':'var(--danger)'};font-weight:700;">${row.status||''}</span></td>
+      </tr>
+    `).join('');
+    appendLog('log', 'ok', `✅ Loaded ${data.length} email logs.`);
+  } catch(e) { appendLog('log', 'err', '❌ ' + e.message); }
+}
+</script>
+</body>
+</html>

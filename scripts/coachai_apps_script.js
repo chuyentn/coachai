@@ -64,60 +64,112 @@ function doGet(e) {
 }
 
 /**
- * [NEW] Handle POST requests (Webhooks from Frontend)
- * Implements Phase 5: Auto-Onboarding Tenant Creation
+ * CRM CONFIG — Lấy từ Script Properties (Extensions → Apps Script → Project Settings)
+ * Cách set: PropertiesService.getScriptProperties().setProperty('RESEND_API_KEY', 're_...')
+ */
+const CRM_CONFIG = {
+  resendApiKey: PropertiesService.getScriptProperties().getProperty('RESEND_API_KEY') || '',
+  fromEmail: 'Coach Chuyên <no-reply@coach.io.vn>',
+  calLink: 'https://cal.com/victorchuyen/coachai',
+  demoLink: 'https://coach.io.vn',
+  leads_sheet: 'Leads',
+  templates_sheet: 'Email Templates',
+  logs_sheet: 'Email Logs',
+};
+
+/**
+ * [UPDATED] Handle POST requests — supports register-tenant + submit-lead (CRM)
  */
 function doPost(e) {
   try {
-    // Enable CORS by returning JSON properly
     if (!e.postData || !e.postData.contents) {
       return ContentService.createTextOutput(JSON.stringify({ error: 'No POST data received' })).setMimeType(ContentService.MimeType.JSON);
     }
-    
     const postData = JSON.parse(e.postData.contents);
     const action = postData.action;
 
+    // ===== REGISTER TENANT =====
     if (action === 'register-tenant') {
-      // FIX: Guard for placeholder SPREADSHEET_ID (audit finding: HIGH)
       if (SPREADSHEET_ID === 'YOUR_SPREADSHEET_ID_HERE') {
-        return ContentService.createTextOutput(JSON.stringify({ error: 'SPREADSHEET_ID not configured. Please update it in the Apps Script.' })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ error: 'SPREADSHEET_ID not configured.' })).setMimeType(ContentService.MimeType.JSON);
       }
       const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
       const sheet = ss.getSheetByName('Tenants');
-      
       if (!sheet) return ContentService.createTextOutput(JSON.stringify({ error: 'Tenants sheet not found' })).setMimeType(ContentService.MimeType.JSON);
-      
-      // Reconstruct Row based on HEADERS.tenants: 
-      // ['domain', 'app_name', 'logo_url', 'primary_color', 'contact_email', 'zalo_url', 'facebook_url', 'sepay_md5', 'bank_id', 'bank_account', 'bank_owner', 'status']
       const newDomain = postData.domain.includes('.') ? postData.domain : `${postData.domain}.coach.io.vn`;
-      
-      const newRow = [
-        newDomain,                 // domain
-        postData.appName || '',    // app_name
-        '',                        // logo_url
-        postData.color || '',      // primary_color
-        postData.email || '',      // contact_email
-        '',                        // zalo_url
-        '',                        // facebook_url
-        '',                        // sepay_md5
-        'techcombank',             // bank_id (default fallback)
-        '8486568666',              // bank_account
-        'TRAN NGOC CHUYEN',        // bank_owner (default support)
-        'pending'                  // status
-      ];
-      
-      sheet.appendRow(newRow);
-      
-      return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Tenant created successfully! Dashboard will be ready shortly.' }))
-        .setMimeType(ContentService.MimeType.JSON);
+      sheet.appendRow([newDomain, postData.appName||'', '', postData.color||'', postData.email||'', '', '', '', 'techcombank', '8486568666', 'TRAN NGOC CHUYEN', 'pending']);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Tenant created successfully!' })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    return ContentService.createTextOutput(JSON.stringify({ error: 'Invalid backend action' })).setMimeType(ContentService.MimeType.JSON);
+    // ===== [CRM] SUBMIT LEAD — lưu vào Sheet + gửi email chào mừng =====
+    if (action === 'submit-lead') {
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      const sheet = ss.getSheetByName(CRM_CONFIG.leads_sheet);
+      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ error: 'Leads sheet not found. Run setupCRMSheets() first.' })).setMimeType(ContentService.MimeType.JSON);
+
+      const tenantId = postData.tenant_id || 'coach.io.vn';
+      const leadRow = [
+        tenantId,
+        postData.name || '',
+        postData.email || '',
+        postData.phone || '',
+        postData.note || '',
+        postData.source || 'web_form',
+        new Date().toISOString(),
+        'welcome_sent',     // stage
+        new Date().toISOString() // last_email_at
+      ];
+      sheet.appendRow(leadRow);
+
+      // Gửi email chào mừng qua Resend
+      const emailResult = _crmSendWelcome({ name: postData.name, email: postData.email, tenantId });
+
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Lead đã được lưu. Email chào mừng: ' + (emailResult ? 'Đã gửi ✅' : 'Chưa cấu hình RESEND_API_KEY ⚠️')
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ===== [CRM] SEND EMAIL TEMPLATE (từ Control Panel HTML) =====
+    if (action === 'send-crm-email') {
+      const { templateId, toEmail, customSubject, customBody } = postData;
+      if (!toEmail) return ContentService.createTextOutput(JSON.stringify({ error: 'Thiếu email người nhận' })).setMimeType(ContentService.MimeType.JSON);
+
+      let subject = customSubject, body = customBody;
+      if (templateId && !customBody) {
+        const tmpl = _crmGetTemplateById(templateId);
+        if (tmpl) { subject = subject || tmpl.subject; body = tmpl.body; }
+      }
+      const emails = toEmail.split(/[;,]/).map(e => e.trim()).filter(e => e);
+      const result = _crmSendEmail(emails, subject, body.replace(/{{name}}/g, '').replace(/{{email}}/g, emails[0]), templateId, 'manual');
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ===== [CRM] SETUP CRM SHEETS =====
+    if (action === 'setup-crm') {
+      setupCRMSheets();
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'CRM Sheets đã được tạo thành công!' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ===== [AUTH] ADMIN LOGIN =====
+    if (action === 'admin-login') {
+      const result = adminLogin(postData.email || '', postData.password || '');
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ===== [AUTH] ADMIN LOGOUT =====
+    if (action === 'admin-logout') {
+      return ContentService.createTextOutput(JSON.stringify(adminLogout(postData.token || ''))).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ error: 'Invalid backend action: ' + action })).setMimeType(ContentService.MimeType.JSON);
+
 
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ error: error.message })).setMimeType(ContentService.MimeType.JSON);
   }
 }
+
 
 /**
  * [NEW] Get Tenant Config based on Hostname
@@ -332,8 +384,9 @@ function getFallbackSeedData() {
  * ============================================================
  */
 function setupSpreadsheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
+  // Dùng openById() thay vì getActiveSpreadsheet() để chạy được từ GAS Editor
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
   // ============================================================
   // BƯỚC 1: TẠO SHEET HƯỚNG DẪN (đặt đầu tiên cho dễ nhìn)
   // ============================================================
@@ -539,23 +592,27 @@ function setupSpreadsheet() {
     ]
   );
 
-  // ============================================================
-  // DONE: Hiển thị thông báo thành công
-  // ============================================================
-  SpreadsheetApp.getUi().alert(
-    '✅ Setup hoàn tất!',
-    'Đã tạo đầy đủ:\n' +
-    '• 📖 Sheet HƯỚNG DẪN (đọc trước)\n' +
-    '• Tenants, Courses, Lessons, Leads, Bots, Projects, page_content\n\n' +
-    '🔑 Bước tiếp theo:\n' +
-    '1. Copy Spreadsheet ID từ URL\n' +
-    '2. Dán vào dòng SPREADSHEET_ID trong Apps Script\n' +
-    '3. Deploy lại Web App (New Deployment)\n\n' +
-    '📋 Đọc sheet [📖 HƯỚNG DẪN] để biết cách điền data!',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
+  // DONE: Hiển thị thông báo thành công (chỉ hoạt động khi mở từ Google Sheet, không phải GAS Editor)
+  try {
+    SpreadsheetApp.getUi().alert(
+      '✅ Setup hoàn tất!',
+      'Đã tạo đầy đủ:\n' +
+      '• 📖 Sheet HƯỚNG DẪN (đọc trước)\n' +
+      '• Tenants, Courses, Lessons, Leads, Bots, Projects, page_content\n\n' +
+      '🔑 Bước tiếp theo:\n' +
+      '1. Copy Spreadsheet ID từ URL\n' +
+      '2. Dán vào dòng SPREADSHEET_ID trong Apps Script\n' +
+      '3. Deploy lại Web App (New Deployment)\n\n' +
+      '📋 Đọc sheet [📖 HƯỚNG DẪN] để biết cách điền data!',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  } catch(e) {
+    // Chạy từ GAS Editor không có UI context — bỏ qua, xem Nhật ký thực thi (Execution Log)
+    Logger.log('ℹ️ UI alert skipped (running from Script Editor, not Sheet).');
+  }
 
-  Logger.log('✅ setupSpreadsheet() completed successfully!');
+  Logger.log('✅ setupSpreadsheet() completed successfully! All sheets created.');
+
 }
 
 /**
@@ -600,3 +657,380 @@ function _createOrUpdateSheet(ss, sheetName, headers, seedRows) {
   }
 }
 
+
+/* ================================================================
+ * ✉️  CRM EMAIL MODULE
+ * Coach.io.vn — Tích hợp Resend API + Email Templates
+ * ================================================================ */
+
+/**
+ * [API-GET] Trả về danh sách email templates cho Control Panel HTML
+ * Usage: ?action=getEmailTemplates&tenant_id=coach.io.vn
+ */
+function getCRMEmailTemplates(tenantId) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CRM_CONFIG.templates_sheet);
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  const templates = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+    const rowTenantId = row[4] || 'coach.io.vn'; // col E = tenant_id
+    if (tenantId && rowTenantId !== tenantId && tenantId !== 'all') continue;
+    templates.push({ id: String(row[0]), name: row[1], subject: row[2], body: row[3] });
+  }
+  return templates;
+}
+
+/**
+ * [API-GET] Lấy email logs gần nhất
+ * Usage: ?action=getEmailLogs&tenant_id=coach.io.vn
+ */
+function getCRMEmailLogs(tenantId) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CRM_CONFIG.logs_sheet);
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  const logs = [];
+  for (let i = Math.max(1, data.length - 50); i < data.length; i++) { // chỉ lấy 50 dòng gần nhất
+    const row = data[i];
+    if (!row[0]) continue;
+    logs.push({
+      timestamp: row[0], type: row[1], templateId: row[2],
+      to: row[3], subject: row[4], statusCode: row[5], status: row[6]
+    });
+  }
+  return logs.reverse(); // mới nhất lên đầu
+}
+
+/**
+ * Tìm template theo ID
+ */
+function _crmGetTemplateById(id) {
+  const all = getCRMEmailTemplates('all');
+  return all.find(t => String(t.id) === String(id)) || null;
+}
+
+/**
+ * Gửi email via Resend API + ghi log
+ */
+function _crmSendEmail(toEmails, subject, htmlBody, templateId, type) {
+  if (!CRM_CONFIG.resendApiKey) {
+    _crmLog(type || 'template', templateId, toEmails.join(','), subject, 0, 'NO_API_KEY', 'RESEND_API_KEY chưa được cấu hình trong Script Properties');
+    return { success: false, error: 'RESEND_API_KEY chưa cấu hình. Vào Script Properties để thêm.' };
+  }
+
+  const payload = {
+    from: CRM_CONFIG.fromEmail,
+    to: toEmails,
+    subject: subject,
+    html: htmlBody
+  };
+
+  try {
+    const res = UrlFetchApp.fetch('https://api.resend.com/emails', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + CRM_CONFIG.resendApiKey },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+
+    const code = res.getResponseCode();
+    const bodyText = res.getContentText();
+    const ok = code >= 200 && code < 300;
+    _crmLog(type || 'template', templateId, toEmails.join(','), subject, code, ok ? 'OK' : 'ERROR', bodyText);
+    return { success: ok, statusCode: code, message: ok ? 'Đã gửi cho ' + toEmails.join(', ') : 'Lỗi Resend: ' + bodyText };
+  } catch (err) {
+    _crmLog(type || 'template', templateId, toEmails.join(','), subject, 0, 'EXCEPTION', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Gửi email chào mừng lead mới
+ */
+function _crmSendWelcome(leadData) {
+  if (!leadData || !leadData.email) return false;
+  const name = leadData.name || '';
+  const email = leadData.email;
+
+  const html = `<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8">
+<style>body{font-family:'Segoe UI',sans-serif;background:#f9fafb;padding:0;margin:0;}
+.wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+.hero{background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px;text-align:center;color:white;}
+.hero h1{margin:0;font-size:22px;}
+.hero p{margin:8px 0 0;opacity:.9;font-size:14px;}
+.body{padding:32px;}
+.body p{color:#374151;line-height:1.7;margin:0 0 16px;}
+.cta{display:inline-block;padding:12px 28px;background:#4f46e5;color:white;border-radius:99px;text-decoration:none;font-weight:600;font-size:14px;}
+.links{background:#f3f4f6;border-radius:8px;padding:16px;margin:20px 0;}
+.links p{margin:4px 0;font-size:13px;}
+.links a{color:#4f46e5;}
+.footer{padding:16px 32px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;}
+</style></head><body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🚀 Chào mừng bạn tới Coach.io.vn!</h1>
+    <p>Vibe Code AI · Build real products with AI in 30 days</p>
+  </div>
+  <div class="body">
+    <p>Xin chào <strong>${name}</strong>,</p>
+    <p>Cảm ơn bạn đã quan tâm đến <strong>Vibe Code AI</strong> — cộng đồng học cách làm việc với Cursor AI, Claude & Gemini để build sản phẩm thật, không cần background coding.</p>
+    <p>Để bắt đầu, bạn có thể xem demo ngay hoặc đặt lịch tư vấn 1:1 miễn phí 30 phút với Coach Chuyên:</p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${CRM_CONFIG.demoLink}" class="cta" style="margin-right:8px;">🎯 Xem Demo</a>
+      &nbsp;&nbsp;
+      <a href="${CRM_CONFIG.calLink}" class="cta" style="background:#10b981;">📅 Đặt lịch 1:1</a>
+    </div>
+    <p>Trong vài ngày tới, mình sẽ gửi cho bạn:</p>
+    <ul style="color:#374151;line-height:2;">
+      <li>Cách chọn đúng tool AI phù hợp với mục tiêu của bạn</li>
+      <li>Quy trình Vibe Coding từ ý tưởng → sản phẩm</li>
+      <li>Case study: học viên đã ra sản phẩm thật như thế nào</li>
+    </ul>
+    <div class="links">
+      <p>📌 Tham gia cộng đồng để cập nhật sớm nhất:</p>
+      <p>• <a href="https://www.facebook.com/groups/vibecodecoaching">Facebook Group · Vibe Code Coaching</a></p>
+      <p>• <a href="https://zalo.me/g/tdhmtu261">Zalo Group · Coach.io.vn</a></p>
+      <p>• <a href="https://t.me/vibecodocoaching">Telegram · @vibecodocoaching</a></p>
+    </div>
+    <p>Nếu cần hỗ trợ ngay: Zalo/WhatsApp <a href="https://zalo.me/0989890022">0989 890 022</a> · Telegram <a href="https://t.me/victorchuyen">@victorchuyen</a></p>
+    <p>Hẹn gặp bạn trong buổi học đầu tiên! 🔥</p>
+    <p>Coach Chuyên · Coach.io.vn</p>
+  </div>
+  <div class="footer">© 2026 Coach.io.vn · <a href="mailto:support@coach.io.vn" style="color:#9ca3af;">Hủy đăng ký</a></div>
+</div>
+</body></html>`;
+
+  return _crmSendEmail([email], 'Chào mừng bạn đến Coach.io.vn 🚀 · Vibe Code AI', html, 'welcome', 'welcome').success;
+}
+
+/**
+ * Ghi log email vào sheet Email Logs
+ */
+function _crmLog(type, templateId, to, subject, statusCode, statusText, raw) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(CRM_CONFIG.logs_sheet);
+    if (!sheet) return;
+    sheet.appendRow([new Date().toISOString(), type, templateId||'', to||'', subject||'', statusCode||'', statusText||'', (raw||'').toString().slice(0,500)]);
+  } catch(e) { Logger.log('Log error: ' + e.message); }
+}
+
+/**
+ * ============================================================
+ * 🤖 setupCRMSheets() — Tạo Email Templates + Logs Sheets
+ * Chạy 1 lần qua GAS Editor hoặc menu
+ * ============================================================
+ */
+function setupCRMSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // === Email Templates Sheet ===
+  _createOrUpdateSheet(ss, CRM_CONFIG.templates_sheet,
+    ['id', 'name', 'subject', 'body_html', 'tenant_id'],
+    [
+      [1, 'Chào mừng dùng thử', 'Chào mừng bạn đến Coach.io.vn 🚀',
+       `<p>Chào {{name}},</p><p>Cảm ơn bạn đã đăng ký. Mình sẽ gửi link demo và lộ trình học trong 24h tới.</p><p>Đặt lịch 1:1 tại: <a href="${CRM_CONFIG.calLink}">cal.com/victorchuyen/coachai</a></p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [2, 'Follow-up ngày 2 – Chưa phản hồi', 'Bạn đã thử Vibe Coding chưa, {{name}}?',
+       `<p>Chào {{name}},</p><p>2 ngày trước bạn đã đăng ký quan tâm Vibe Code AI. Bạn đã có thời gian thử chưa?</p><p>Nếu muốn mình gợi ý kịch bản áp dụng, hãy reply email này với: Ngành nghề + Mục tiêu của bạn.</p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [3, 'Mời đặt lịch tư vấn 1:1', 'Hẹn {{name}} 1 buổi 30 phút để build sản phẩm thật',
+       `<p>Chào {{name}},</p><p>Mình đề xuất một buổi trao đổi 1:1 miễn phí 30 phút để:</p><ul><li>Chọn tool AI phù hợp với mục tiêu của bạn</li><li>Lên kế hoạch build sản phẩm cụ thể</li></ul><p><a href="${CRM_CONFIG.calLink}">👉 Đặt lịch tại đây</a></p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [4, 'Follow-up nhắc lịch tư vấn', 'Nhắc {{name}} về buổi tư vấn Vibe Code AI',
+       `<p>Chào {{name}},</p><p>Nhắc bạn về buổi tư vấn sắp tới. Nếu cần dời lịch, trả lời email này hoặc Zalo: <a href="https://zalo.me/0989890022">0989 890 022</a>.</p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [5, 'Case study áp dụng', '3 cách {{name}} có thể áp dụng Vibe Coding ngay tuần này',
+       `<p>Chào {{name}},</p><p>Dựa trên 500+ học viên đã qua khoá, có 3 hướng áp dụng Vibe Coding nhanh nhất:</p><ol><li>Build Landing Page + form thu lead trong 2 giờ</li><li>Tạo Telegram Bot báo cáo tự động mỗi sáng</li><li>Build dashboard Google Sheets → React hiển thị doanh thu real-time</li></ol><p>Bạn muốn bắt đầu với hướng nào? Reply email này nhé.</p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [6, 'Re-activation sau 14 ngày', 'Còn hứng thú với Vibe Code AI không, {{name}}?',
+       `<p>Chào {{name}},</p><p>Đã ~2 tuần từ khi bạn quan tâm Vibe Code AI. Reply email này với từ khoá <b>"Kích hoạt lại"</b> – mình gửi ngay gói tài liệu + hướng dẫn quickstart. Hoặc <b>"Tạm dừng"</b> nếu không còn nhu cầu.</p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [7, 'Giới thiệu cộng đồng', 'Tài nguyên miễn phí dành cho {{name}}',
+       `<p>Chào {{name}},</p><p>Ngoài khoá học, mình có cộng đồng miễn phí chia sẻ tips AI hàng tuần:</p><ul><li><a href="https://facebook.com/groups/vibecodecoaching">Facebook Group</a></li><li><a href="https://zalo.me/g/tdhmtu261">Zalo Group</a></li><li><a href="https://t.me/vibecodocoaching">Telegram</a></li></ul><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [8, 'Upsell khoá No-Code SaaS', 'Build SaaS thu tiền tự động – không cần dev, {{name}}',
+       `<p>Chào {{name}},</p><p>Khoá <b>No-Code SaaS Builder</b> dạy bạn xây hệ thống thu tiền tự động chỉ bằng Google Sheets + Apps Script + Cloudflare. 0 đồng server.</p><p>Đăng ký sớm: <a href="${CRM_CONFIG.demoLink}/courses">coach.io.vn/courses</a></p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [9, 'Xin feedback ngắn', '1 câu hỏi nhỏ dành cho {{name}}',
+       `<p>Chào {{name}},</p><p><b>Điều gì khiến bạn do dự khi bắt đầu Vibe Coding?</b></p><p>Trả lời 2-3 dòng, mình sẽ giúp bạn tháo gỡ cụ thể. Feedback của bạn giúp mình cải thiện khoá học.</p><p>Coach Chuyên</p>`,
+       'coach.io.vn'],
+      [10, 'Email cảm ơn & closure', 'Cảm ơn {{name}} đã trải nghiệm Coach.io.vn',
+       `<p>Chào {{name}},</p><p>Cảm ơn bạn đã theo dõi chuỗi email từ Coach.io.vn. Nếu sau này cần hỗ trợ về Vibe Coding, AI Agent, hay build SaaS – chỉ cần reply email này hoặc Zalo <a href="https://zalo.me/0989890022">0989 890 022</a>.</p><p>Chúc bạn nhiều sức khoẻ và thành công! 🚀</p><p>Coach Chuyên · Coach.io.vn</p>`,
+       'coach.io.vn'],
+    ]
+  );
+
+  // === Email Logs Sheet ===
+  _createOrUpdateSheet(ss, CRM_CONFIG.logs_sheet,
+    ['timestamp', 'type', 'template_id', 'to', 'subject', 'status_code', 'status', 'raw_response'],
+    []
+  );
+
+  Logger.log('✅ CRM Sheets created: Email Templates + Email Logs');
+}
+
+/**
+ * Trigger hàng ngày: gửi follow-up cho leads đủ điều kiện
+ * Tạo trigger: Apps Script → Triggers → Add Trigger → dailyFollowup → Time-driven → Day
+ */
+function dailyFollowup() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CRM_CONFIG.leads_sheet);
+  if (!sheet) return;
+
+  const data = sheet.getDataRange().getValues();
+  const now = new Date();
+  let count = 0;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const email = row[2];  // col C
+    const stage = row[7];  // col H
+    const lastEmailAt = row[8]; // col I
+    if (!email) continue;
+
+    const diffDays = lastEmailAt ? Math.floor((now - new Date(lastEmailAt)) / 86400000) : 999;
+
+    // Follow-up ngày 2 nếu chưa phản hồi sau welcome
+    if (stage === 'welcome_sent' && diffDays >= 2) {
+      const tmpl = _crmGetTemplateById('2');
+      if (tmpl) {
+        const body = tmpl.body.replace(/{{name}}/g, row[1]||'').replace(/{{email}}/g, email);
+        const result = _crmSendEmail([email], tmpl.subject.replace(/{{name}}/g, row[1]||''), body, '2', 'followup');
+        if (result.success) {
+          sheet.getRange(i + 1, 8).setValue('followup1');
+          sheet.getRange(i + 1, 9).setValue(now.toISOString());
+          count++;
+        }
+      }
+    }
+  }
+
+  Logger.log('✅ dailyFollowup: sent to ' + count + ' leads');
+  return count;
+}
+
+
+/* ================================================================
+ * 🔐  ADMIN AUTH MODULE
+ * Token-based session: 24h, stored in Script Properties (server-side)
+ * Setup: Script Properties → ADMIN_EMAIL, ADMIN_PASSWORD
+ *   PropertiesService.getScriptProperties().setProperties({
+ *     'ADMIN_EMAIL': 'support@coach.io.vn',
+ *     'ADMIN_PASSWORD': 'your-strong-passphrase'
+ *   })
+ * ================================================================ */
+
+/**
+ * Admin Login — POST action: admin-login
+ * Returns: { success, token, email, expiresAt } or { error }
+ */
+function adminLogin(email, password) {
+  const props = PropertiesService.getScriptProperties();
+  const adminEmail = props.getProperty('ADMIN_EMAIL') || '';
+  const adminPass  = props.getProperty('ADMIN_PASSWORD') || '';
+
+  // Multi-admin support: check against Admins sheet (col: email, password_hash, role, status)
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let isValid = false;
+  let adminRole = 'admin';
+
+  // Check 1: Script Properties (quick hardcoded admin)
+  if (email === adminEmail && password === adminPass && adminEmail) {
+    isValid = true;
+  }
+
+  // Check 2: Admins sheet (supports adding more admins without code change)
+  if (!isValid) {
+    const adminsSheet = ss.getSheetByName('Admins');
+    if (adminsSheet) {
+      const data = adminsSheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (String(row[0]).trim() === email.trim() &&
+            String(row[1]).trim() === password.trim() &&
+            String(row[3] || 'active').toLowerCase() === 'active') {
+          isValid = true;
+          adminRole = row[2] || 'admin'; // col C = role
+          break;
+        }
+      }
+    }
+  }
+
+  if (!isValid) {
+    return { error: 'Email hoặc mật khẩu không đúng.' };
+  }
+
+  // Generate session token: base64(email:timestamp:secret)
+  const secret = props.getProperty('TOKEN_SECRET') || 'coach_secret_2026';
+  const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+  const rawToken = email + ':' + expiresAt + ':' + secret;
+  const token = Utilities.base64EncodeWebSafe(rawToken);
+
+  // Store active tokens in Script Properties (max 10 active sessions)
+  const existingTokens = JSON.parse(props.getProperty('ACTIVE_TOKENS') || '{}');
+  existingTokens[token] = { email, role: adminRole, expiresAt };
+  // Cleanup expired tokens
+  Object.keys(existingTokens).forEach(t => {
+    if (existingTokens[t].expiresAt < Date.now()) delete existingTokens[t];
+  });
+  props.setProperty('ACTIVE_TOKENS', JSON.stringify(existingTokens));
+
+  Logger.log('✅ Admin login: ' + email + ' | Role: ' + adminRole);
+
+  return { success: true, token, email, role: adminRole, expiresAt };
+}
+
+/**
+ * Validate admin token — call at top of protected actions
+ * Returns: { valid, email, role } or { valid: false, error }
+ */
+function validateAdminToken(token) {
+  if (!token) return { valid: false, error: 'Không có token. Vui lòng đăng nhập.' };
+
+  const props = PropertiesService.getScriptProperties();
+  const existingTokens = JSON.parse(props.getProperty('ACTIVE_TOKENS') || '{}');
+  const session = existingTokens[token];
+
+  if (!session) return { valid: false, error: 'Token không hợp lệ. Vui lòng đăng nhập lại.' };
+  if (session.expiresAt < Date.now()) return { valid: false, error: 'Phiên đăng nhập đã hết hạn (24h). Vui lòng đăng nhập lại.' };
+
+  return { valid: true, email: session.email, role: session.role };
+}
+
+/**
+ * Admin Logout — invalidate token
+ */
+function adminLogout(token) {
+  if (!token) return { success: true };
+  const props = PropertiesService.getScriptProperties();
+  const tokens = JSON.parse(props.getProperty('ACTIVE_TOKENS') || '{}');
+  delete tokens[token];
+  props.setProperty('ACTIVE_TOKENS', JSON.stringify(tokens));
+  return { success: true, message: 'Đã đăng xuất.' };
+}
+
+/**
+ * Setup Admins sheet — chạy 1 lần
+ */
+function setupAdminsSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  _createOrUpdateSheet(ss, 'Admins',
+    ['email', 'password', 'role', 'status', 'created_at', 'last_login'],
+    [
+      // ⚠️ THAY MẬT KHẨU THỰC TẾ — xóa dòng này sau khi setup
+      ['support@coach.io.vn', 'CHANGE_ME_NOW', 'super_admin', 'active', new Date().toISOString(), ''],
+      // Thêm admin khác bên dưới: [email, password, role (admin/viewer), active/inactive]
+    ]
+  );
+  Logger.log('✅ Admins sheet created. REMEMBER to change the password!');
+}
