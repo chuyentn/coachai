@@ -67,7 +67,7 @@ export const SignUp: React.FC = () => {
             </div>
             <p>Nếu cần hỗ trợ, đừng ngần ngại reply email này hoặc liên hệ Mentor qua Zalo.</p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://edu.victorchuyen.net/dashboard/student" style="background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Vào Dashboard Học Viên</a>
+              <a href="https://coach.io.vn/dashboard/student" style="background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Vào Dashboard Học Viên</a>
             </div>
           `
         );

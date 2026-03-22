@@ -429,7 +429,7 @@ export const StudentDashboard: React.FC = () => {
                   <h3 className="font-bold text-sm flex items-center gap-2 mb-2"><TrendingUp size={16} className="text-emerald-400" /> Kiếm Tiền Cùng {import.meta.env.VITE_APP_NAME || 'CoachAI'}</h3>
                   <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Chia sẻ tài nguyên cho bạn bè, nhận hoa hồng lên đến 50% khi có người đăng ký từ link của bạn.</p>
                   <div className="bg-black/50 border border-white/10 p-3 rounded-xl flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono text-emerald-400 truncate opacity-90 select-all">https://edu.victorchuyen.net/?ref={profile?.id?.substring(0,8)}</span>
+                    <span className="text-xs font-mono text-emerald-400 truncate opacity-90 select-all">{window.location.origin}/?ref={profile?.id?.substring(0,8)}</span>
                   </div>
                   <button onClick={() => alert('Đã sao chép link!')} className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold text-xs transition-colors border border-white/10 flex items-center justify-center gap-2">
                     <UserPlus size={14} /> Copy Link Giới Thiệu

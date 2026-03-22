@@ -35,7 +35,7 @@ export const AffiliateDashboard: React.FC = () => {
     { email: 'p***@agency.vn', date: '10/03/2026', status: 'Pending', commission: '-' },
   ];
 
-  const affiliateLink = `https://edu.victorchuyen.net/?ref=${profile?.id?.substring(0, 8) || 'YOUR_ID'}`;
+  const affiliateLink = `${window.location.origin}/?ref=${profile?.id?.substring(0, 8) || 'YOUR_ID'}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(affiliateLink);

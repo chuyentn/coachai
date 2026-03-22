@@ -26,8 +26,8 @@
       background: var(--bg);
       color: var(--text);
       display: flex;
-      min-height: 100vh;
-      overflow-x: hidden;
+      height: 100vh;
+      overflow: hidden;
     }
 
     /* ====== SIDEBAR ====== */
@@ -129,7 +129,7 @@
       gap: 8px;
     }
     .url-badge span { color: #818cf8; font-family: monospace; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .content { padding: 24px; flex: 1; }
+    .content { padding: 24px; flex: 1; overflow-y: auto; }
 
     /* ====== SECTION PAGES ====== */
     .page { display: none; }
