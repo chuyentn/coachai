@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Navigate, Link } from 'react-router-dom';
 import { ShieldOff, ArrowLeft, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Control Panel — admin & teacher only
@@ -10,6 +11,7 @@ import { ShieldOff, ArrowLeft, ExternalLink } from 'lucide-react';
  */
 export const ControlPanel: React.FC = () => {
   const { profile, loading } = useAuth();
+  const { t } = useTranslation();
 
   // Still loading auth state
   if (loading) {
@@ -35,16 +37,15 @@ export const ControlPanel: React.FC = () => {
         <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mb-6">
           <ShieldOff className="text-rose-500" size={36} />
         </div>
-        <h1 className="text-2xl font-black text-white mb-2">Không có quyền truy cập</h1>
+        <h1 className="text-2xl font-black text-white mb-2">{t('controlPanel.accessDenied')}</h1>
         <p className="text-slate-400 mb-8 max-w-sm">
-          Trang Control Panel chỉ dành cho <strong className="text-white">Admin</strong> và{' '}
-          <strong className="text-white">Giáo viên</strong>. Tài khoản của bạn ({profile.role}) không đủ quyền.
+          {t('controlPanel.accessDeniedDesc', { role: profile.role })}
         </p>
         <Link
           to={profile.role === 'student' ? '/dashboard/student' : '/'}
           className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all"
         >
-          <ArrowLeft size={18} /> Về Dashboard của tôi
+          <ArrowLeft size={18} /> {t('controlPanel.backToDashboard')}
         </Link>
       </div>
     );
@@ -70,7 +71,7 @@ export const ControlPanel: React.FC = () => {
           rel="noreferrer"
           className="flex items-center gap-1.5 text-slate-400 hover:text-white text-sm font-medium transition-colors"
         >
-          <ExternalLink size={13} /> Mở tab mới
+          <ExternalLink size={13} /> {t('controlPanel.openNewTab')}
         </a>
       </div>
 

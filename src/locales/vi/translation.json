@@ -494,5 +494,34 @@
     "successTitle": "Thanh toán hoàn tất!",
     "successDesc": "Hệ thống đã nhận được thanh toán. Gói {{plan}} của bạn đã được kích hoạt thành công!",
     "successBtn": "Về Dashboard"
+  },
+  "courses": {
+    "pageTitle": "Khóa học AI & Vibe Coding",
+    "heroBadge": "Trực tiếp 2026 · AI & Vibe Coding",
+    "heroTitle": "Học AI, Build Thật",
+    "heroDesc": "Từ cơ bản đến ra sản phẩm thật — AI Agent, No-Code SaaS, Vibe Coding",
+    "searchPlaceholder": "Tìm khóa học AI, No-Code, Vibe Coding...",
+    "filterAllLevel": "📚 Mọi trình độ",
+    "filterBeginner": "🌱 Cơ bản",
+    "filterIntermediate": "⚡ Trung cấp",
+    "filterExpert": "🔥 Nâng cao",
+    "filterFeatured": "Nổi bật",
+    "clearFilters": "Xóa bộ lọc",
+    "resultCount": "khóa học",
+    "noResults": "Không tìm thấy kết quả",
+    "bookingCta": "Chưa biết bắt đầu từ đâu?",
+    "bookingCtaDesc": "Đặt lịch tư vấn 1:1 miễn phí với Coach — 30 phút lên kế hoạch học cụ thể.",
+    "bookingBtn": "📅 Đặt lịch miễn phí"
+  },
+  "controlPanel": {
+    "title": "Control Panel",
+    "accessDenied": "Không có quyền truy cập",
+    "accessDeniedDesc": "Trang Control Panel chỉ dành cho Admin và Giáo viên. Tài khoản của bạn ({{role}}) không đủ quyền.",
+    "backToDashboard": "Về Dashboard của tôi",
+    "openNewTab": "Mở tab mới"
+  },
+  "saasOnboarding": {
+    "title": "Thiết lập nền tảng học AI của bạn",
+    "subtitle": "Cấu hình hệ thống trong 3 bước đơn giản"
   }
 }

@@ -144,7 +144,7 @@ export const Courses: React.FC = () => {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-bold uppercase tracking-widest mb-6"
           >
-            <Flame size={12} /> Live 2026 · AI & Vibe Coding
+            <Flame size={12} /> {t('courses.heroBadge')}
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
@@ -152,14 +152,14 @@ export const Courses: React.FC = () => {
           >
             Học AI,{' '}
             <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              Build thật
+              {t('courses.heroTitle')}
             </span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
             className="text-slate-400 text-lg mb-10 max-w-xl mx-auto"
           >
-            Khóa học từ cơ bản đến ra sản phẩm thật — AI Agent, No-Code SaaS, Vibe Coding
+            {t('courses.heroDesc')}
           </motion.p>
 
           {/* Search Bar */}
@@ -170,7 +170,7 @@ export const Courses: React.FC = () => {
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
-              placeholder="Tìm khóa học AI, No-Code, Vibe Coding..."
+              placeholder={t('courses.searchPlaceholder')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-14 pr-14 py-4 rounded-2xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:bg-white/8 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 text-white placeholder-slate-500 text-base font-medium transition-all"

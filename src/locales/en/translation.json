@@ -82,6 +82,7 @@
     "pricingVipFeature5": "Priority support",
     "pricingCoachFeature1": "All VIP benefits",
     "pricingCoachFeature2": "Personalized 1:1 roadmap",
+    "pricingCoachFeature3": "Support deploying real projects",
     "pricingCoachFeature4": "Portfolio building guidance",
     "pricingCoachFeature5": "Support deploying real projects",
     "pricingRefund": "100% money back within 7 days if not satisfied",
@@ -392,7 +393,7 @@
     "formSocialLabel": "Your Social Channels (Optional)",
     "formSocialPlaceholder": "Facebook, TikTok, Website...",
     "btnSubmit": "Get my Affiliate Link",
-    "footerDesc": "Leading AI No-Code self-learning ecosystem by Victor Chuyen. Helping you master new tech without coding.",
+    "footerDesc": "Leading AI No-Code self-learning ecosystem by {{companyName}}. Helping you master new tech without coding.",
     "footerCol1": "PROGRAMS",
     "footerCol2": "Connect",
     "footerCopyright": "© 2026 {{appName}}. All rights reserved.",
@@ -493,5 +494,34 @@
     "successTitle": "Payment Completed!",
     "successDesc": "System has received your payment. Your {{plan}} plan is now active!",
     "successBtn": "Go to Dashboard"
+  },
+  "courses": {
+    "pageTitle": "AI & Vibe Coding Courses",
+    "heroBadge": "Live 2026 · AI & Vibe Coding",
+    "heroTitle": "Learn AI, Build Real",
+    "heroDesc": "From beginner to real product — AI Agent, No-Code SaaS, Vibe Coding",
+    "searchPlaceholder": "Search AI, No-Code, Vibe Coding courses...",
+    "filterAllLevel": "📚 All Levels",
+    "filterBeginner": "🌱 Beginner",
+    "filterIntermediate": "⚡ Intermediate",
+    "filterExpert": "🔥 Advanced",
+    "filterFeatured": "Featured",
+    "clearFilters": "Clear Filters",
+    "resultCount": "courses",
+    "noResults": "No results found",
+    "bookingCta": "Don't know where to start?",
+    "bookingCtaDesc": "Book a free 1:1 consultation with Coach — 30 minutes to map your personal learning plan.",
+    "bookingBtn": "📅 Book free call"
+  },
+  "controlPanel": {
+    "title": "Control Panel",
+    "accessDenied": "Access Denied",
+    "accessDeniedDesc": "Control Panel is only for Admin and Teachers. Your account ({{role}}) does not have permission.",
+    "backToDashboard": "Back to my Dashboard",
+    "openNewTab": "Open in new tab"
+  },
+  "saasOnboarding": {
+    "title": "Set Up Your AI Learning Platform",
+    "subtitle": "Configure your system in 3 simple steps"
   }
 }
