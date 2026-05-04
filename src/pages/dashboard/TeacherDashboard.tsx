@@ -19,7 +19,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { CourseBuilder } from '../../components/dashboard/CourseBuilder';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export const TeacherDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -36,6 +36,21 @@ export const TeacherDashboard: React.FC = () => {
   const [myCourses, setMyCourses] = useState<any[]>([]);
 
   const [instructorStats, setInstructorStats] = useState<any>(null);
+  const [payoutsList, setPayoutsList] = useState<any[]>([]);
+  const [bankInfo, setBankInfo] = useState({ bankName: '', accountName: '', accountNumber: '' });
+  const [isRequestingPayout, setIsRequestingPayout] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const unsubPayouts = onSnapshot(
+      query(collection(db, 'payouts'), where('teacher_id', '==', profile.id), orderBy('created_at', 'desc')),
+      (snapshot) => {
+        setPayoutsList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      },
+      (error) => console.error('Error fetching payouts', error)
+    );
+    return () => unsubPayouts();
+  }, [profile?.id]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -84,19 +99,42 @@ export const TeacherDashboard: React.FC = () => {
     { id: 'settings', label: 'Cài đặt', icon: Settings },
   ] as const;
 
-  const handleRequestPayout = async () => {
+  const handleRequestPayout = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (payoutBalance < 1000000) {
       alert('Số dư tối thiểu để rút là 1.000.000₫');
       return;
     }
-    const paymentInfo = prompt('Nhập thông tin nhận tiền (STK, Ngân hàng, Chủ TK):');
-    if (!paymentInfo) return;
+    const finalBankName = bankInfo.bankName.trim();
+    const finalAccountName = bankInfo.accountName.trim();
+    const finalAccountNumber = bankInfo.accountNumber.trim();
 
-    const success = await googleSheetsService.submitWithdrawal(profile?.id || '', payoutBalance, paymentInfo);
-    if (success) {
+    if (!finalBankName || !finalAccountName || !finalAccountNumber) {
+       alert('Vui lòng nhập đầy đủ thông tin ngân hàng ở Tab Rút tiền');
+       return;
+    }
+
+    setIsRequestingPayout(true);
+    try {
+      const paymentInfoStr = `${finalBankName} - ${finalAccountNumber} - ${finalAccountName}`;
+      await googleSheetsService.submitWithdrawal(profile?.id || '', payoutBalance, paymentInfoStr);
+      await addDoc(collection(db, 'payouts'), {
+        teacher_id: profile?.id,
+        teacher_name: profile?.full_name,
+        teacher_email: profile?.email,
+        amount: payoutBalance,
+        bank_name: finalBankName,
+        bank_account: `${finalAccountNumber} - ${finalAccountName}`,
+        status: 'pending',
+        created_at: serverTimestamp()
+      });
       alert('Yêu cầu rút tiền thành công! Admin sẽ xử lý trong 24h.');
-    } else {
+      setBankInfo({ bankName: '', accountName: '', accountNumber: '' });
+    } catch (err) {
+      console.error(err);
       alert('Có lỗi xảy ra, vui lòng thử lại sau.');
+    } finally {
+      setIsRequestingPayout(false);
     }
   };
 
@@ -221,7 +259,7 @@ export const TeacherDashboard: React.FC = () => {
                       </p>
                     </div>
                     <button 
-                      onClick={handleRequestPayout}
+                      onClick={() => setActiveTab('payouts')}
                       className="mt-6 w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl font-bold text-sm transition-all"
                     >
                       Rút tiền về Bank
@@ -297,11 +335,152 @@ export const TeacherDashboard: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Payouts Tab / Settings Tab (Placeholders for MVP Phase 2) */}
-            {!isCreatingCourse && (activeTab === 'payouts' || activeTab === 'settings') && (
-              <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-500">
-                Hiển thị tab {activeTab}. Tính năng đang phát triển...
-              </div>
+            {!isCreatingCourse && activeTab === 'payouts' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+              >
+                {/* Yêu cầu Rút Tiền */}
+                <div className="lg:col-span-1 space-y-6">
+                  <div className="bg-white dark:bg-[#111623] p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-amber-600">
+                        <DollarSign size={20} />
+                      </div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Yêu Cầu Rút Tiền</h2>
+                    </div>
+                    
+                    <div className="mb-8">
+                      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Số dư khả dụng</p>
+                      <h3 className="text-4xl font-black text-amber-500 tracking-tight">{formatVND(payoutBalance)}</h3>
+                    </div>
+
+                    <form onSubmit={handleRequestPayout} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Tên Ngân Hàng</label>
+                        <input required value={bankInfo.bankName} onChange={e => setBankInfo({...bankInfo, bankName: e.target.value})} type="text" placeholder="VD: Vietcombank" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Số Tài Khoản</label>
+                        <input required value={bankInfo.accountNumber} onChange={e => setBankInfo({...bankInfo, accountNumber: e.target.value})} type="text" placeholder="VD: 0123456789" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Chủ Tài Khoản</label>
+                        <input required value={bankInfo.accountName} onChange={e => setBankInfo({...bankInfo, accountName: e.target.value})} type="text" placeholder="VD: NGUYEN VAN A" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm uppercase focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                      </div>
+                      <button 
+                        type="submit" 
+                        disabled={isRequestingPayout || payoutBalance < 1000000}
+                        className="w-full mt-6 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                      >
+                        {isRequestingPayout ? <Loader2 className="animate-spin" size={20} /> : <DollarSign size={20} />}
+                        Gửi Yêu Cầu Rút Tiền
+                      </button>
+                      {payoutBalance < 1000000 && <p className="text-xs text-rose-500 text-center mt-3 font-bold flex items-center justify-center gap-1"><AlertCircle size={12}/> Tối thiểu 1.000.000₫</p>}
+                    </form>
+                  </div>
+                </div>
+
+                {/* Lịch Sử Rút Tiền */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white dark:bg-[#111623] p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm h-full">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Lịch Sử Giao Dịch</h2>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                          <tr>
+                            <th className="px-6 py-4 rounded-l-xl">Thời Gian</th>
+                            <th className="px-6 py-4">Số Tiền</th>
+                            <th className="px-6 py-4">Ngân Hàng</th>
+                            <th className="px-6 py-4 rounded-r-xl">Trạng Thái</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                          {payoutsList.map(p => (
+                            <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                              <td className="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">
+                                {p.created_at?.toDate().toLocaleString('vi-VN')}
+                              </td>
+                              <td className="px-6 py-4 font-black text-amber-500">{formatVND(p.amount)}</td>
+                              <td className="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                {p.bank_name}<br/>
+                                <span className="text-slate-400 font-normal">{p.bank_account}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {p.status === 'paid' ? (
+                                  <span className="text-[10px] font-black px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 uppercase tracking-widest">Thành công</span>
+                                ) : (
+                                  <span className="text-[10px] font-black px-2.5 py-1 rounded bg-amber-50 text-amber-600 dark:bg-amber-900/30 uppercase tracking-widest">Đang xử lý</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                          {payoutsList.length === 0 && (
+                            <tr>
+                              <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-bold">Chưa có giao dịch rút tiền nào.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {!isCreatingCourse && activeTab === 'settings' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="max-w-3xl mx-auto"
+              >
+                <div className="bg-white dark:bg-[#111623] p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600">
+                      <Settings size={20} />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Cài Đặt Hồ Sơ Giảng Viên</h2>
+                  </div>
+
+                  <form onSubmit={(e) => { e.preventDefault(); alert('Cập nhật thành công!'); }} className="space-y-6">
+                    <div className="flex items-center gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
+                      <img src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.id}`} alt="Avatar" className="w-24 h-24 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm" />
+                      <div>
+                        <button type="button" className="px-5 py-2.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-bold text-sm rounded-xl hover:bg-indigo-100 transition-colors">Tải ảnh mới</button>
+                        <p className="text-xs text-slate-500 mt-2">Định dạng JPG, PNG. Tối đa 2MB.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Họ & Tên</label>
+                        <input type="text" defaultValue={profile?.full_name} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Email</label>
+                        <input type="email" defaultValue={profile?.email} disabled className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-500 cursor-not-allowed" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Chuyên Môn / Tiêu Đề</label>
+                        <input type="text" placeholder="VD: Chuyên gia chuyển đổi số & AI" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Giới Thiệu Bản Thân</label>
+                        <textarea rows={4} placeholder="Viết vài dòng giới thiệu về kinh nghiệm của bạn..." className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 resize-none"></textarea>
+                      </div>
+                    </div>
+
+                    <div className="pt-6">
+                      <button type="submit" className="w-full md:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-200">
+                        Lưu Thay Đổi
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

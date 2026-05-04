@@ -1,10 +1,10 @@
 {
-  "apiKey": "AIzaSyCDBaAQ-keYN7iX1IXenMpm3Jv-QYR3H10",
-  "authDomain": "edu-victorchuyen.firebaseapp.com",
-  "projectId": "edu-victorchuyen",
-  "storageBucket": "edu-victorchuyen.firebasestorage.app",
-  "messagingSenderId": "548071412482",
-  "appId": "1:548071412482:web:fb0063b52591a51f81a81b",
-  "measurementId": "G-J2C9XLP98J",
+  "apiKey": "AIzaSyDYCsMHuHyQSJ0PMTyibPT86SeLAYSdEn4",
+  "authDomain": "fleetpro-app.firebaseapp.com",
+  "projectId": "fleetpro-app",
+  "storageBucket": "fleetpro-app.firebasestorage.app",
+  "messagingSenderId": "1094737819291",
+  "appId": "1:1094737819291:web:15871bf0c228943519f83e",
+  "measurementId": "G-H5WZJ5X22T",
   "firestoreDatabaseId": "(default)"
 }

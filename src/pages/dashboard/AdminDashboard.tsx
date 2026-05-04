@@ -237,6 +237,14 @@ export const AdminDashboard: React.FC = () => {
 
   const handleApproveTeacher = (id: string) => {
     alert(`Đã phê duyệt giảng viên ID: ${id}`);
+    setPendingTeachers(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleRejectTeacher = (id: string) => {
+    if(window.confirm('Chắc chắn từ chối giảng viên này?')) {
+      alert(`Đã từ chối giảng viên ID: ${id}`);
+      setPendingTeachers(prev => prev.filter(t => t.id !== id));
+    }
   };
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
@@ -664,7 +672,7 @@ export const AdminDashboard: React.FC = () => {
                               <button onClick={() => handleApproveTeacher(t.id)} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors">
                                 <CheckCircle2 size={18} />
                               </button>
-                              <button onClick={() => alert('Feature coming soon')} className="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-100 rounded-lg transition-colors">
+                              <button onClick={() => handleRejectTeacher(t.id)} className="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-100 rounded-lg transition-colors">
                                 <XCircle size={18} />
                               </button>
                             </div>
