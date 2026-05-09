@@ -29,6 +29,7 @@ import {
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { PasswordChangeForm } from '../../components/dashboard/PasswordChangeForm';
+import confetti from 'canvas-confetti';
 
 export const StudentDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -73,7 +74,31 @@ export const StudentDashboard: React.FC = () => {
       const certSnap = await getDocs(
         query(collection(db, 'certificates'), where('user_id', '==', profile?.id))
       );
-      setCertificateCount(certSnap.size);
+      const newCertCount = certSnap.size;
+      
+      // FIREWORKS if new certificate earned!
+      if (newCertCount > certificateCount && certificateCount > 0) {
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+        const interval: any = setInterval(function() {
+          const timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          const particleCount = 50 * (timeLeft / duration);
+          // since particles fall down, start a bit higher than random
+          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+      }
+      
+      setCertificateCount(newCertCount);
     } catch (error) {
       console.error('Error fetching enrollments:', error);
     } finally {
@@ -305,6 +330,12 @@ export const StudentDashboard: React.FC = () => {
                                   <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 shadow-lg">
                                     <Award size={12} />
                                     {t('studentDashboard.statusCompleted')}
+                                  </div>
+                                )}
+                                {progress > 0 && progress < 100 && (
+                                  <div className="absolute top-3 left-3 bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg border border-white/20">
+                                    <Zap size={12} className="text-amber-400" />
+                                    Recommended Next
                                   </div>
                                 )}
                               </div>

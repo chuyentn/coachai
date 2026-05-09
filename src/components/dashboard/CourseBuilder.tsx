@@ -136,15 +136,34 @@ export const CourseBuilder: React.FC = () => {
                       placeholder="Tiêu đề bài học..."
                     />
                   </div>
-                  <div className="md:col-span-6 relative">
-                    <Video size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                      type="text"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#111623] border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-600 dark:text-slate-300 transition-all"
-                      value={module.video_url}
-                      onChange={(e) => handleUpdateModule(module.id, 'video_url', e.target.value)}
-                      placeholder="YouTube URL (vd: https://youtube.com/watch?v=...)"
-                    />
+                  <div className="md:col-span-6 space-y-2">
+                    <div className="relative">
+                      <Video size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        type="text"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#111623] border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-600 dark:text-slate-300 transition-all"
+                        value={module.video_url}
+                        onChange={(e) => handleUpdateModule(module.id, 'video_url', e.target.value)}
+                        placeholder="YouTube URL (vd: https://youtube.com/watch?v=...)"
+                      />
+                    </div>
+                    {module.video_url && module.video_url.includes('youtube.com/watch?v=') && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800"
+                      >
+                        <img 
+                          src={`https://img.youtube.com/vi/${module.video_url.split('v=')[1]?.split('&')[0]}/mqdefault.jpg`} 
+                          alt="Thumbnail"
+                          className="w-20 h-12 object-cover rounded-lg shadow-sm"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-0.5">Video Preview</p>
+                          <p className="text-[10px] text-slate-500 truncate">{module.video_url}</p>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                   <div className="md:col-span-2 relative">
                     <Clock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

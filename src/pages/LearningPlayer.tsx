@@ -27,7 +27,8 @@ import {
   BookOpen,
   Menu,
   ShoppingCart,
-  Zap
+  Zap,
+  Activity
 } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { motion, AnimatePresence } from 'motion/react';
@@ -510,27 +511,51 @@ export const LearningPlayer: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    className="max-w-4xl mx-auto"
                   >
-                    <div className="bg-white/5 p-10 rounded-[2.5rem] border border-white/5">
-                      <h3 className="font-bold text-white mb-6 flex items-center gap-2">
-                        <Save size={18} className="text-indigo-400" />
-                        Ghi chú bài học
-                      </h3>
-                      <textarea 
-                        value={lessonNote}
-                        onChange={(e) => setLessonNote(e.target.value)}
-                        placeholder="Ghi lại kiến thức quan trọng tại đây..."
-                        className="w-full h-48 p-6 bg-black/40 border border-white/10 rounded-3xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-lg transition-all font-medium resize-none"
-                      />
-                      <div className="mt-6 flex justify-end">
-                        <button 
-                          onClick={handleSaveNote}
-                          disabled={savingNote || !currentLesson}
-                          className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 disabled:opacity-50"
-                        >
-                          {savingNote ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                          Lưu Ghi Chú
-                        </button>
+                    <div className="bg-white/5 p-8 md:p-10 rounded-[2.5rem] border border-white/5 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                        <FileText size={120} />
+                      </div>
+                      
+                      <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                          <div>
+                            <h3 className="font-bold text-white text-xl flex items-center gap-2">
+                              <Save size={20} className="text-indigo-400" />
+                              Ghi chú cá nhân
+                            </h3>
+                            <p className="text-xs text-slate-500 font-medium mt-1">Hệ thống tự động lưu trữ ghi chú riêng của bạn cho bài học này.</p>
+                          </div>
+                          {savingNote && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                              <Loader2 className="animate-spin text-indigo-400" size={12} />
+                              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Đang lưu...</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <textarea 
+                          value={lessonNote}
+                          onChange={(e) => setLessonNote(e.target.value)}
+                          placeholder="Ghi lại kiến thức quan trọng tại đây. Ví dụ: 'Timestamp 05:20 - Cách cấu hình API Key'..."
+                          className="w-full h-64 p-8 bg-black/40 border border-white/10 rounded-[2rem] text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-lg transition-all font-medium resize-none leading-relaxed shadow-inner"
+                        />
+                        
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            <Activity size={12} />
+                            <span>Tự động đồng bộ với Cloud</span>
+                          </div>
+                          <button 
+                            onClick={handleSaveNote}
+                            disabled={savingNote || !currentLesson}
+                            className="w-full sm:w-auto px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 hover:scale-[1.02] transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                          >
+                            {savingNote ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                            Lưu ngay bây giờ
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

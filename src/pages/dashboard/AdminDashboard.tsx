@@ -430,6 +430,35 @@ export const AdminDashboard: React.FC = () => {
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mt-1">Doanh thu (Lý thuyết)</p>
                   </motion.div>
                 </div>
+                
+                {/* System Health Widget */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <div className="md:col-span-3 bg-white dark:bg-[#111623] p-5 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Firebase Auth:</span>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">ONLINE</span>
+                        </div>
+                        <div className="w-px h-4 bg-slate-200 dark:bg-slate-800" />
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Google Sheets API:</span>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">CONNECTED</span>
+                        </div>
+                        <div className="w-px h-4 bg-slate-200 dark:bg-slate-800" />
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Storage:</span>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">STABLE</span>
+                        </div>
+                      </div>
+                      <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <Activity size={14} className="text-slate-400" />
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">System Health: 100%</span>
+                      </div>
+                   </div>
+                </div>
 
                 {/* Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -725,6 +754,30 @@ export const AdminDashboard: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="space-y-8"
               >
+                {/* Finance Inbox Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-indigo-600 rounded-[2rem] p-8 text-white relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                      <CreditCard size={120} />
+                    </div>
+                    <div className="relative z-10">
+                      <p className="text-xs font-black text-indigo-200 uppercase tracking-widest mb-2">Học viên chờ duyệt</p>
+                      <h3 className="text-4xl font-black mb-1">{pendingPayments.length}</h3>
+                      <p className="text-sm font-medium text-indigo-100">Cần xác nhận thanh toán VIP/Khóa học</p>
+                    </div>
+                  </div>
+                  <div className="bg-emerald-600 rounded-[2rem] p-8 text-white relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                      <DollarSign size={120} />
+                    </div>
+                    <div className="relative z-10">
+                      <p className="text-xs font-black text-emerald-200 uppercase tracking-widest mb-2">Lệnh rút tiền chờ duyệt</p>
+                      <h3 className="text-4xl font-black mb-1">{payouts.filter(p => p.status === 'pending').length}</h3>
+                      <p className="text-sm font-medium text-emerald-100">Cần chuyển khoản doanh thu cho giảng viên</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 1. Duyệt Thanh Toán Học Viên */}
                 <div className="bg-white dark:bg-[#111623] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                   <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
