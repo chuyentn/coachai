@@ -200,7 +200,7 @@ export const googleSheetsService = {
 
   async submitLead(email: string, name?: string, phone?: string, note?: string): Promise<boolean> {
     return this.submitToWebhook({
-      type: 'lead',
+      action: 'lead',
       email, name, phone, note,
       tenant_id: getTenantId()
     });
@@ -208,21 +208,21 @@ export const googleSheetsService = {
 
   async submitComment(courseId: string, userId: string, userName: string, content: string, userEmail?: string, photoUrl?: string): Promise<boolean> {
     return this.submitToWebhook({
-      type: 'comment',
+      action: 'comment',
       courseId, userId, userName, userEmail, photoUrl, content, tenant_id: getTenantId()
     });
   },
 
   async submitTeacher(teacherData: { email: string; name: string; phone: string; expertise: string; bio: string; }): Promise<boolean> {
-    return this.submitToWebhook({ type: 'teacher', ...teacherData, tenant_id: getTenantId() });
+    return this.submitToWebhook({ action: 'teacher', ...teacherData, tenant_id: getTenantId() });
   },
 
   async submitCourse(courseData: any): Promise<boolean> {
-    return this.submitToWebhook({ type: 'course', ...courseData, tenant_id: getTenantId() });
+    return this.submitToWebhook({ action: 'course', ...courseData, tenant_id: getTenantId() });
   },
 
   async updateRecord(sheet: string, id: string, updates: any): Promise<boolean> {
-    return this.submitToWebhook({ type: 'update', sheet, id, updates, tenant_id: getTenantId() });
+    return this.submitToWebhook({ action: 'update', sheet, id, updates, tenant_id: getTenantId() });
   },
 
   async fetchLessonProgress(userId: string, courseId: string): Promise<any[]> {
@@ -239,7 +239,7 @@ export const googleSheetsService = {
 
   async updateLessonProgress(userId: string, courseId: string, lessonId: string, status: 'completed' | 'in_progress'): Promise<boolean> {
     return this.submitToWebhook({
-      type: 'updateLessonProgress', user_id: userId, course_id: courseId, lesson_id: lessonId, status, tenant_id: getTenantId()
+      action: 'updateLessonProgress', user_id: userId, course_id: courseId, lesson_id: lessonId, status, tenant_id: getTenantId()
     });
   },
 
@@ -255,7 +255,7 @@ export const googleSheetsService = {
   },
 
   async saveNote(userId: string, courseId: string, lessonId: string, content: string): Promise<boolean> {
-    return this.submitToWebhook({ type: 'saveNote', user_id: userId, course_id: courseId, lesson_id: lessonId, content, tenant_id: getTenantId() });
+    return this.submitToWebhook({ action: 'saveNote', user_id: userId, course_id: courseId, lesson_id: lessonId, content, tenant_id: getTenantId() });
   },
 
   async fetchQuizzes(lessonId: string): Promise<any[]> {
@@ -270,7 +270,7 @@ export const googleSheetsService = {
   },
 
   async submitQuizAttempt(userId: string, lessonId: string, score: number, total: number): Promise<boolean> {
-    return this.submitToWebhook({ type: 'submitQuiz', user_id: userId, lesson_id: lessonId, score, total_questions: total, tenant_id: getTenantId() });
+    return this.submitToWebhook({ action: 'submitQuiz', user_id: userId, lesson_id: lessonId, score, total_questions: total, tenant_id: getTenantId() });
   },
 
   async fetchCertificates(userId: string): Promise<any[]> {
@@ -296,7 +296,7 @@ export const googleSheetsService = {
   },
 
   async submitWithdrawal(userId: string, amount: number, paymentInfo: string): Promise<boolean> {
-    return this.submitToWebhook({ type: 'withdrawal', user_id: userId, amount, payment_info: paymentInfo, tenant_id: getTenantId() });
+    return this.submitToWebhook({ action: 'withdrawal', user_id: userId, amount, payment_info: paymentInfo, tenant_id: getTenantId() });
   },
 
   async initializeSystem(): Promise<boolean> {

@@ -151,15 +151,39 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'CRM Sheets đã được tạo thành công!' })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // ===== [AUTH] ADMIN LOGIN =====
-    if (action === 'admin-login') {
-      const result = adminLogin(postData.email || '', postData.password || '');
+    // ===== [DATA] UPDATE RECORD (Tenants, Courses, etc.) =====
+    if (action === 'update') {
+      const { sheet, id, updates } = postData;
+      const result = updateRecord(sheet, id, updates);
       return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // ===== [AUTH] ADMIN LOGOUT =====
-    if (action === 'admin-logout') {
-      return ContentService.createTextOutput(JSON.stringify(adminLogout(postData.token || ''))).setMimeType(ContentService.MimeType.JSON);
+    // ===== [CRM] SUBMIT COMMENT =====
+    if (action === 'comment') {
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      const sheet = ss.getSheetByName('Comments');
+      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ error: 'Comments sheet not found' })).setMimeType(ContentService.MimeType.JSON);
+      sheet.appendRow([new Date().toISOString(), postData.courseId, postData.userId, postData.userName, postData.userEmail, postData.photoUrl, postData.content, postData.tenant_id]);
+      return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ===== [CRM] SUBMIT TEACHER =====
+    if (action === 'teacher') {
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      const sheet = ss.getSheetByName('Teachers');
+      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ error: 'Teachers sheet not found' })).setMimeType(ContentService.MimeType.JSON);
+      sheet.appendRow([Date.now(), postData.name, postData.email, postData.phone, postData.expertise, postData.bio, 'pending', postData.tenant_id]);
+      return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ===== [CRM] SUBMIT COURSE =====
+    if (action === 'course') {
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      const sheet = ss.getSheetByName('Courses');
+      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ error: 'Courses sheet not found' })).setMimeType(ContentService.MimeType.JSON);
+      const id = 'course_' + Date.now();
+      sheet.appendRow([id, postData.title, postData.slug, postData.category, postData.price, postData.sale_price, postData.thumbnail, postData.description, 0, 'pending', postData.teacher_id, postData.tenant_id]);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, id })).setMimeType(ContentService.MimeType.JSON);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ error: 'Invalid backend action: ' + action })).setMimeType(ContentService.MimeType.JSON);
@@ -167,6 +191,45 @@ function doPost(e) {
 
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ error: error.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Helper to update a record in a specific sheet
+ */
+function updateRecord(sheetName, id, updates) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) return { error: 'Sheet not found: ' + sheetName };
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length < 1) return { error: 'Sheet is empty' };
+    
+    const headers = data[0];
+    const idColIndex = 0; // Assumption: ID/Key is in the first column
+
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][idColIndex]) === String(id)) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) return { error: 'Record not found with ID: ' + id + ' in sheet: ' + sheetName };
+
+    // Update specific columns
+    for (const key in updates) {
+      const colIndex = headers.indexOf(key);
+      if (colIndex !== -1) {
+        sheet.getRange(rowIndex, colIndex + 1).setValue(updates[key]);
+      }
+    }
+
+    return { success: true, message: 'Updated ' + sheetName + ' successfully' };
+  } catch (e) {
+    return { error: e.message };
   }
 }
 

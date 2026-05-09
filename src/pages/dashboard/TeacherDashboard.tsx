@@ -14,10 +14,12 @@ import {
   Clock,
   ChevronRight,
   AlertCircle,
-  Loader2
+  Loader2,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CourseBuilder } from '../../components/dashboard/CourseBuilder';
+import { PasswordChangeForm } from '../../components/dashboard/PasswordChangeForm';
 import { db } from '../../lib/firebase';
 import { collection, query, where, getDocs, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -479,6 +481,16 @@ export const TeacherDashboard: React.FC = () => {
                       </button>
                     </div>
                   </form>
+                </div>
+
+                <div className="bg-white dark:bg-[#111623] p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm mt-8">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 bg-rose-50 dark:bg-rose-900/30 rounded-xl flex items-center justify-center text-rose-600">
+                      <Lock size={20} />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Bảo mật & Tài khoản</h2>
+                  </div>
+                  <PasswordChangeForm />
                 </div>
               </motion.div>
             )}

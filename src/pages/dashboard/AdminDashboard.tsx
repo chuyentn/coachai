@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTenantContext } from '../../contexts/TenantContext';
+import { updatePassword } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
 import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
@@ -33,6 +36,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { PasswordChangeForm } from '../../components/dashboard/PasswordChangeForm';
 import { googleSheetsService } from '../../services/googleSheetsService';
 import { db } from '../../lib/firebase';
 import { 
@@ -52,16 +56,16 @@ import {
 export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { profile } = useAuth();
+  const { tenant } = useTenantContext();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'courses' | 'approvals' | 'finance' | 'settings'>('overview');
   
   // Settings form state
   const [settingsSaved, setSettingsSaved] = useState(false);
-  const [appName, setAppName] = useState(import.meta.env.VITE_APP_NAME || 'CoachAI');
-  const [supportEmail, setSupportEmail] = useState(import.meta.env.VITE_SUPPORT_EMAIL || 'support@coachai.vn');
-  const [supportPhone, setSupportPhone] = useState('0987.654.321');
+  const [appName, setAppName] = useState(tenant?.app_name || import.meta.env.VITE_APP_NAME || 'CoachAI');
+  const [supportEmail, setSupportEmail] = useState(tenant?.contact_email || import.meta.env.VITE_SUPPORT_EMAIL || 'support@coachai.vn');
+  const [supportPhone, setSupportPhone] = useState(tenant?.zalo_url || '0987.654.321');
   const [affiliateRate, setAffiliateRate] = useState('30');
   const [freeTrialDays, setFreeTrialDays] = useState('7');
-  
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalLeads: 0,
@@ -230,10 +234,34 @@ export const AdminDashboard: React.FC = () => {
     else alert('Chưa cấu hình VITE_GOOGLE_SHEET_EDIT_URL trong .env');
   };
 
-  const handleSaveSettings = () => {
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 3000);
+  const handleSaveSettings = async () => {
+    if (!tenant?.domain) {
+      alert('Không tìm thấy thông tin domain để lưu.');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const success = await googleSheetsService.updateRecord('tenants', tenant.domain, {
+        app_name: appName,
+        contact_email: supportEmail,
+        zalo_url: supportPhone
+      });
+
+      if (success) {
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } else {
+        alert('Lỗi khi lưu cài đặt vào Google Sheets.');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Đã có lỗi xảy ra khi lưu.');
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const handleApproveTeacher = (id: string) => {
     alert(`Đã phê duyệt giảng viên ID: ${id}`);
@@ -929,12 +957,18 @@ export const AdminDashboard: React.FC = () => {
                       <Lock size={20} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-white">Bảo mật & Hệ thống</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Thao tác kỹ thuật và bảo trì hệ thống.</p>
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white">Bảo mật & Tài khoản</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Thay đổi mật khẩu và quản lý hệ thống.</p>
                     </div>
                   </div>
-                  <div className="p-6 md:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-6 md:p-8 space-y-8">
+                    {/* Change Password Form */}
+                    <div className="pb-8 border-b border-slate-100 dark:border-slate-800">
+                      <PasswordChangeForm />
+                    </div>
+
+                    {/* System Buttons */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all group">
                         <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 group-hover:text-indigo-600 transition-all">
                           <RefreshCw size={16} />
@@ -949,8 +983,8 @@ export const AdminDashboard: React.FC = () => {
                           <Users size={16} />
                         </div>
                         <div className="text-left">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">Xuất Danh sách User</p>
-                          <p className="text-xs text-slate-400">Export CSV</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">Xuất CSV</p>
+                          <p className="text-xs text-slate-400">Export User List</p>
                         </div>
                       </button>
                       <button className="flex items-center gap-3 p-4 rounded-xl border border-rose-100 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all group">
@@ -958,8 +992,8 @@ export const AdminDashboard: React.FC = () => {
                           <ShieldCheck size={16} />
                         </div>
                         <div className="text-left">
-                          <p className="text-sm font-bold text-rose-600 dark:text-rose-400">Kiểm tra Security Rules</p>
-                          <p className="text-xs text-slate-400">Firestore Audit</p>
+                          <p className="text-sm font-bold text-rose-600 dark:text-rose-400">Security Audit</p>
+                          <p className="text-xs text-slate-400">Check Rules</p>
                         </div>
                       </button>
                       <button 
@@ -970,8 +1004,8 @@ export const AdminDashboard: React.FC = () => {
                           <FileSpreadsheet size={16} />
                         </div>
                         <div className="text-left">
-                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Quản lý trên Sheets</p>
-                          <p className="text-xs text-slate-400">Open Google Spreadsheet</p>
+                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Google Sheets</p>
+                          <p className="text-xs text-slate-400">Open Database</p>
                         </div>
                       </button>
                     </div>

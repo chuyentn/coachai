@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { PasswordChangeForm } from '../../components/dashboard/PasswordChangeForm';
 
 export const StudentDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -193,264 +194,291 @@ export const StudentDashboard: React.FC = () => {
           </div>
         </header>
 
-        <div className="p-8 md:p-10 space-y-10">
-          {/* Welcome Section */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{t('studentDashboard.welcomeTitle', { name: profile?.full_name?.split(' ')[0] || '' })}</h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-1">{t('studentDashboard.welcomeSub')}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link to="/" className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-                <Search size={20} />
-                {t('studentDashboard.exploreCoursesBtn')}
-              </Link>
-            </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { label: t('studentDashboard.statCourses'), value: enrollments.length, icon: BookOpen, color: 'indigo', sub: t('studentDashboard.statCoursesSub') },
-              { label: t('studentDashboard.statHours'), value: `${totalHours}h`, icon: Clock, color: 'emerald', sub: t('studentDashboard.statHoursSub') },
-              { label: t('studentDashboard.statCerts'), value: String(certificateCount).padStart(2, '0'), icon: Award, color: 'violet', sub: t('studentDashboard.statCertsSub') },
-            ].map((stat, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
+        <div className="p-8 md:p-10">
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-10"
               >
-                <div className={`w-12 h-12 rounded-2xl bg-${stat.color === 'indigo' ? 'indigo' : stat.color === 'emerald' ? 'emerald' : 'violet'}-50 flex items-center justify-center text-${stat.color === 'indigo' ? 'indigo' : stat.color === 'emerald' ? 'emerald' : 'violet'}-600 mb-4 group-hover:scale-110 transition-transform`}>
-                  <stat.icon size={24} />
+                {/* Welcome Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  <div>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{t('studentDashboard.welcomeTitle', { name: profile?.full_name?.split(' ')[0] || '' })}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">{t('studentDashboard.welcomeSub')}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Link to="/" className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                      <Search size={20} />
+                      {t('studentDashboard.exploreCoursesBtn')}
+                    </Link>
+                  </div>
                 </div>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{stat.value}</h3>
-                <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-1">{stat.label}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-2">{stat.sub}</p>
-              </motion.div>
-            ))}
-          </div>
-          {/* VIP Upgrade Banner */}
-          {profile?.role !== 'vip' && (
-            <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-[2.5rem] p-8 md:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-indigo-500/30 shadow-2xl relative overflow-hidden">
-               <div className="absolute inset-0 bg-transparent opacity-5" style={{backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')"}} />
-               <div className="relative z-10 max-w-xl">
-                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest mb-4 border border-rose-500/30">
-                   <Zap size={12} fill="currentColor" /> Quyền Lợi Đặc Quyền
-                 </div>
-                 <h2 className="text-2xl md:text-3xl font-black mb-3 text-white">Trở thành VIP Member</h2>
-                 <p className="text-indigo-200 text-sm font-medium leading-relaxed">Mở khóa toàn bộ kho source code, thư viện dự án độc quyền và ưu tiên Coaching 1:1 trực tiếp cùng tôi. Nâng cấp ngay hôm nay!</p>
-               </div>
-               <Link to="/auth/signup?plan=vip" className="relative z-10 shrink-0 px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 rounded-2xl font-black text-sm hover:scale-105 transition-transform shadow-xl shadow-rose-500/20 flex items-center gap-2">
-                 Nâng Cấp VIP <ChevronRight size={18} />
-               </Link>
-            </div>
-          )}
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Learning Path - Takes 2 columns */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <PlayCircle className="text-indigo-600" size={24} />
-                  {t('studentDashboard.learningPath')}
-                </h2>
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                  {(['all', 'in_progress', 'completed'] as const).map((filterType) => (
-                    <button
-                      key={filterType}
-                      onClick={() => setFilter(filterType)}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        filter === filterType ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {[
+                    { label: t('studentDashboard.statCourses'), value: enrollments.length, icon: BookOpen, color: 'indigo', sub: t('studentDashboard.statCoursesSub') },
+                    { label: t('studentDashboard.statHours'), value: `${totalHours}h`, icon: Clock, color: 'emerald', sub: t('studentDashboard.statHoursSub') },
+                    { label: t('studentDashboard.statCerts'), value: String(certificateCount).padStart(2, '0'), icon: Award, color: 'violet', sub: t('studentDashboard.statCertsSub') },
+                  ].map((stat, idx) => (
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
                     >
-                      {filterType === 'all' ? t('studentDashboard.filterAll') : filterType === 'in_progress' ? t('studentDashboard.filterInProgress') : t('studentDashboard.filterCompleted')}
-                    </button>
+                      <div className={`w-12 h-12 rounded-2xl bg-${stat.color === 'indigo' ? 'indigo' : stat.color === 'emerald' ? 'emerald' : 'violet'}-50 flex items-center justify-center text-${stat.color === 'indigo' ? 'indigo' : stat.color === 'emerald' ? 'emerald' : 'violet'}-600 mb-4 group-hover:scale-110 transition-transform`}>
+                        <stat.icon size={24} />
+                      </div>
+                      <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{stat.value}</h3>
+                      <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-1">{stat.label}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-2">{stat.sub}</p>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
 
-              {filteredEnrollments.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredEnrollments.map((enroll) => {
-                    const progress = enroll.completion_percentage || 0;
-                    return (
-                      <motion.div
-                        key={enroll.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ y: -5 }}
-                        className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all flex flex-col group"
-                      >
-                        <div className="aspect-video relative overflow-hidden">
-                          <img 
-                            src={enroll.course?.thumbnail_url || `https://picsum.photos/seed/${enroll.course_id}/800/450`} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            alt=""
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                          {progress === 100 && (
-                            <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 shadow-lg">
-                              <Award size={12} />
-                              {t('studentDashboard.statusCompleted')}
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-6 flex-grow flex flex-col">
-                          <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors line-clamp-2 leading-tight mb-4">
-                            {enroll.course?.title}
-                          </h3>
-                          <div className="mt-auto space-y-4">
-                            <div>
-                              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                                <span>{t('studentDashboard.progressLabel')}</span>
-                                <span className="text-slate-900 dark:text-white">{progress}%</span>
-                              </div>
-                              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <motion.div 
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${progress}%` }}
-                                  transition={{ duration: 1, ease: "easeOut" }}
-                                  className={`h-full rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-indigo-600'}`}
-                                />
-                              </div>
-                            </div>
-                            <Link 
-                              to={`/learn/${enroll.course_id}`}
-                              className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${
-                                progress === 100 
-                                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
-                                  : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
-                              }`}
+                {/* VIP Banner */}
+                {profile?.role !== 'vip' && (
+                  <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-[2.5rem] p-8 md:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-indigo-500/30 shadow-2xl relative overflow-hidden">
+                     <div className="absolute inset-0 bg-transparent opacity-5" style={{backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')"}} />
+                     <div className="relative z-10 max-w-xl">
+                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest mb-4 border border-rose-500/30">
+                         <Zap size={12} fill="currentColor" /> Quyền Lợi Đặc Quyền
+                       </div>
+                       <h2 className="text-2xl md:text-3xl font-black mb-3 text-white">Trở thành VIP Member</h2>
+                       <p className="text-indigo-200 text-sm font-medium leading-relaxed">Mở khóa toàn bộ kho source code, thư viện dự án độc quyền và ưu tiên Coaching 1:1 trực tiếp cùng tôi. Nâng cấp ngay hôm nay!</p>
+                     </div>
+                     <Link to="/auth/signup?plan=vip" className="relative z-10 shrink-0 px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 rounded-2xl font-black text-sm hover:scale-105 transition-transform shadow-xl shadow-rose-500/20 flex items-center gap-2">
+                       Nâng Cấp VIP <ChevronRight size={18} />
+                     </Link>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 space-y-8">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <PlayCircle className="text-indigo-600" size={24} />
+                        {t('studentDashboard.learningPath')}
+                      </h2>
+                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                        {(['all', 'in_progress', 'completed'] as const).map((filterType) => (
+                          <button
+                            key={filterType}
+                            onClick={() => setFilter(filterType)}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              filter === filterType ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            {filterType === 'all' ? t('studentDashboard.filterAll') : filterType === 'in_progress' ? t('studentDashboard.filterInProgress') : t('studentDashboard.filterCompleted')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {filteredEnrollments.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {filteredEnrollments.map((enroll) => {
+                          const progress = enroll.completion_percentage || 0;
+                          return (
+                            <motion.div
+                              key={enroll.id}
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              whileHover={{ y: -5 }}
+                              className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all flex flex-col group"
                             >
-                              {progress === 100 ? t('studentDashboard.btnReviewCourse') : t('studentDashboard.btnContinueLesson')}
-                              <ChevronRight size={14} />
-                            </Link>
+                              <div className="aspect-video relative overflow-hidden">
+                                <img 
+                                  src={enroll.course?.thumbnail_url || `https://picsum.photos/seed/${enroll.course_id}/800/450`} 
+                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                  alt=""
+                                  referrerPolicy="no-referrer"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                {progress === 100 && (
+                                  <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                                    <Award size={12} />
+                                    {t('studentDashboard.statusCompleted')}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-6 flex-grow flex flex-col">
+                                <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors line-clamp-2 leading-tight mb-4">
+                                  {enroll.course?.title}
+                                </h3>
+                                <div className="mt-auto space-y-4">
+                                  <div>
+                                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                      <span>{t('studentDashboard.progressLabel')}</span>
+                                      <span className="text-slate-900 dark:text-white">{progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                      <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progress}%` }}
+                                        transition={{ duration: 1, ease: "easeOut" }}
+                                        className={`h-full rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-indigo-600'}`}
+                                      />
+                                    </div>
+                                  </div>
+                                  <Link 
+                                    to={`/learn/${enroll.course_id}`}
+                                    className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${
+                                      progress === 100 
+                                        ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
+                                    }`}
+                                  >
+                                    {progress === 100 ? t('studentDashboard.btnReviewCourse') : t('studentDashboard.btnContinueLesson')}
+                                    <ChevronRight size={14} />
+                                  </Link>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <BookOpen size={28} className="text-slate-300" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('studentDashboard.noCoursesTitle')}</h3>
+                        <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
+                          {t('studentDashboard.noCoursesSub')}
+                        </p>
+                        <Link to="/" className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all">
+                          {t('studentDashboard.exploreNowBtn')}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-8">
+                    {/* AI Coach Assistant */}
+                    <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-200 relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
+                            <Zap size={20} className="text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm">{t('studentDashboard.aiCoachTitle')}</h3>
+                            <p className="text-[10px] text-indigo-200 font-medium">{t('studentDashboard.aiCoachSub')}</p>
                           </div>
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BookOpen size={28} className="text-slate-300" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('studentDashboard.noCoursesTitle')}</h3>
-                  <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
-                    {t('studentDashboard.noCoursesSub')}
-                  </p>
-                  <Link to="/" className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all">
-                    {t('studentDashboard.exploreNowBtn')}
-                  </Link>
-                </div>
-              )}
-            </div>
-
-             {/* Certificates Section (V7 Elite) */}
-             <div className="bg-white dark:bg-slate-900/50 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                   <ShieldCheck size={20} className="text-indigo-500" />
-                   Chứng Chỉ Chuyên Nghiệp
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="p-4 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center justify-between group hover:border-indigo-500/30 transition-all">
-                      <div className="flex items-center gap-4">
-                         <div className="w-10 h-10 bg-indigo-600/10 text-indigo-600 rounded-xl flex items-center justify-center">
-                            <Award size={20} />
-                         </div>
-                         <div>
-                            <p className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-tight">AI Automation Expert</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Cấp ngày 18/03/2026</p>
-                         </div>
+                        <p className="text-xs text-indigo-100 mb-6 leading-relaxed">
+                          {t('studentDashboard.aiCoachMsg', { name: profile?.full_name?.split(' ')[0] || '' })}
+                        </p>
+                        <button className="w-full py-3 bg-white text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-50 transition-all shadow-lg">
+                          {t('studentDashboard.startChatBtn')}
+                        </button>
                       </div>
-                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-black text-[10px] hover:bg-indigo-700 transition-all">
-                         XEM PDF
-                      </button>
-                   </div>
-                </div>
-             </div>
-
-            {/* Sidebar Widgets */}
-            <div className="space-y-8">
-              {/* AI Coach Assistant */}
-              <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-200 relative overflow-hidden group">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
-                      <Zap size={20} className="text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-sm">{t('studentDashboard.aiCoachTitle')}</h3>
-                      <p className="text-[10px] text-indigo-200 font-medium">{t('studentDashboard.aiCoachSub')}</p>
+
+                    {/* Resources */}
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-4">{t('studentDashboard.resources')}</h3>
+                      <div className="space-y-2">
+                        {[t('studentDashboard.promptLib'), t('studentDashboard.discordComm'), t('studentDashboard.pdfDocs')].map((item, i) => (
+                          <button key={i} className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-xl transition-all group border border-slate-100 dark:border-slate-700">
+                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600">{item}</span>
+                            <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-600" />
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <p className="text-xs text-indigo-100 mb-6 leading-relaxed">
-                    {t('studentDashboard.aiCoachMsg', { name: profile?.full_name?.split(' ')[0] || '' })}
-                  </p>
-                  <button className="w-full py-3 bg-white text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-50 transition-all shadow-lg">
-                    {t('studentDashboard.startChatBtn')}
-                  </button>
                 </div>
-              </div>
+              </motion.div>
+            )}
 
-              {/* Next Session */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">{t('studentDashboard.coachingSchedule')}</h3>
-                  <Calendar size={16} className="text-slate-400" />
+            {activeTab === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{t('studentDashboard.settings')}</h1>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">Quản lý thông tin cá nhân và bảo mật tài khoản.</p>
                 </div>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase">Th3</span>
-                      <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">18</span>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 space-y-8">
+                    {/* Profile Section */}
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                      <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                          <Settings size={24} />
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Thông tin cá nhân</h2>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-6">
+                          <img 
+                            src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.id}`} 
+                            className="w-20 h-20 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm"
+                            alt="Avatar"
+                          />
+                          <button className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                            Thay đổi ảnh
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Họ và tên</label>
+                            <input 
+                              type="text" 
+                              defaultValue={profile?.full_name}
+                              className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email</label>
+                            <input 
+                              type="email" 
+                              value={profile?.email}
+                              disabled
+                              className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        <button className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                          Lưu thay đổi
+                        </button>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">Xây dựng hệ thống AI</h4>
-                      <p className="text-[10px] text-slate-400 font-medium mt-1">20:00 - 21:30</p>
+
+                    {/* Password Change Form */}
+                    <PasswordChangeForm />
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200">
+                      <h3 className="font-bold mb-2">Cần giúp đỡ?</h3>
+                      <p className="text-sm text-indigo-100 mb-6 leading-relaxed">Nếu bạn gặp vấn đề khi cập nhật tài khoản, hãy liên hệ đội ngũ hỗ trợ của chúng tôi.</p>
+                      <Link to="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-50 transition-all">
+                        Liên hệ ngay
+                      </Link>
                     </div>
                   </div>
-                  <button className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-bold text-[10px] hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
-                    <ExternalLink size={12} />
-                    {t('studentDashboard.joinZoomBtn')}
-                  </button>
                 </div>
-              </div>
-              {/* Affiliate Simple */}
-              <div className="bg-slate-900 text-white p-6 rounded-[2rem] border border-slate-800 shadow-xl overflow-hidden relative group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] pointer-events-none" />
-                <div className="relative z-10">
-                  <h3 className="font-bold text-sm flex items-center gap-2 mb-2"><TrendingUp size={16} className="text-emerald-400" /> Kiếm Tiền Cùng {import.meta.env.VITE_APP_NAME || 'CoachAI'}</h3>
-                  <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Chia sẻ tài nguyên cho bạn bè, nhận hoa hồng lên đến 50% khi có người đăng ký từ link của bạn.</p>
-                  <div className="bg-black/50 border border-white/10 p-3 rounded-xl flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono text-emerald-400 truncate opacity-90 select-all">{window.location.origin}/?ref={profile?.id?.substring(0,8)}</span>
-                  </div>
-                  <button onClick={() => alert('Đã sao chép link!')} className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold text-xs transition-colors border border-white/10 flex items-center justify-center gap-2">
-                    <UserPlus size={14} /> Copy Link Giới Thiệu
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick Links */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-700">
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-4">{t('studentDashboard.resources')}</h3>
-                <div className="space-y-2">
-                  {[t('studentDashboard.promptLib'), t('studentDashboard.discordComm'), t('studentDashboard.pdfDocs')].map((item, i) => (
-                    <button key={i} className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-xl transition-all group border border-slate-100 dark:border-slate-700">
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600">{item}</span>
-                      <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-600" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
     </div>
